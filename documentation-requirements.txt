@@ -1,0 +1,7 @@
+sphinx
+m2r
+sphinx_rtd_theme
+jupyter_sphinx
+nbsphinx
+sphinx_automodapi
+numpydoc

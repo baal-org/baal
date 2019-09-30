@@ -1,0 +1,8 @@
+pytest
+pytest-pep8
+pytest-cov
+coverage
+torch-hypothesis==0.1.1
+coveralls
+pytest-mock
+flake8

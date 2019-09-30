@@ -1,0 +1,78 @@
+import os
+
+import numpy as np
+import pytest
+from PIL import Image
+from torch import nn
+from torch import optim
+from torch.utils.data import Dataset
+from torchvision.models import vgg
+from torchvision.transforms import ToTensor, Resize, Compose
+
+from baal.active import ActiveLearningDataset
+from baal.active import ActiveLearningLoop
+from baal.active import heuristics
+from baal.modelwrapper import ModelWrapper
+
+
+class DummyDataset(Dataset):
+    def __init__(self, t=None):
+        self.transform = t
+
+    def __len__(self):
+        return 50
+
+    def __getitem__(self, item):
+        i = Image.fromarray(np.random.randint(0, 255, [30, 30, 3], dtype=np.uint8))
+        if self.transform:
+            i = self.transform(i)
+        return (i, item % 10)
+
+
+@pytest.mark.skipif('CIRCLECI' in os.environ, reason="Really slow")
+def test_integration():
+    transform_pipeline = Compose([Resize((64, 64)), ToTensor()])
+    cifar10_train = DummyDataset(transform_pipeline)
+    cifar10_test = DummyDataset(transform_pipeline)
+
+    al_dataset = ActiveLearningDataset(cifar10_train, transform_pipeline)
+    al_dataset.label_randomly(10)
+
+    use_cuda = False
+    model = vgg.vgg16(pretrained=False,
+                      num_classes=10)
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=0.0005)
+
+    # We can now use BaaL to create the active learning loop.
+
+    model = ModelWrapper(model, criterion)
+    # We create an ActiveLearningLoop that will automatically label the most uncertain samples.
+    # In this case, we use the widely used BALD heuristic.
+    active_loop = ActiveLearningLoop(al_dataset,
+                                     model.predict_on_dataset,
+                                     heuristic=heuristics.BALD(),
+                                     ndata_to_label=10,
+                                     batch_size=10,
+                                     iterations=10,
+                                     use_cuda=use_cuda,
+                                     workers=4)
+    # We're all set!
+    num_steps = 10
+    for step in range(num_steps):
+        old_param = list(map(lambda x: x.clone(), model.model.parameters()))
+        model.train_on_dataset(al_dataset, optimizer=optimizer, batch_size=10,
+                               epoch=5, use_cuda=use_cuda, workers=2)
+        model.test_on_dataset(cifar10_test, batch_size=10, use_cuda=use_cuda,
+                              workers=2)
+        if not active_loop.step():
+            break
+        new_param = list(map(lambda x: x.clone(), model.model.parameters()))
+        assert any([not np.allclose(i.detach(), j.detach())
+                    for i, j in zip(old_param, new_param)])
+    assert step == 4  # 10 + (4 * 10) = 50, so it stops at iterations 4
+
+
+if __name__ == '__main__':
+    pytest.main()

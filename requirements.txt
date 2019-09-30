@@ -1,0 +1,12 @@
+numpy
+matplotlib
+pandas
+scikit-learn
+scipy
+torch==1.2.0
+torchvision>=0.2.2
+gpytorch
+tqdm
+h5py
+structlog
+joblib

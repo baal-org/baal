@@ -1,0 +1,9 @@
+.venv
+mnist-data/
+cifar-10-batches-py/
+*.tar.gz
+.git
+.gitignore
+.ipynb_checkpoint
+__pycache__
+
