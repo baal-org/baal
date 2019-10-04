@@ -1,4 +1,5 @@
 from copy import copy
+import warnings
 from itertools import zip_longest
 from typing import Union, Optional, Callable, Tuple, List, Any
 
@@ -134,7 +135,13 @@ class ActiveLearningDataset(torchdata.Dataset):
         for index, val in zip_longest(indexes, value, fillvalue=None):
             if self.can_label and val is not None:
                 self._dataset.label(index, val)
-            self._labelled[index] = 1
+                self._labelled[index] = 1
+            elif not self.can_label:
+                self._labelled[index] = 1
+                if val is not None:
+                    warnings.warn(
+                        "We will consider the original label of this datasample : {}.".format(
+                            self._dataset[index][0], self._dataset[index][1]), UserWarning)
 
     def label_randomly(self, n: int = 1) -> None:
         """
