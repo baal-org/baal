@@ -290,7 +290,7 @@ class ModelWrapperTest(unittest.TestCase):
         assert isinstance(res[1], dict)
         mock = Mock()
         mock.side_effect = (((np.linspace(0, 50) - 10) / 10) ** 2).tolist()
-        self.wrapper.train_on_dataset = mock
+        self.wrapper.test_on_dataset = mock
         res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset,
                                                       self.optim, 32, 50,
                                                       False, return_best_weights=True, patience=1)
