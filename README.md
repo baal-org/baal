@@ -24,7 +24,7 @@ For requirements please see: _[requirements.txt](requirements.txt)_.
 Active learning is a special case of machine learning in which a learning
 algorithm is able to interactively query the user (or some other information
 source) to obtain the desired outputs at new data points
-([Wiki](https://en.wikipedia.org/wiki/Active_learning)).
+(to understand the concept in more depth, refer to our [tutorial](https://baal.readthedocs.io/en/latest/)).
 
 The goal of baal team is to make a production level ready framework for
 active-learning. In this repo, you could find a set of heuristics that we
@@ -112,8 +112,8 @@ based on the calculated uncertainty of the pool.
 ### Re-run our Experiments
 
 ```bash
-docker build [--target prod_baal] -t baal .
-docker run --rm baal python3 experiments/vgg_mcdropout_cifar10.py 
+nvidia-docker build [--target prod_baal] -t baal .
+nvidia-docker run --rm baal python3 experiments/vgg_mcdropout_cifar10.py 
 ```
 
 ### Use BaaL for YOUR Experiments
@@ -128,7 +128,7 @@ Simply build the dockerfile as below:
 
 ```bash
 git clone git@github.com:ElementAI/baal.git
-docker build [--target base_baal] -t baal-dev .
+nvidia-docker build [--target base_baal] -t baal-dev .
 ```
 
 Now you have all the requirements to start contributing to BaaL. _**YEAH!**_

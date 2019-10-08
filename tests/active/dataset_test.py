@@ -54,10 +54,17 @@ class ActiveDatasetTest(unittest.TestCase):
 
     def test_pool(self):
         self.dataset._dataset.label = unittest.mock.MagicMock()
+        labels_initial = self.dataset.n_labelled
         self.dataset.can_label = False
-        self.dataset.label(0)
+        self.dataset.label(0, value=np.arange(1, 10))
         self.dataset._dataset.label.assert_not_called()
+        labels_next_1 = self.dataset.n_labelled
+        assert labels_next_1 == labels_initial + 1
         self.dataset.can_label = True
+        self.dataset.label(np.arange(0, 9))
+        self.dataset._dataset.label.assert_not_called()
+        labels_next_2 = self.dataset.n_labelled
+        assert labels_next_1 == labels_next_2
         self.dataset.label(np.arange(0, 9), value=np.arange(1, 10))
         assert self.dataset._dataset.label.called_once_with(np.arange(1, 10))
         # cleanup
@@ -65,8 +72,8 @@ class ActiveDatasetTest(unittest.TestCase):
         self.dataset.can_label = False
 
         pool = self.dataset.pool
-        assert np.equal([i for i in pool], [(i, -1) for i in np.arange(10, 100)]).all()
-        assert np.equal([i for i in self.dataset], [(i, i) for i in np.arange(10)]).all()
+        assert np.equal([i for i in pool], [(i, -1) for i in np.arange(2, 100)]).all()
+        assert np.equal([i for i in self.dataset], [(i, i) for i in np.arange(2)]).all()
 
     def test_get_raw(self):
         # check that get_raw returns the same thing regardless of labelling
