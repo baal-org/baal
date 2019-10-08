@@ -148,7 +148,8 @@ class ModelWrapper:
                                    use_cuda: bool,
                                    workers: int = 4,
                                    collate_fn: Optional[Callable] = None,
-                                   return_best_weights=False):
+                                   return_best_weights=False,
+                                   patience=None):
         """
         Train and test the model on both Dataset `train_dataset`, `test_dataset`.
 
@@ -162,21 +163,30 @@ class ModelWrapper:
             workers (int): Number of workers to use.
             collate_fn (Optional[Callable]): The collate function to use.
             return_best_weights (bool): If True, will keep the best weights and return them.
+            patience (Optional[int]): If provided, will use early stopping to stop after
+                                        `patience` epoch without improvement.
 
         Returns:
             History and best weights if required.
         """
         best_weight = None
         best_loss = 1e10
+        best_epoch = 0
         hist = []
-        for epoch in range(epoch):
+        for e in range(epoch):
             _ = self.train_on_dataset(train_dataset, optimizer, batch_size, 1,
                                       use_cuda, workers, collate_fn)
             te_loss = self.test_on_dataset(test_dataset, batch_size, use_cuda, workers, collate_fn)
             hist.append({k: v.value for k, v in self.metrics.items()})
-            if return_best_weights and te_loss < best_loss:
+            if te_loss < best_loss:
+                best_epoch = e
                 best_loss = te_loss
-                best_weight = deepcopy(self.state_dict())
+                if return_best_weights:
+                    best_weight = deepcopy(self.state_dict())
+
+            if patience is not None and (e - best_epoch) > patience:
+                # Early stopping
+                break
 
         if return_best_weights:
             return hist, best_weight
