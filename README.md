@@ -1,4 +1,4 @@
-# Bayesian Active Learning (Baal) [![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal) [![Coverage Status](https://coveralls.io/repos/github/ElementAI/baal/badge.svg?branch=develop&t=HLyM0v)](https://coveralls.io/github/ElementAI/baal?branch=develop)
+# Bayesian Active Learning (Baal) [![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal) [![Coverage Status](https://coveralls.io/repos/github/ElementAI/baal/badge.svg?branch=develop&t=HLyM0v)](https://coveralls.io/github/ElementAI/baal?branch=develop) [![Documentation Status](https://readthedocs.org/projects/baal/badge/?version=latest)](https://baal.readthedocs.io/en/latest/?badge=latest)
 
 
 <p align="left">
@@ -8,6 +8,8 @@
 BaaL is an active learning library developed at
 [ElementAI](https://www.elementai.com/). This repository contains techniques
 and reusable components to make active learning accessible for all.
+
+Read the documentation at https://baal.readthedocs.io.
 
 ## Installation and requirements
 
