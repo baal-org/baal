@@ -294,8 +294,20 @@ class ModelWrapperTest(unittest.TestCase):
         res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset,
                                                       self.optim, 32, 50,
                                                       False, return_best_weights=True, patience=1)
+
         assert len(res) == 2
-        assert len(res[0]) != 50
+        assert len(res[0]) < 50
+
+        mock = Mock()
+        mock.side_effect = (((np.linspace(0, 50) - 10) / 10) ** 2).tolist()
+        self.wrapper.test_on_dataset = mock
+        res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset,
+                                                      self.optim, 32, 50,
+                                                      False, return_best_weights=True, patience=1,
+                                                      min_epoch_for_es=20)
+        assert len(res) == 2
+        assert len(res[0]) < 50 and len(res[0]) > 20
+
 
 
 if __name__ == '__main__':

@@ -149,7 +149,8 @@ class ModelWrapper:
                                    workers: int = 4,
                                    collate_fn: Optional[Callable] = None,
                                    return_best_weights=False,
-                                   patience=None):
+                                   patience=None,
+                                   min_epoch_for_es=0):
         """
         Train and test the model on both Dataset `train_dataset`, `test_dataset`.
 
@@ -165,6 +166,7 @@ class ModelWrapper:
             return_best_weights (bool): If True, will keep the best weights and return them.
             patience (Optional[int]): If provided, will use early stopping to stop after
                                         `patience` epoch without improvement.
+            min_epoch_for_es (int): Epoch at which the early stopping starts.
 
         Returns:
             History and best weights if required.
@@ -184,7 +186,7 @@ class ModelWrapper:
                 if return_best_weights:
                     best_weight = deepcopy(self.state_dict())
 
-            if patience is not None and (e - best_epoch) > patience:
+            if patience is not None and (e - best_epoch) > patience and (e > min_epoch_for_es):
                 # Early stopping
                 break
 
