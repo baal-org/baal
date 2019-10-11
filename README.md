@@ -1,4 +1,4 @@
-# Bayesian Active Learning (Baal) [![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal) [![Coverage Status](https://coveralls.io/repos/github/ElementAI/baal/badge.svg?branch=develop&t=HLyM0v)](https://coveralls.io/github/ElementAI/baal?branch=develop)
+# Bayesian Active Learning (Baal) [![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal) [![Coverage Status](https://coveralls.io/repos/github/ElementAI/baal/badge.svg?branch=develop&t=HLyM0v)](https://coveralls.io/github/ElementAI/baal?branch=develop) [![Documentation Status](https://readthedocs.org/projects/baal/badge/?version=latest)](https://baal.readthedocs.io/en/latest/?badge=latest)
 
 
 <p align="left">
@@ -9,9 +9,11 @@ BaaL is an active learning library developed at
 [ElementAI](https://www.elementai.com/). This repository contains techniques
 and reusable components to make active learning accessible for all.
 
+Read the documentation at https://baal.readthedocs.io.
+
 ## Installation and requirements
 
-BaaL requires Python>=3.6
+BaaL requires `Python>=3.6`.
 
 To install baal using pip: `pip install baal`
 
@@ -19,18 +21,12 @@ To install baal from source: `pip install -e .`
 
 For requirements please see: _[requirements.txt](requirements.txt)_.
 
-## Our background and Motivation
+## What is Active Learning?
 
 Active learning is a special case of machine learning in which a learning
 algorithm is able to interactively query the user (or some other information
 source) to obtain the desired outputs at new data points
 (to understand the concept in more depth, refer to our [tutorial](https://baal.readthedocs.io/en/latest/)).
-
-The goal of baal team is to make a production level ready framework for
-active-learning. In this repo, you could find a set of heuristics that we
-normally use in our active learning setup. You could also find the SoTA
-experiments which we tested and if their performance is competent to production
-pipeline needs, they are constantly added to our baal package.
 
 
 ## BaaL Framework
@@ -41,13 +37,11 @@ At the moment BaaL supports the following methods to perform active learning.
 
 **Please see our Roadmap [below](./README.md#roadmap-subject-to-change-depending-on-the-community).**
 
-The **Monte-Carlo Dropout** method is a known approximation for bayesian neural
+The **Monte-Carlo Dropout** method is a known approximation for Bayesian neural
 networks. In this method, the dropout layer is used both in training and test
-time. Using of dropout layer and iterating through the model in test time, help
-us to calculate the uncertainty of the model prediction using one of our
-provided uncertainty measurements in _src/baal/active/heuristics.py_.
+time. By running the model multiple times whilst randomly dropping weights, we calculate the uncertainty of the prediction using one of the uncertainty measurements in _src/baal/active/heuristics.py_.
 
-The framework consists of four main parts as it is demonstrated in the flowchart below:
+The framework consists of four main parts, as demonstrated in the flowchart below:
 
 - ActiveLearningDataset
 - Heuristics
@@ -58,22 +52,18 @@ The framework consists of four main parts as it is demonstrated in the flowchart
   <img src="./docs/literature/images/Baalscheme.svg">
 </p>
 
-The dataset should be wrapped in our _[**ActiveLearningDataset**](src/baal/active/dataset.py)_ class. This will assure that the dataset is split in
-training and pool sets. The pool set represents the rest of training set which are yet
+To get started, wrap your dataset in our _[**ActiveLearningDataset**](src/baal/active/dataset.py)_ class. This will ensure that the dataset is split into
+`training` and `pool` sets. The `pool` set represents the portion of the training set which is yet
 to be labelled.
 
 
 We provide a lightweight object _[**ModelWrapper**](src/baal/modelwrapper.py)_ similar to `keras.Model` to make it easier to train and test the model. If your model is not ready for active learning, we provide Modules to prepare them. 
 
 For example, the _[**MCDropoutModule**](src/baal/bayesian/dropout.py)_ wrapper changes the existing dropout layer
-to be used in both training and inference time and the ModelWrapper makes
-the training and prediction outputs compatible with respect to number of
-iterations. The number of iterations are defined as a hyper parameter in the
-active learning set up which indicates the number of times the model will be
-looped over with the test set to create a set of predictions for each of the
-test set items.
+to be used in both training and inference time and the `ModelWrapper` makes
+the specifies the number of iterations to run at training and inference.
 
-In conclusion, your script would be similar to this:
+In conclusion, your script should be similar to this:
 ```python
 dataset = ActiveLearningDataset(your_dataset)
 dataset.label_randomly(INITIAL_POOL)  # label some data
@@ -120,11 +110,11 @@ nvidia-docker run --rm baal python3 experiments/vgg_mcdropout_cifar10.py
 
 Simply clone the repo, and create your own experiment script similar to the
 example at _experiments/vgg_experiment.py_. Make sure to use the four main parts
-of Baal framework. _Happy running experiments_
+of BaaL framework. _Happy running experiments_
 
 ### Dev install
 
-Simply build the dockerfile as below:
+Simply build the Dockerfile as below:
 
 ```bash
 git clone git@github.com:ElementAI/baal.git
@@ -142,8 +132,8 @@ To contribute, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 "There is passion, yet peace; serenity, yet emotion; chaos, yet order."
 
-At ElementAI, BaaL team tests and implements the most recent papers on uncertainty estimation and active learning.
- BaaL team is here to serve you best:
+At ElementAI, the BaaL team tests and implements the most recent papers on uncertainty estimation and active learning.
+The BaaL team is here to serve you!
 
 - [Parmida Atighehchian](mailto:parmida@elementai.com)
 - [Frédéric Branchaud-Charron](mailto:frederic.branchaud-charron@elementai.com)
