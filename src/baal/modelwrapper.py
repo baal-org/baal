@@ -346,9 +346,18 @@ class ModelWrapper:
                 try:
                     data = torch.stack([data] * iterations)
                 except Exception as e:
-                    print(e)
+                    raise RuntimeError(
+                        '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
+                    Use `replicate_in_memory=False` in order to reduce the memory requirements.
+                    Note that there will be some speed trade-offs''') from e
                 data = data.view(batch_size * iterations, *input_shape[1:])
-                out = self.model(data)
+                try:
+                    out = self.model(data)
+                except Exception as e:
+                    raise RuntimeError(
+                        '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
+                    Use `replicate_in_memory=False` in order to reduce the memory requirements.
+                    Note that there will be some speed trade-offs''') from e
                 out = map_on_tensor(lambda o: o.view([iterations, batch_size, *o.size()[1:]]), out)
                 out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
             else:
