@@ -99,6 +99,15 @@ class ModelWrapperMultiOutTest(unittest.TestCase):
         pred = self.wrapper.predict_on_batch(input, 10, False)
         assert pred[0].size() == (2, 1, 10)
 
+        # iteration == 1
+        self.wrapper = ModelWrapper(self.model, self.criterion, replicate_in_memory=False)
+        pred = self.wrapper.predict_on_batch(input, 1, False)
+        assert pred[0].size() == (2, 1, 1)
+
+        # iterations > 1
+        pred = self.wrapper.predict_on_batch(input, 10, False)
+        assert pred[0].size() == (2, 1, 10)
+
     def test_train(self):
         history = self.wrapper.train_on_dataset(self.dataset, self.optim, 10, 2, use_cuda=False,
                                                 workers=0)
@@ -200,6 +209,15 @@ class ModelWrapperTest(unittest.TestCase):
         input = torch.randn([2, 3, 10, 10])
 
         # iteration == 1
+        pred = self.wrapper.predict_on_batch(input, 1, False)
+        assert pred.size() == (2, 1, 1)
+
+        # iterations > 1
+        pred = self.wrapper.predict_on_batch(input, 10, False)
+        assert pred.size() == (2, 1, 10)
+
+        # iteration == 1
+        self.wrapper = ModelWrapper(self.model, self.criterion, replicate_in_memory=False)
         pred = self.wrapper.predict_on_batch(input, 1, False)
         assert pred.size() == (2, 1, 1)
 
