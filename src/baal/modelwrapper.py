@@ -25,6 +25,7 @@ class ModelWrapper:
     Args:
         model (nn.Module): The model to optimize.
         criterion (Callable): a loss function.
+        replicate_in_memory (bool): Replicate in memory optional.
     """
 
     def __init__(self, model, criterion, replicate_in_memory=True):
@@ -336,6 +337,9 @@ class ModelWrapper:
         Returns:
             Tensor, the loss computed from the criterion.
                     shape = {batch_size, nclass, n_iteration}
+
+        Raises:
+            raises RuntimeError if CUDA rans out of memory during data replication.
         """
         with torch.no_grad():
             if cuda:
