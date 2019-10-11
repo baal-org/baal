@@ -19,7 +19,6 @@ Therefore, baal has several components:
 
     Active learning dataset and training loop classes <active-learning.ipynb>
     Methods for approximating bayesian posteriors <posteriors.ipynb>
-    Methods for selecting data points to label based on these posteriors <strategies.ipynb>
     API Index <api/index>
 
 .. toctree ::
