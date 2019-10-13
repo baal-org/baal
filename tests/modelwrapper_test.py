@@ -1,3 +1,4 @@
+import math
 import unittest
 from unittest.mock import Mock
 
@@ -107,6 +108,13 @@ class ModelWrapperMultiOutTest(unittest.TestCase):
         # iterations > 1
         pred = self.wrapper.predict_on_batch(input, 10, False)
         assert pred[0].size() == (2, 1, 10)
+
+    def test_out_of_mem_raises_error(self):
+        iterations = math.inf
+        self.wrapper.eval()
+        input = torch.stack((self.dataset[0][0], self.dataset[1][0]))
+        with pytest.raises(Exception):
+            self.wrapper.predict_on_batch(input, iterations, False)
 
     def test_train(self):
         history = self.wrapper.train_on_dataset(self.dataset, self.optim, 10, 2, use_cuda=False,
@@ -266,26 +274,39 @@ class ModelWrapperTest(unittest.TestCase):
         assert l.dtype == np.float16
 
     def test_states(self):
-        self.wrapper.train()
         input = torch.randn([1, 3, 10, 10])
-        # Dropout make the pred changes
-        preds = torch.stack(
-            [
-                self.wrapper.predict_on_batch(input, iterations=1, cuda=False)
-                for _ in range(10)
-            ]
-        ).view(10, -1)
-        assert not torch.allclose(torch.mean(preds, 0), preds[0])
 
-        # Dropout is not active in eval
-        self.wrapper.eval()
-        preds = torch.stack(
-            [
-                self.wrapper.predict_on_batch(input, iterations=1, cuda=False)
-                for _ in range(10)
-            ]
-        ).view(10, -1)
-        assert torch.allclose(torch.mean(preds, 0), preds[0])
+        def pred_with_dropout(replicate_in_memory):
+            self.wrapper = ModelWrapper(self.model, self.criterion,
+                                        replicate_in_memory=replicate_in_memory)
+            self.wrapper.train()
+            # Dropout make the pred changes
+            preds = torch.stack(
+                [
+                    self.wrapper.predict_on_batch(input, iterations=1, cuda=False)
+                    for _ in range(10)
+                ]
+            ).view(10, -1)
+            assert not torch.allclose(torch.mean(preds, 0), preds[0])
+
+        pred_with_dropout(replicate_in_memory=True)
+        pred_with_dropout(replicate_in_memory=False)
+
+        def pred_without_dropout(replicate_in_memory):
+            self.wrapper = ModelWrapper(self.model, self.criterion,
+                                        replicate_in_memory=replicate_in_memory)
+            # Dropout is not active in eval
+            self.wrapper.eval()
+            preds = torch.stack(
+                [
+                    self.wrapper.predict_on_batch(input, iterations=1, cuda=False)
+                    for _ in range(10)
+                ]
+            ).view(10, -1)
+            assert torch.allclose(torch.mean(preds, 0), preds[0])
+
+        pred_without_dropout(replicate_in_memory=True)
+        pred_without_dropout(replicate_in_memory=False)
 
     def test_add_metric(self):
         self.wrapper.add_metric('cls_report', lambda: ClassificationReport(2))
@@ -325,7 +346,6 @@ class ModelWrapperTest(unittest.TestCase):
                                                       min_epoch_for_es=20)
         assert len(res) == 2
         assert len(res[0]) < 50 and len(res[0]) > 20
-
 
 
 if __name__ == '__main__':
