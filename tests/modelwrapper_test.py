@@ -157,6 +157,12 @@ class ModelWrapperMultiOutTest(unittest.TestCase):
         assert next(l_gen)[0].dtype == np.float16
         assert l[0].dtype == np.float16
 
+        data_s = []
+        l_gen = self.wrapper.predict_on_dataset_generator(data_s, 10, 20, use_cuda=False,
+                                                          workers=0, half=True)
+
+        assert len(list(l_gen)) == 0
+
 
 class ModelWrapperTest(unittest.TestCase):
     def setUp(self):
