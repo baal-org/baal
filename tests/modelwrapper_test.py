@@ -116,6 +116,13 @@ class ModelWrapperMultiOutTest(unittest.TestCase):
         with pytest.raises(Exception):
             self.wrapper.predict_on_batch(input, iterations, False)
 
+    def test_using_cuda_raises_error_while_testing(self):
+        '''CUDA is not available on test environment'''
+        self.wrapper.eval()
+        input = torch.stack((self.dataset[0][0], self.dataset[1][0]))
+        with pytest.raises(Exception):
+            self.wrapper.predict_on_batch(input, 1, True)
+
     def test_train(self):
         history = self.wrapper.train_on_dataset(self.dataset, self.optim, 10, 2, use_cuda=False,
                                                 workers=0)
