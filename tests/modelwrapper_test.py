@@ -110,10 +110,17 @@ class ModelWrapperMultiOutTest(unittest.TestCase):
         assert pred[0].size() == (2, 1, 10)
 
     def test_out_of_mem_raises_error(self):
+        self.wrapper.eval()
+        input = torch.stack((self.dataset[0][0], self.dataset[1][0]))
+        with pytest.raises(RuntimeError) as e_info:
+            self.wrapper.predict_on_batch(input, 0, False)
+        assert 'CUDA ran out of memory while BaaL tried to replicate data' in str(e_info.value)
+
+    def test_raising_type_errors(self):
         iterations = math.inf
         self.wrapper.eval()
         input = torch.stack((self.dataset[0][0], self.dataset[1][0]))
-        with pytest.raises(Exception):
+        with pytest.raises(TypeError):
             self.wrapper.predict_on_batch(input, iterations, False)
 
     def test_using_cuda_raises_error_while_testing(self):

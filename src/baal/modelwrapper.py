@@ -349,7 +349,7 @@ class ModelWrapper:
                 batch_size = input_shape[0]
                 try:
                     data = torch.stack([data] * iterations)
-                except Exception as e:
+                except RuntimeError as e:
                     raise RuntimeError(
                         '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
                     Use `replicate_in_memory=False` in order to reduce the memory requirements.
@@ -357,7 +357,7 @@ class ModelWrapper:
                 data = data.view(batch_size * iterations, *input_shape[1:])
                 try:
                     out = self.model(data)
-                except Exception as e:
+                except RuntimeError as e:
                     raise RuntimeError(
                         '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
                     Use `replicate_in_memory=False` in order to reduce the memory requirements.
