@@ -14,13 +14,12 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('./../src'))
 
+sys.path.insert(0, os.path.abspath('./../src'))
 
 # -- Project information -----------------------------------------------------
 
 import sphinx_rtd_theme
-
 
 project = 'baal'
 copyright = '2019, Parmida Atighehchian, Frédéric Branchaud-Charron, Jan Freyberg'
@@ -30,7 +29,6 @@ author = 'Parmida Atighehchian, Frédéric Branchaud-Charron, Jan Freyberg'
 version = ''
 # The full version, including alpha/beta/rc tags
 release = '1.0.0'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -56,7 +54,8 @@ extensions = [
 ]
 
 # We need to mock these packages to compile without deps.
-autodoc_mock_imports = ["PIL", "tqdm", "structlog", "torch", "torchvision", "numpy", "sklearn", "scipy"]
+autodoc_mock_imports = ["PIL", "tqdm", "structlog", "torch", "torchvision", "numpy", "sklearn",
+                        "scipy"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -82,7 +81,6 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.ipynb_checkpoints']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
-
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -120,7 +118,6 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'baaldoc'
 
-
 # -- Options for LaTeX output ------------------------------------------------
 
 latex_elements = {
@@ -151,13 +148,11 @@ latex_documents = [
     )
 ]
 
-
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [(master_doc, 'baal', 'baal Documentation', [author], 1)]
-
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -176,7 +171,6 @@ texinfo_documents = [
     )
 ]
 
-
 # -- Options for Epub output -------------------------------------------------
 
 # Bibliographic Dublin Core info.
@@ -193,7 +187,6 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
-
 
 # -- Extension configuration -------------------------------------------------
 
