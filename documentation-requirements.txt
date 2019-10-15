@@ -1,4 +1,4 @@
-sphinx
+sphinx>2
 m2r
 sphinx_rtd_theme
 jupyter_sphinx
