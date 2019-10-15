@@ -25,13 +25,15 @@ class ModelWrapper:
     Args:
         model (nn.Module): The model to optimize.
         criterion (Callable): a loss function.
+        replicate_in_memory (bool): Replicate in memory optional.
     """
 
-    def __init__(self, model, criterion):
+    def __init__(self, model, criterion, replicate_in_memory=True):
         self.model = model
         self.criterion = criterion
         self.metrics = dict()
         self.add_metric('loss', lambda: Loss())
+        self.replicate_in_memory = replicate_in_memory
 
     def add_metric(self, name: str, initializer: Callable):
         """
@@ -335,17 +337,39 @@ class ModelWrapper:
         Returns:
             Tensor, the loss computed from the criterion.
                     shape = {batch_size, nclass, n_iteration}
+
+        Raises:
+            raises RuntimeError if CUDA rans out of memory during data replication.
         """
         with torch.no_grad():
             if cuda:
                 data = data.cuda()
-            input_shape = data.size()
-            batch_size = input_shape[0]
-            data = torch.stack([data] * iterations)
-            data = data.view(batch_size * iterations, *input_shape[1:])
-            out = self.model(data)
-            out = map_on_tensor(lambda o: o.view([iterations, batch_size, *o.size()[1:]]), out)
-            out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
+            if self.replicate_in_memory:
+                input_shape = data.size()
+                batch_size = input_shape[0]
+                try:
+                    data = torch.stack([data] * iterations)
+                except RuntimeError as e:
+                    raise RuntimeError(
+                        '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
+                    Use `replicate_in_memory=False` in order to reduce the memory requirements.
+                    Note that there will be some speed trade-offs''') from e
+                data = data.view(batch_size * iterations, *input_shape[1:])
+                try:
+                    out = self.model(data)
+                except RuntimeError as e:
+                    raise RuntimeError(
+                        '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
+                    Use `replicate_in_memory=False` in order to reduce the memory requirements.
+                    Note that there will be some speed trade-offs''') from e
+                out = map_on_tensor(lambda o: o.view([iterations, batch_size, *o.size()[1:]]), out)
+                out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
+            else:
+                out = [self.model(data) for _ in range(iterations)]
+                if isinstance(out[0], Sequence):
+                    out = [torch.stack(ts, dim=-1) for ts in zip(*out)]
+                else:
+                    out = torch.stack(out, dim=-1)
             return out
 
     def get_params(self):
