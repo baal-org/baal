@@ -3,9 +3,13 @@ import unittest
 import numpy as np
 import pytest
 import torch
+from sklearn.datasets import load_iris
+
 from baal.active import ActiveLearningDataset
 from torch.utils.data import Dataset
 from torchvision.transforms import Lambda
+
+from baal.active.dataset import ActiveNumpyArray
 
 
 class MyDataset(Dataset):
@@ -106,6 +110,31 @@ class ActiveDatasetTest(unittest.TestCase):
         self.dataset.label_randomly(50)
         assert len(self.dataset) == 50
         assert len(self.dataset.pool) == 50
+
+
+def test_numpydataset():
+    x,y = load_iris(return_X_y=True)
+    init_len = len(x)
+    dataset = ActiveNumpyArray((x,y))
+    assert len(dataset) == 0 == dataset.n_labelled
+    assert dataset.n_unlabelled == init_len
+
+    dataset.label_randomly(10)
+    assert len(dataset) == 10 == dataset.n_labelled
+    assert dataset.n_unlabelled == init_len - 10
+
+    xi, yi = dataset.dataset
+    assert len(xi) == 10
+
+    xp,yp = dataset.pool
+    assert len(xp) == init_len - 10
+
+    dataset.label(list(range(10)))
+    assert len(dataset) == 20
+
+    l = np.array([1]*10 + [0]*(init_len - 10))
+    dataset = ActiveNumpyArray((x, y), labelled=l)
+    assert len(dataset) == 10
 
 
 if __name__ == '__main__':

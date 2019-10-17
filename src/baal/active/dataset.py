@@ -1,5 +1,5 @@
-from copy import copy
 import warnings
+from copy import copy
 from itertools import zip_longest
 from typing import Union, Optional, Callable, Tuple, List, Any
 
@@ -55,6 +55,7 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     class ActiveIter():
         """Iterator over an ActiveLearningDataset."""
+
         def __init__(self, aldataset):
             self.i = 0
             self.aldataset = aldataset
@@ -194,3 +195,43 @@ class ActiveLearningPool(torchdata.Dataset):
     def __len__(self) -> int:
         """Return how many actual data / label pairs we have."""
         return len(self._dataset)
+
+
+class ActiveNumpyArray(ActiveLearningDataset):
+    """
+    Active dataset for numpy arrays. Useful when using sklearn.
+
+    Args:
+        dataset (Tuple[ndarray, ndarray]): [Train x, train y], the dataset.
+        labelled (Union[np.ndarray, torch.Tensor]):
+            An array/tensor that acts as a boolean mask which is True for every
+            data point that is labelled, and False for every data point that is not
+            labelled.
+    """
+
+    def __init__(self, dataset: Tuple[np.ndarray, np.ndarray],
+                 labelled: Union[np.ndarray, torch.Tensor] = None) -> None:
+
+        if labelled is not None:
+            if isinstance(labelled, torch.Tensor):
+                labelled = labelled.numpy()
+            labelled = labelled.astype(np.bool)
+        else:
+            labelled = np.zeros(len(dataset[0]), dtype=np.bool)
+        super().__init__(dataset, None, labelled)
+
+    @property
+    def pool(self):
+        """Return the unlabelled portion of the dataset."""
+        return self._dataset[0][~self._labelled], self._dataset[1][~self._labelled]
+
+    @property
+    def dataset(self):
+        """Return the labelled portion of the dataset."""
+        return self._dataset[0][self._labelled], self._dataset[1][self._labelled]
+
+    def get_raw(self, idx: int) -> None:
+        return self._dataset[0][idx], self._dataset[1][idx]
+
+    def __iter__(self):
+        return zip(*self._dataset)
