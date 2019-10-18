@@ -4,11 +4,10 @@ import numpy as np
 import pytest
 import torch
 from sklearn.datasets import load_iris
-
-from baal.active import ActiveLearningDataset
 from torch.utils.data import Dataset
 from torchvision.transforms import Lambda
 
+from baal.active import ActiveLearningDataset
 from baal.active.dataset import ActiveNumpyArray
 
 
@@ -113,9 +112,9 @@ class ActiveDatasetTest(unittest.TestCase):
 
 
 def test_numpydataset():
-    x,y = load_iris(return_X_y=True)
+    x, y = load_iris(return_X_y=True)
     init_len = len(x)
-    dataset = ActiveNumpyArray((x,y))
+    dataset = ActiveNumpyArray((x, y))
     assert len(dataset) == 0 == dataset.n_labelled
     assert dataset.n_unlabelled == init_len
 
@@ -126,15 +125,20 @@ def test_numpydataset():
     xi, yi = dataset.dataset
     assert len(xi) == 10
 
-    xp,yp = dataset.pool
+    xp, yp = dataset.pool
     assert len(xp) == init_len - 10
 
     dataset.label(list(range(10)))
     assert len(dataset) == 20
 
-    l = np.array([1]*10 + [0]*(init_len - 10))
+    l = np.array([1] * 10 + [0] * (init_len - 10))
     dataset = ActiveNumpyArray((x, y), labelled=l)
     assert len(dataset) == 10
+
+    assert [a == b for a, b in zip(dataset.get_raw(-1), (x[-1], y[-1]))]
+    assert [a == b for a, b in zip(dataset.get_raw(0), (x[0], y[0]))]
+
+    assert (next(iter(dataset))[0] == dataset[0][0]).all()
 
 
 if __name__ == '__main__':
