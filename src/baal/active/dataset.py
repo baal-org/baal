@@ -6,6 +6,7 @@ from typing import Union, Optional, Callable, Tuple, List, Any
 import numpy as np
 import torch
 import torch.utils.data as torchdata
+from sklearn.utils import check_random_state
 
 
 class ActiveLearningDataset(torchdata.Dataset):
@@ -20,6 +21,7 @@ class ActiveLearningDataset(torchdata.Dataset):
             labelled.
         make_unlabelled (Callable): the function that returns an
             unlabelled version of a datum so that it can still be used in the DataLoader.
+        random_seed (None, int, RandomState): set the random seed for label_randomly().
     """
 
     def __init__(
@@ -28,6 +30,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         eval_transform: Optional[Callable] = None,
         labelled: Union[np.ndarray, torch.Tensor] = None,
         make_unlabelled: Callable = lambda x: x,
+        random_state=None
     ) -> None:
         self._dataset = dataset
         if labelled is not None:
@@ -44,6 +47,8 @@ class ActiveLearningDataset(torchdata.Dataset):
         self.make_unlabelled = make_unlabelled
         # For example, FileDataset has a method 'label'. This is useful when we're in prod.
         self.can_label = hasattr(self._dataset, 'label')
+
+        self.random_state = check_random_state(random_state)
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, ...]:
         """Return stuff from the original dataset."""
@@ -152,10 +157,10 @@ class ActiveLearningDataset(torchdata.Dataset):
             n (int): number of samples to label.
         """
         for i in range(n):
-            """Making multiple call to self.n_unlabelled is eneficient, but
+            """Making multiple call to self.n_unlabelled is enefficient, but
             self.label changes the available length and it may lead to
             IndexError if not done this way."""
-            self.label(np.random.choice(self.n_unlabelled, 1).item())
+            self.label(self.random_state.choice(self.n_unlabelled, 1).item())
 
     def reset_labeled(self):
         """Reset the label map."""
@@ -170,8 +175,14 @@ class ActiveLearningDataset(torchdata.Dataset):
         return self._dataset[idx]
 
     def state_dict(self):
-        """Return the state_dict, ie. the labelled map."""
-        return {'labeled': self._labelled}
+        """Return the state_dict, ie. the labelled map and random_state"""
+        return {'labelled': self._labelled,
+                'random_state': self.random_state}
+
+    def load_state_dict(self, state_dict):
+        """Load the labelled map and random_state with give state_dict"""
+        self._labelled = state_dict['labelled']
+        self.random_state = state_dict['random_state']
 
 
 class ActiveLearningPool(torchdata.Dataset):
