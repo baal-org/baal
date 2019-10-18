@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 import pytest
 import torch
+import pickle as pkl
 from sklearn.datasets import load_iris
 from torch.utils.data import Dataset
 from torchvision.transforms import Lambda

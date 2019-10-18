@@ -21,7 +21,7 @@ class ActiveLearningDataset(torchdata.Dataset):
             labelled.
         make_unlabelled (Callable): the function that returns an
             unlabelled version of a datum so that it can still be used in the DataLoader.
-        random_seed (None, int, RandomState): set the random seed for label_randomly().
+        random_state (None, int, RandomState): set the random seed for label_randomly().
     """
 
     def __init__(
