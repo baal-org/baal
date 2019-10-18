@@ -26,7 +26,7 @@ Therefore, baal has several components:
     :maxdepth: 1
 
     Use BaaL in production (Classification) <baal_prod_cls.ipynb>
-    Use BaaL with SkLean (Classification) <sklearn_tutorial.ipynb>
+    Use BaaL with SkLearn (Classification) <sklearn_tutorial.ipynb>
 
 .. toctree::
     :caption: Literature and support
