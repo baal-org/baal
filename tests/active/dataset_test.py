@@ -3,9 +3,12 @@ import unittest
 import numpy as np
 import pytest
 import torch
-from baal.active import ActiveLearningDataset
+from sklearn.datasets import load_iris
 from torch.utils.data import Dataset
 from torchvision.transforms import Lambda
+
+from baal.active import ActiveLearningDataset
+from baal.active.dataset import ActiveNumpyArray
 
 
 class MyDataset(Dataset):
@@ -83,6 +86,11 @@ class ActiveDatasetTest(unittest.TestCase):
         i_2 = self.dataset.get_raw(5)
         assert i_1 == i_2
 
+    def test_types(self):
+        self.dataset.label_randomly(2)
+        assert self.dataset._pool_to_oracle_index(1) == self.dataset._pool_to_oracle_index([1])
+        assert self.dataset._oracle_to_pool_index(1) == self.dataset._oracle_to_pool_index([1])
+
     def test_state_dict(self):
         state_dict_1 = self.dataset.state_dict()
         assert np.equal(state_dict_1["labeled"], np.full((100,), False)).all()
@@ -106,6 +114,36 @@ class ActiveDatasetTest(unittest.TestCase):
         self.dataset.label_randomly(50)
         assert len(self.dataset) == 50
         assert len(self.dataset.pool) == 50
+
+
+def test_numpydataset():
+    x, y = load_iris(return_X_y=True)
+    init_len = len(x)
+    dataset = ActiveNumpyArray((x, y))
+    assert len(dataset) == 0 == dataset.n_labelled
+    assert dataset.n_unlabelled == init_len
+
+    dataset.label_randomly(10)
+    assert len(dataset) == 10 == dataset.n_labelled
+    assert dataset.n_unlabelled == init_len - 10
+
+    xi, yi = dataset.dataset
+    assert len(xi) == 10
+
+    xp, yp = dataset.pool
+    assert len(xp) == init_len - 10
+
+    dataset.label(list(range(10)))
+    assert len(dataset) == 20
+
+    l = np.array([1] * 10 + [0] * (init_len - 10))
+    dataset = ActiveNumpyArray((x, y), labelled=l)
+    assert len(dataset) == 10
+
+    assert [a == b for a, b in zip(dataset.get_raw(-1), (x[-1], y[-1]))]
+    assert [a == b for a, b in zip(dataset.get_raw(0), (x[0], y[0]))]
+
+    assert (next(iter(dataset))[0] == dataset[0][0]).all()
 
 
 if __name__ == '__main__':
