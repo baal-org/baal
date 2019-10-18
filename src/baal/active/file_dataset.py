@@ -93,17 +93,3 @@ class FileDataset(Dataset):
         else:
             t_kwargs = {}
         return t_kwargs
-
-    def add_sample(self, pt: str, lbl: Any):
-        """
-        Add a new sample at the end of the dataset.
-
-        Args:
-            pt (str): file path.
-            lbl (Any): label associated with.
-
-        Notes:
-            This is not thread-safe.
-        """
-        self.files.append(pt)
-        self.lbls.append(lbl)

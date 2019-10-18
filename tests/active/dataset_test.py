@@ -86,6 +86,11 @@ class ActiveDatasetTest(unittest.TestCase):
         i_2 = self.dataset.get_raw(5)
         assert i_1 == i_2
 
+    def test_types(self):
+        self.dataset.label_randomly(2)
+        assert self.dataset._pool_to_oracle_index(1) == self.dataset._pool_to_oracle_index([1])
+        assert self.dataset._oracle_to_pool_index(1) == self.dataset._oracle_to_pool_index([1])
+
     def test_state_dict(self):
         state_dict_1 = self.dataset.state_dict()
         assert np.equal(state_dict_1["labeled"], np.full((100,), False)).all()

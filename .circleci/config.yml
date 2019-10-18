@@ -51,7 +51,7 @@ jobs:
           name: run coveralls
           command: |
             . venv/bin/activate
-            python -m pytest --cov
+            python -m pytest --cov --cov-report term-missing:skip-covered
             coveralls
 
       - store_artifacts:
