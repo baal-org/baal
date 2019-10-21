@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 import pytest
 import torch
+import pickle as pkl
 from sklearn.datasets import load_iris
 from torch.utils.data import Dataset
 from torchvision.transforms import Lambda
@@ -93,12 +94,30 @@ class ActiveDatasetTest(unittest.TestCase):
 
     def test_state_dict(self):
         state_dict_1 = self.dataset.state_dict()
-        assert np.equal(state_dict_1["labeled"], np.full((100,), False)).all()
+        assert np.equal(state_dict_1["labelled"], np.full((100,), False)).all()
+
         self.dataset.label(0)
         assert np.equal(
-            state_dict_1["labeled"],
+            state_dict_1["labelled"],
             np.concatenate((np.array([True]), np.full((99,), False)))
         ).all()
+
+    def test_load_state_dict(self):
+        dataset_1 = ActiveLearningDataset(MyDataset(), random_state=50)
+        dataset_1.label_randomly(10)
+        state_dict1 = dataset_1.state_dict()
+
+        dataset_2 = ActiveLearningDataset(MyDataset(), random_state=None)
+        assert dataset_2.n_labelled == 0
+
+        dataset_2.load_state_dict(state_dict1)
+        assert dataset_2.n_labelled == 10
+
+        #test if the second lable_randomly call have same behaviour
+        dataset_1.label_randomly(5)
+        dataset_2.label_randomly(5)
+
+        assert np.allclose(dataset_1._labelled, dataset_2._labelled)
 
     def test_transform(self):
         train_transform = Lambda(lambda k: 1)
@@ -114,6 +133,29 @@ class ActiveDatasetTest(unittest.TestCase):
         self.dataset.label_randomly(50)
         assert len(self.dataset) == 50
         assert len(self.dataset.pool) == 50
+
+
+    def test_random_state(self):
+        seed = None
+        dataset_1 = ActiveLearningDataset(MyDataset(), random_state=seed)
+        dataset_1.label_randomly(10)
+        dataset_2 = ActiveLearningDataset(MyDataset(), random_state=seed)
+        dataset_2.label_randomly(10)
+        assert not np.allclose(dataset_1._labelled, dataset_2._labelled)
+
+        seed = 50
+        dataset_1 = ActiveLearningDataset(MyDataset(), random_state=seed)
+        dataset_1.label_randomly(10)
+        dataset_2 = ActiveLearningDataset(MyDataset(), random_state=seed)
+        dataset_2.label_randomly(10)
+        assert np.allclose(dataset_1._labelled, dataset_2._labelled)
+
+        seed = np.random.RandomState(50)
+        dataset_1 = ActiveLearningDataset(MyDataset(), random_state=seed)
+        dataset_1.label_randomly(10)
+        dataset_2 = ActiveLearningDataset(MyDataset(), random_state=seed)
+        dataset_2.label_randomly(10)
+        assert not np.allclose(dataset_1._labelled, dataset_2._labelled)
 
 
 def test_numpydataset():
