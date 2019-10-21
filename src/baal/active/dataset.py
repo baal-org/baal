@@ -157,7 +157,7 @@ class ActiveLearningDataset(torchdata.Dataset):
             n (int): number of samples to label.
         """
         for i in range(n):
-            """Making multiple call to self.n_unlabelled is enefficient, but
+            """Making multiple call to self.n_unlabelled is inefficient, but
             self.label changes the available length and it may lead to
             IndexError if not done this way."""
             self.label(self.random_state.choice(self.n_unlabelled, 1).item())
