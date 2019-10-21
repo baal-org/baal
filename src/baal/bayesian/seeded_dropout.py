@@ -34,7 +34,7 @@ class _SeededDropoutNd(_DropoutNd):
             self.gen.manual_seed(self.seed)
         return super().cuda(device)
 
-    def cpu(self, device=None):
+    def cpu(self):
         if self.use_cuda or self.gen is None:
             self.use_cuda = False
             self.gen = torch.Generator()
