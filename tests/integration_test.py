@@ -57,7 +57,8 @@ def test_integration():
                                      batch_size=10,
                                      iterations=10,
                                      use_cuda=use_cuda,
-                                     workers=4)
+                                     workers=4,
+                                     max_sample=20)
     # We're all set!
     num_steps = 10
     for step in range(num_steps):
