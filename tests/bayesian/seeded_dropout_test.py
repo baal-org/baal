@@ -1,6 +1,7 @@
 import pytest
 import torch
 from torch import nn
+from torch.nn.modules import Flatten
 
 from baal.bayesian import seeded_dropout
 
@@ -18,10 +19,25 @@ def dummy_model():
     )
 
 
-def test_dropout_with_seed(dummy_model):
-    model1 = seeded_dropout.patch_module(dummy_model, inplace=False, seed=1337)
-    model2 = seeded_dropout.patch_module(dummy_model, inplace=False, seed=1337)
-    inp = torch.randn(10, 32)
+@pytest.fixture()
+def dummy_cnn_model():
+    return nn.Sequential(
+        nn.Conv2d(3, 32, 3),
+        nn.Dropout2d(),
+        nn.AdaptiveAvgPool2d(1),
+        Flatten(),
+        nn.Linear(32, 16),
+        nn.Linear(16, 10)
+    )
+
+
+@pytest.mark.parametrize('model, input_shape',
+                         [['mlp', [10, 32]], ['cnn', [10, 3, 32, 32]]])
+def test_dropout_with_seed(model, input_shape, dummy_model, dummy_cnn_model):
+    model = {'mlp': dummy_model, 'cnn': dummy_cnn_model}[model]
+    model1 = seeded_dropout.patch_module(model, inplace=False, seed=1337)
+    model2 = seeded_dropout.patch_module(model, inplace=False, seed=1337)
+    inp = torch.randn(*input_shape)
 
     model1.train()
     model2.train()
@@ -36,14 +52,17 @@ def test_dropout_with_seed(dummy_model):
 
 
 @pytest.mark.skipif(not gpu_available, reason='Need gpu')
-def test_gpu_dropout_with_seed(dummy_model):
+@pytest.mark.parametrize('model, input_shape',
+                         [['mlp', [10, 32]], ['cnn', [10, 3, 32, 32]]])
+def test_gpu_dropout_with_seed(model, input_shape, dummy_model, dummy_cnn_model):
+    model = {'mlp': dummy_model, 'cnn': dummy_cnn_model}[model]
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    model1 = seeded_dropout.patch_module(dummy_model, inplace=False, seed=1337)
+    model1 = seeded_dropout.patch_module(model, inplace=False, seed=1337)
     model1 = model1.cuda()
-    model2 = seeded_dropout.patch_module(dummy_model, inplace=False, seed=1337)
+    model2 = seeded_dropout.patch_module(model, inplace=False, seed=1337)
     model2 = model2.cuda()
-    inp = torch.randn(10, 32).cuda()
+    inp = torch.randn(*input_shape).cuda()
 
     model1.train()
     model2.train()
