@@ -74,3 +74,12 @@ def test_gpu_dropout_with_seed(model, input_shape, dummy_model, dummy_cnn_model)
     model2.eval()
     assert torch.equal(model1(inp), model2(inp))
     assert not torch.equal(model1(inp), model1(inp))
+
+
+@pytest.mark.parametrize('model, input_shape',
+                         [['mlp', [10, 32]], ['cnn', [10, 3, 32, 32]]])
+def test_dropout_module(model, input_shape, dummy_model, dummy_cnn_model):
+    model = {'mlp': dummy_model, 'cnn': dummy_cnn_model}[model]
+    model1 = seeded_dropout.SeededMCDropoutModule(model, 1337)
+    inp = torch.randn(*input_shape)
+    assert not torch.equal(model1(inp), model1(inp))
