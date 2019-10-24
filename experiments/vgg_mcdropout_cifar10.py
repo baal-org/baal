@@ -55,7 +55,7 @@ def get_datasets(initial_pool):
     test_set = datasets.CIFAR10('.', train=False,
                                 transform=test_transform, target_transform=None, download=True)
 
-    active_set = ActiveLearningDataset(train_ds, eval_transform=test_transform)
+    active_set = ActiveLearningDataset(train_ds, pool_specifics={'transform': test_transform})
 
     # We start labeling randomly.
     active_set.label_randomly(initial_pool)

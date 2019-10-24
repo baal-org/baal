@@ -14,7 +14,8 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     Args:
         dataset (torch.data.Dataset): The baseline dataset.
-        eval_transform (Optional(Callable)): transformations to call on the evaluation dataset.
+        eval_transform (Optional(Callable)): DEPRECATED
+                                            transformations to call on the evaluation dataset.
         labelled (Union[np.ndarray, torch.Tensor]):
             An array/tensor that acts as a boolean mask which is True for every
             data point that is labelled, and False for every data point that is not
@@ -22,6 +23,8 @@ class ActiveLearningDataset(torchdata.Dataset):
         make_unlabelled (Callable): the function that returns an
             unlabelled version of a datum so that it can still be used in the DataLoader.
         random_state (None, int, RandomState): set the random seed for label_randomly().
+        pool_specifics (Optional[Dict]): Attributes to set when creating the pool.
+                                         Useful to remove data augmentation.
     """
 
     def __init__(
@@ -30,7 +33,8 @@ class ActiveLearningDataset(torchdata.Dataset):
         eval_transform: Optional[Callable] = None,
         labelled: Union[np.ndarray, torch.Tensor] = None,
         make_unlabelled: Callable = lambda x: x,
-        random_state=None
+        random_state=None,
+        pool_specifics=None
     ) -> None:
         self._dataset = dataset
         if labelled is not None:
@@ -39,10 +43,15 @@ class ActiveLearningDataset(torchdata.Dataset):
             self._labelled = labelled.astype(np.bool)
         else:
             self._labelled = np.zeros(len(self._dataset), dtype=np.bool)
+
+        if pool_specifics is None:
+            pool_specifics = {}
         if eval_transform is not None:
-            self.eval_transform = eval_transform
-        else:
-            self.eval_transform = getattr(self._dataset, 'transform', None)
+            warnings.warn(f"""eval_transform is deprecated and will be removed shortly.
+            Please update your constructor to use
+             `pool_specifics={{'transform': {{eval_transform}}}}`""", DeprecationWarning)
+            pool_specifics['transform'] = eval_transform
+        self.pool_specifics = pool_specifics
 
         self.make_unlabelled = make_unlabelled
         # For example, FileDataset has a method 'label'. This is useful when we're in prod.
@@ -94,8 +103,12 @@ class ActiveLearningDataset(torchdata.Dataset):
         """Returns a new Dataset made from unlabelled samples"""
         pool_dataset = copy(self._dataset)
         # TODO Handle target transform as well.
-        if hasattr(pool_dataset, 'transform') and self.eval_transform is not None:
-            pool_dataset.transform = self.eval_transform
+
+        for attr, new_val in self.pool_specifics.items():
+            if hasattr(pool_dataset, attr):
+                setattr(pool_dataset, attr, new_val)
+            else:
+                raise ValueError(f"{pool_dataset} doesn't have {attr}")
 
         pool_dataset = torchdata.Subset(pool_dataset,
                                         (~self._labelled).nonzero()[0].squeeze())
@@ -229,7 +242,7 @@ class ActiveNumpyArray(ActiveLearningDataset):
             labelled = labelled.astype(np.bool)
         else:
             labelled = np.zeros(len(dataset[0]), dtype=np.bool)
-        super().__init__(dataset, None, labelled)
+        super().__init__(dataset, labelled=labelled)
 
     @property
     def pool(self):

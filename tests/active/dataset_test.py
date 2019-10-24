@@ -3,7 +3,6 @@ import unittest
 import numpy as np
 import pytest
 import torch
-import pickle as pkl
 from sklearn.datasets import load_iris
 from torch.utils.data import Dataset
 from torchvision.transforms import Lambda
@@ -113,7 +112,7 @@ class ActiveDatasetTest(unittest.TestCase):
         dataset_2.load_state_dict(state_dict1)
         assert dataset_2.n_labelled == 10
 
-        #test if the second lable_randomly call have same behaviour
+        # test if the second lable_randomly call have same behaviour
         dataset_1.label_randomly(5)
         dataset_2.label_randomly(5)
 
@@ -122,18 +121,25 @@ class ActiveDatasetTest(unittest.TestCase):
     def test_transform(self):
         train_transform = Lambda(lambda k: 1)
         test_transform = Lambda(lambda k: 0)
-        dataset = ActiveLearningDataset(MyDataset(train_transform), test_transform,
+        dataset = ActiveLearningDataset(MyDataset(train_transform),
+                                        pool_specifics={'transform': test_transform},
                                         make_unlabelled=lambda x: (x[0], -1))
         dataset.label(np.arange(10))
         pool = dataset.pool
         assert np.equal([i for i in pool], [(0, -1) for i in np.arange(10, 100)]).all()
         assert np.equal([i for i in dataset], [(1, i) for i in np.arange(10)]).all()
 
+        with pytest.warns(DeprecationWarning) as e:
+            ActiveLearningDataset(MyDataset(train_transform), eval_transform=train_transform)
+        assert len(e) == 1
+
+        with pytest.raises(ValueError) as e:
+            ActiveLearningDataset(MyDataset(train_transform), pool_specifics={'whatever': 123}).pool
+
     def test_random(self):
         self.dataset.label_randomly(50)
         assert len(self.dataset) == 50
         assert len(self.dataset.pool) == 50
-
 
     def test_random_state(self):
         seed = None
