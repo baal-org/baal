@@ -12,6 +12,7 @@ from torch.utils.data.dataloader import default_collate
 from tqdm import tqdm
 
 from baal.utils.iterutils import map_on_tensor
+from baal.utils.cuda_utils import to_cuda
 from baal.utils.metrics import Loss
 
 log = structlog.get_logger("ModelWrapper")
@@ -280,7 +281,7 @@ class ModelWrapper:
         """
 
         if cuda:
-            data, target = data.cuda(), target.cuda()
+            data, target = to_cuda(data), to_cuda(target)
         optimizer.zero_grad()
         output = self.model(data)
         loss = self.criterion(output, target)
@@ -311,7 +312,7 @@ class ModelWrapper:
         """
         with torch.no_grad():
             if cuda:
-                data, target = data.cuda(), target.cuda()
+                data, target = to_cuda(data), to_cuda(target)
             if average_predictions == 1:
                 preds = self.model(data)
                 loss = self.criterion(preds, target)
@@ -342,7 +343,7 @@ class ModelWrapper:
         """
         with torch.no_grad():
             if cuda:
-                data = data.cuda()
+                data = to_cuda(data)
             if self.replicate_in_memory:
                 input_shape = data.size()
                 batch_size = input_shape[0]
