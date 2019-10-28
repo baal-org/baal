@@ -12,13 +12,16 @@ def to_cuda(data):
 
     Parameters
     ----------
-    data : list, dict, torch.Tensor, torch.nn.Module, 
-        [description]
+    data : list, tuple, dict, torch.Tensor, torch.nn.Module
+        The data you'd like to move to the GPU. If there's a pytorch tensor or
+        model in data (e.g. in a list or as values in a dictionary) this
+        function will move them all to CUDA and return something that matches
+        the input in structure.
 
     Returns
     -------
-    [type]
-        [description]
+    data : list, tuple, dict, torch.Tensor, torch.nn.Module
+        Data of the same type / structure as the input.
     """
     # the base case: if this is not a type we recognise, return it
     return data
@@ -26,20 +29,20 @@ def to_cuda(data):
 
 @to_cuda.register(torch.Tensor)
 @to_cuda.register(torch.nn.Module)
-def _(x):
-    return x.cuda()
+def _(data):
+    return data.cuda()
 
 
 @to_cuda.register
-def _(x: Mapping):
+def _(data: Mapping):
     # use the type of the object to create a new one:
-    return type(x)([(key, to_cuda(val)) for key, val in x.items()])
+    return type(data)([(key, to_cuda(val)) for key, val in data.items()])
 
 
 @to_cuda.register
-def _(x: Sequence):
+def _(data: Sequence):
     # use the type of this object to instantiate a new one:
-    if hasattr(x, "_fields"):  # in case it's a named tuple
-        return type(x)(*(to_cuda(item) for item in x))
+    if hasattr(data, "_fields"):  # in case it's a named tuple
+        return type(data)(*(to_cuda(item) for item in data))
     else:
-        return type(x)(to_cuda(item) for item in x)
+        return type(data)(to_cuda(item) for item in data)
