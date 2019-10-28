@@ -5,23 +5,22 @@ import torch
 
 @singledispatch
 def to_cuda(data):
-    """Move an object to CUDA.
+    """
+    Move an object to CUDA.
 
     This function works recursively on lists and dicts, moving the values
     inside to cuda.
 
-    Parameters
-    ----------
-    data : list, tuple, dict, torch.Tensor, torch.nn.Module
-        The data you'd like to move to the GPU. If there's a pytorch tensor or
-        model in data (e.g. in a list or as values in a dictionary) this
-        function will move them all to CUDA and return something that matches
-        the input in structure.
+    Args:
+        data (list, tuple, dict, torch.Tensor, torch.nn.Module):
+            The data you'd like to move to the GPU. If there's a pytorch tensor or
+            model in data (e.g. in a list or as values in a dictionary) this
+            function will move them all to CUDA and return something that matches
+            the input in structure.
 
-    Returns
-    -------
-    data : list, tuple, dict, torch.Tensor, torch.nn.Module
-        Data of the same type / structure as the input.
+    Returns:
+        list, tuple, dict, torch.Tensor, torch.nn.Module:
+            Data of the same type / structure as the input.
     """
     # the base case: if this is not a type we recognise, return it
     return data
