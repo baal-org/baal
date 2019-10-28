@@ -6,7 +6,6 @@ from typing import Callable, Optional
 import numpy as np
 import structlog
 import torch
-from torch.autograd import Variable
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.dataloader import default_collate
@@ -279,7 +278,7 @@ class ModelWrapper:
         Returns:
             Tensor, the loss computed from the criterion.
         """
-        data = Variable(data)
+
         if cuda:
             data, target = data.cuda(), target.cuda()
         optimizer.zero_grad()
