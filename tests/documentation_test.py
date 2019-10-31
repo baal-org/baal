@@ -6,7 +6,7 @@ from itertools import compress
 
 import pytest
 
-modules = ['baal.active', 'baal', 'baal.utils.metrics']
+modules = ['baal.active', 'baal', 'baal.utils.metrics', 'baal.utils.cuda_utils']
 # We do not force these functions to be compliant.
 accepted_name = ['set_logger_config']
 # We do not force these modules to be compliant.
