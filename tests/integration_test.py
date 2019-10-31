@@ -35,7 +35,8 @@ def test_integration():
     cifar10_train = DummyDataset(transform_pipeline)
     cifar10_test = DummyDataset(transform_pipeline)
 
-    al_dataset = ActiveLearningDataset(cifar10_train, transform_pipeline)
+    al_dataset = ActiveLearningDataset(cifar10_train,
+                                       pool_specifics={'transform': transform_pipeline})
     al_dataset.label_randomly(10)
 
     use_cuda = False
