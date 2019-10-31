@@ -100,9 +100,12 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     @property
     def pool(self) -> torchdata.Dataset:
-        """Returns a new Dataset made from unlabelled samples"""
+        """Returns a new Dataset made from unlabelled samples.
+
+        Raises:
+            ValueError if a pool specific attribute cannot be set.
+        """
         pool_dataset = copy(self._dataset)
-        # TODO Handle target transform as well.
 
         for attr, new_val in self.pool_specifics.items():
             if hasattr(pool_dataset, attr):
