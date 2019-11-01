@@ -163,6 +163,15 @@ class ActiveDatasetTest(unittest.TestCase):
         dataset_2.label_randomly(10)
         assert not np.allclose(dataset_1._labelled, dataset_2._labelled)
 
+    def test_label_randomly_full(self):
+        dataset_1 = ActiveLearningDataset(MyDataset())
+        dataset_1.label_randomly(99)
+        assert dataset_1.n_unlabelled == 1
+        assert len(dataset_1.pool) == 1
+        dataset_1.label_randomly(1)
+        assert dataset_1.n_unlabelled == 0
+        assert dataset_1.n_labelled == 100
+
 
 def test_numpydataset():
     x, y = load_iris(return_X_y=True)
