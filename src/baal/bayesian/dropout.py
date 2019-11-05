@@ -21,8 +21,10 @@ class Dropout(_DropoutNd):
         - Output: :math:`(*)`. Output is of the same shape as input.
 
     Args:
-        p (float, optional): probability of an element to be zeroed. Default: 0.5
-        inplace (bool, optional): If set to ``True``, will do this operation in-place. Default: ``False``
+        p (float, optional):
+            probability of an element to be zeroed. Default: 0.5
+        inplace (bool, optional):
+            If set to ``True``, will do this operation in-place. Default: ``False``
 
     Examples::
         >>> m = nn.Dropout(p=0.2)
@@ -59,9 +61,10 @@ class Dropout2d(_DropoutNd):
         - Output: :math:`(N, C, H, W)` (same shape as input)
 
     Args:
-        p (float, optional): probability of an element to be zero-ed.
-        inplace (bool, optional): If set to ``True``, will do this operation
-            in-place
+        p (float, optional):
+            probability of an element to be zero-ed.
+        inplace (bool, optional):
+            If set to ``True``, will do this operation in-place
 
     Examples::
 
