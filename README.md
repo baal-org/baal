@@ -101,7 +101,7 @@ based on the calculated uncertainty of the pool.
 ### Re-run our Experiments
 
 ```bash
-nvidia-docker build [--target prod_baal] -t baal .
+nvidia-docker build [--target base_baal] -t baal .
 nvidia-docker run --rm baal python3 experiments/vgg_mcdropout_cifar10.py 
 ```
 
@@ -137,7 +137,9 @@ The BaaL team is here to serve you!
 - [Parmida Atighehchian](mailto:parmida@elementai.com)
 - [Frédéric Branchaud-Charron](mailto:frederic.branchaud-charron@elementai.com)
 - [Jan Freyberg](mailto:jan.freyberg@elementai.com)
+- [Rafael Pardinas](mailto:rafael.pardinas@elementai.com)
 - [Lorne Schell](mailto:lorne.schell@elementai.com)
+
 
 ### Licence
 To get information on licence of this API please read [LICENCE](./LICENSE)
