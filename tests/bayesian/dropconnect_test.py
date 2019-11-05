@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from baal.bayesian.dropconnect.weight_drop import WeightDropLinear, WeightDropConv2d,\
+from baal.bayesian.weight_drop import WeightDropLinear, WeightDropConv2d,\
     patch_module, MCDropoutConnectModule
 
 
