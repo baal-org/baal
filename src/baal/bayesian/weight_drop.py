@@ -63,6 +63,7 @@ class WeightDrop(torch.nn.Module):
         _weight_drop(module, weights, dropout)
         self.forward = module.forward
 
+
 # code from https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/nn/weight_drop.html
 class WeightDropLinear(torch.nn.Linear):
     """
