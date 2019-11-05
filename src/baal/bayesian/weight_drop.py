@@ -40,34 +40,10 @@ def _weight_drop(module, weights, dropout):
     setattr(module, 'forward', forward)
 
 
-# code from https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/nn/weight_drop.html
-# this module is to change all the covered layers to dropconnect layers
-class WeightDrop(torch.nn.Module):
-    """
-    The weight-dropped module applies recurrent regularization through a DropConnect mask on the
-    hidden-to-hidden recurrent weights.
-
-    **Thank you** to Sales Force for their initial implementation of :class:`WeightDrop`. Here is
-    their `License
-    <https://github.com/salesforce/awd-lstm-lm/blob/master/LICENSE>`__.
-
-    Args:
-        module (:class:`torch.nn.Module`): Containing module.
-        weights (:class:`list` of :class:`str`): Names of the module weight parameters to apply a
-          dropout too.
-        dropout (float): The probability a weight will be dropped.
-    """
-
-    def __init__(self, module, weights, dropout=0.0):
-        super(WeightDrop, self).__init__()
-        _weight_drop(module, weights, dropout)
-        self.forward = module.forward
-
-
-# code from https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/nn/weight_drop.html
 class WeightDropLinear(torch.nn.Linear):
     """
     Thanks to PytorchNLP for the initial implementation
+    # code from https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/nn/weight_drop.html
     of class WeightDropLinear. Their `License
     <https://github.com/PetrochukM/PyTorch-NLP/blob/master/LICENSE>`__.
     Wrapper around :class:`torch.nn.Linear` that adds ``weight_dropout`` named argument.
