@@ -104,7 +104,7 @@ class WeightDropConv2d(torch.nn.Conv2d):
 
 def patch_module(module: torch.nn.Module,
                  layers: Sequence,
-                 weight_dropout=0.0,
+                 weight_dropout: float=0.0,
                  inplace: bool = True) -> torch.nn.Module:
     """Replace given layers with weight_drop module of that layer.
 
@@ -124,11 +124,11 @@ def patch_module(module: torch.nn.Module,
     """
     if not inplace:
         module = copy.deepcopy(module)
-    _patch_dropout_layers(module, layers, weight_dropout)
+    _patch_layers(module, layers, weight_dropout)
     return module
 
 
-def _patch_dropout_layers(module: torch.nn.Module, layers, weight_dropout) -> None:
+def _patch_layers(module: torch.nn.Module, layers: Sequence, weight_dropout: float) -> None:
     """
     Recursively iterate over the children of a module and replace them if
     they are in the layers list. This function operates in-place.
@@ -149,7 +149,7 @@ def _patch_dropout_layers(module: torch.nn.Module, layers, weight_dropout) -> No
             child.p = 0
 
         # recursively apply to child
-        _patch_dropout_layers(child, layers, weight_dropout)
+        _patch_layers(child, layers, weight_dropout)
 
 
 class MCDropoutConnectModule(torch.nn.Module):
@@ -167,5 +167,5 @@ class MCDropoutConnectModule(torch.nn.Module):
     def __init__(self, module: torch.nn.Module, layers: Sequence, weight_dropout=0.0):
         super().__init__()
         self.parent_module = module
-        _patch_dropout_layers(self.parent_module, layers, weight_dropout)
+        _patch_layers(self.parent_module, layers, weight_dropout)
         self.forward = self.parent_module.forward
