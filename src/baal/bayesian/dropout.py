@@ -16,12 +16,16 @@ class Dropout(_DropoutNd):
     detectors`_ .
     Furthermore, the outputs are scaled by a factor of :math:`\frac{1}{1-p}` during
     training.
-    Args:
-        p: probability of an element to be zeroed. Default: 0.5
-        inplace: If set to ``True``, will do this operation in-place. Default: ``False``
     Shape:
         - Input: :math:`(*)`. Input can be of any shape
-        - Output: :math:`(*)`. Output is of the same shape as input
+        - Output: :math:`(*)`. Output is of the same shape as input.
+
+    Args:
+        p (float, optional):
+            probability of an element to be zeroed. Default: 0.5
+        inplace (bool, optional):
+            If set to ``True``, will do this operation in-place. Default: ``False``
+
     Examples::
         >>> m = nn.Dropout(p=0.2)
         >>> input = torch.randn(20, 16)
@@ -52,15 +56,15 @@ class Dropout2d(_DropoutNd):
 
     In this case, :func:`nn.Dropout2d` will help promote independence between
     feature maps and should be used instead.
-
-    Args:
-        p (float, optional): probability of an element to be zero-ed.
-        inplace (bool, optional): If set to ``True``, will do this operation
-            in-place
-
     Shape:
         - Input: :math:`(N, C, H, W)`
         - Output: :math:`(N, C, H, W)` (same shape as input)
+
+    Args:
+        p (float, optional):
+            probability of an element to be zero-ed.
+        inplace (bool, optional):
+            If set to ``True``, will do this operation in-place
 
     Examples::
 
@@ -70,6 +74,7 @@ class Dropout2d(_DropoutNd):
 
     .. _Efficient Object Localization Using Convolutional Networks:
        http://arxiv.org/abs/1411.4280
+
     """
 
     def forward(self, input):
@@ -79,18 +84,16 @@ class Dropout2d(_DropoutNd):
 def patch_module(module: torch.nn.Module, inplace: bool = True) -> torch.nn.Module:
     """Replace dropout layers in a model with MC Dropout layers.
 
-    Parameters
-    ----------
-    module : torch.nn.Module
-        The module in which you would like to replace dropout layers.
-    inplace : bool, optional
-        Whether to modify the module in place or return a copy of the module.
+    Args:
+        module (torch.nn.Module):
+            The module in which you would like to replace dropout layers.
+        inplace (bool, optional):
+            Whether to modify the module in place or return a copy of the module.
 
-    Returns
-    -------
-    torch.nn.Module
-        The modified module, which is either the same object as you passed in
-        (if inplace = True) or a copy of that object.
+    Returns:
+        torch.nn.Module
+            The modified module, which is either the same object as you passed in
+            (if inplace = True) or a copy of that object.
     """
     if not inplace:
         module = copy.deepcopy(module)
@@ -123,10 +126,9 @@ class MCDropoutModule(torch.nn.Module):
     def __init__(self, module: torch.nn.Module):
         """Create a module that with all dropout layers patched.
 
-        Parameters
-        ----------
-        module : torch.nn.Module
-            A fully specified neural network.
+        Args:
+            module (torch.nn.Module):
+                A fully specified neural network.
         """
         super().__init__()
         self.parent_module = module
