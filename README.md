@@ -91,7 +91,7 @@ based on the calculated uncertainty of the pool.
 ### Roadmap (Subject to change depending on the community.)
 
 * [x] Initial FOSS release with MCDropout (Gal et al. 2015)
-* [ ] MCDropConnect (Mobiny et al. 2019)
+* [x] MCDropConnect (Mobiny et al. 2019)
 * [ ] Bayesian layers (Shridhar et al. 2019)
 * [ ] Unsupervised methods
 * [ ] NNGP (Panov et al. 2019)
