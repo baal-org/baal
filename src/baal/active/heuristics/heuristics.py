@@ -340,7 +340,7 @@ class Variance(AbstractHeuristic):
 class Entropy(AbstractHeuristic):
     """
     Sort by the highest entropy.
-    
+
     Args:
         shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias.
         threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
