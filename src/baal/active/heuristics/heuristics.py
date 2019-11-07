@@ -1,6 +1,6 @@
-from functools import wraps as _wraps
 import types
 import warnings
+from functools import wraps as _wraps
 
 import numpy as np
 import scipy.stats
