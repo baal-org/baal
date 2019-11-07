@@ -1,6 +1,6 @@
-from functools import wraps as _wraps
 import types
 import warnings
+from functools import wraps as _wraps
 
 import numpy as np
 import scipy.stats
@@ -25,6 +25,7 @@ def _shuffle_subset(data: np.ndarray, shuffle_prop: float) -> np.ndarray:
 def singlepass(fn):
     """
     Will take the mean of the iterations if needed.
+
     Args:
         fn (Callable): Heuristic function.
 
@@ -44,7 +45,15 @@ def singlepass(fn):
 
 
 def requireprobs(fn):
-    """Will convert logits to probs if needed"""
+    """
+    Will convert logits to probs if needed.
+
+    Args:
+        fn (Fn): Function that takes logits as input to wraps.
+
+    Returns:
+        Wrapper function
+    """
 
     @_wraps(fn)
     def wrapper(self, probabilities):
@@ -58,7 +67,8 @@ def requireprobs(fn):
 
 
 class AbstractHeuristic:
-    """Abstract class that defines a Heuristic.
+    """
+    Abstract class that defines a Heuristic.
 
     Args:
         shuffle_prop (float): shuffle proportion.
@@ -77,6 +87,7 @@ class AbstractHeuristic:
     def compute_score(self, predictions):
         """
         Compute the score according to the heuristic.
+
         Args:
             predictions (ndarray): Array of predictions
 
@@ -88,8 +99,12 @@ class AbstractHeuristic:
     def get_uncertainties_generator(self, predictions):
         """
         Compute the score according to the heuristic.
+
         Args:
             predictions (Iterable): Generator of predictions
+
+        Raises:
+            ValueError if the generator is empty.
 
         Returns:
             Array of scores.
@@ -102,7 +117,16 @@ class AbstractHeuristic:
         return np.concatenate(acc)
 
     def get_uncertainties(self, predictions):
-        """Get the uncertainties"""
+        """
+        Get the uncertainties.
+
+        Args:
+            predictions (ndarray): Array of predictions
+
+        Returns:
+            Array of uncertainties
+
+        """
         if isinstance(predictions, Tensor):
             predictions = predictions.numpy()
         scores = self.compute_score(predictions)
@@ -114,7 +138,16 @@ class AbstractHeuristic:
         return scores
 
     def get_ranks(self, predictions):
-        """Rank the predictions according to their uncertainties."""
+        """
+        Rank the predictions according to their uncertainties.
+
+        Args:
+            predictions (ndarray): [batch_size, C, ..., Iterations]
+
+        Returns:
+            Ranked index according to the uncertainty (highest to lowes).
+
+        """
         if isinstance(predictions, types.GeneratorType):
             scores = self.get_uncertainties_generator(predictions)
         else:
@@ -135,7 +168,15 @@ class AbstractHeuristic:
 
 
 class BALD(AbstractHeuristic):
-    """Sort by the highest acquisition function value.
+    """
+    Sort by the highest acquisition function value.
+
+    Args:
+        shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias.
+        threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
+        reduction (Union[str, callable]): function that aggregates the results.
+
+
     References:
         https://arxiv.org/abs/1703.02910
     """
@@ -147,6 +188,15 @@ class BALD(AbstractHeuristic):
 
     @requireprobs
     def compute_score(self, predictions):
+        """
+        Compute the score according to the heuristic.
+
+        Args:
+            predictions (ndarray): Array of predictions
+
+        Returns:
+            Array of scores.
+        """
         assert predictions.ndim >= 3
         # [n_sample, n_class, ..., n_iterations]
 
@@ -162,6 +212,12 @@ class BALD(AbstractHeuristic):
 class BatchBALD(BALD):
     """
     Implementation of BatchBALD.
+
+    Args:
+        num_samples (int): Number of samples to select. (min 2*the amount of samples you want)
+        shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias.
+        threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
+        reduction (Union[str, callable]): function that aggregates the results.
 
     References:
         https://arxiv.org/abs/1906.08158
@@ -196,6 +252,15 @@ class BatchBALD(BALD):
 
     @requireprobs
     def compute_score(self, predictions):
+        """
+        Compute the score according to the heuristic.
+
+        Args:
+            predictions (ndarray): Array of predictions
+
+        Returns:
+            Array of scores.
+        """
         MAX_SELECTED = 16000
         MIN_SPREAD = 0.1
         COUNT = 0
@@ -227,7 +292,19 @@ class BatchBALD(BALD):
         return np.array(history)
 
     def get_ranks(self, predictions):
-        """Rank the predictions according to their uncertainties."""
+        """
+        Rank the predictions according to their uncertainties.
+
+        Args:
+            predictions (ndarray): [batch_size, C, ..., Iterations]
+
+        Returns:
+            Ranked index according to the uncertainty (highest to lowest).
+
+        Raises:
+            ValueError if predictions is a generator.
+
+        """
         if isinstance(predictions, types.GeneratorType):
             raise ValueError("BatchBALD doesn't support generators.")
 
@@ -239,7 +316,14 @@ class BatchBALD(BALD):
 
 
 class Variance(AbstractHeuristic):
-    """Sort by the highest variance"""
+    """
+    Sort by the highest variance.
+
+    Args:
+        shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias.
+        threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
+        reduction (Union[str, callable]): function that aggregates the results.
+    """
 
     def __init__(self, shuffle_prop=0.0, threshold=None, reduction='mean'):
         _help = "Need to reduce the output from [n_sample, n_class] to [n_sample]"
@@ -254,7 +338,14 @@ class Variance(AbstractHeuristic):
 
 
 class Entropy(AbstractHeuristic):
-    """Sort by the highest entropy"""
+    """
+    Sort by the highest entropy.
+
+    Args:
+        shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias.
+        threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
+        reduction (Union[str, callable]): function that aggregates the results.
+    """
 
     def __init__(self, shuffle_prop=0.0, threshold=None, reduction='none'):
         super().__init__(
@@ -268,8 +359,15 @@ class Entropy(AbstractHeuristic):
 
 
 class Margin(AbstractHeuristic):
-    """Sort by the lowest margin, i.e. the difference between the most confident class and
-    the second most confident class."""
+    """
+    Sort by the lowest margin, i.e. the difference between the most confident class and
+    the second most confident class.
+
+    Args:
+        shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias.
+        threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
+        reduction (Union[str, callable]): function that aggregates the results.
+    """
 
     def __init__(self, shuffle_prop=0.0, threshold=None, reduction='none'):
         super().__init__(
@@ -284,7 +382,14 @@ class Margin(AbstractHeuristic):
 
 
 class Certainty(AbstractHeuristic):
-    """Sort by the lowest certainty"""
+    """
+    Sort by the lowest certainty.
+
+    Args:
+        shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias.
+        threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
+        reduction (Union[str, callable]): function that aggregates the results.
+    """
 
     def __init__(self, shuffle_prop=0.0, threshold=None, reduction='none'):
         super().__init__(
@@ -297,7 +402,13 @@ class Certainty(AbstractHeuristic):
 
 
 class Random(AbstractHeuristic):
-    """Random heuristic."""
+    """Random heuristic.
+
+    Args:
+        shuffle_prop (float): UNUSED
+        threshold (Optional[Float]): UNUSED
+        reduction (Union[str, callable]): UNUSED.
+    """
 
     def __init__(self, shuffle_prop=0.0, threshold=None, reduction='none'):
         super().__init__(1.0, threshold, False)
@@ -311,7 +422,13 @@ class Random(AbstractHeuristic):
 
 
 class Precomputed(AbstractHeuristic):
-    """Precomputed heuristics"""
+    """Precomputed heuristics.
+
+    Args:
+        shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias.
+        threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
+        reverse (Bool): Sort from lowest to highest if False.
+    """
 
     def __init__(self, shuffle_prop=0.0, threshold=None, reverse=False):
         super().__init__(shuffle_prop, threshold, reverse=reverse)

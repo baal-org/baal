@@ -55,7 +55,7 @@ extensions = [
 
 # We need to mock these packages to compile without deps.
 autodoc_mock_imports = ["PIL", "tqdm", "structlog", "torch", "torchvision", "numpy", "sklearn",
-                        "scipy"]
+                        "scipy", "baal.utils.cuda_utils"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

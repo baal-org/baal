@@ -7,6 +7,8 @@ from itertools import compress
 import pytest
 
 modules = ['baal', 'baal.active', 'baal.bayesian',
+           'baal.active.heuristics', 'baal.active.active_loop',
+           'baal.active.dataset', 'baal.active.file_dataset',
            'baal.utils.metrics', 'baal.utils.cuda_utils']
 # We do not force these functions to be compliant.
 accepted_name = ['set_logger_config']
@@ -58,9 +60,9 @@ def handle_function(name, member):
 def assert_doc_style(name, member, doc, args):
     lines = doc.split("\n")
     first_line = lines[0 if len(args) == 0 else 1]
-    if len(first_line.strip()) == 0:
+    if len(args) > 0 and len(lines[0]) != 0:
         raise ValueError(
-            "{} the documentation should be on the first line.".format(member),
+            "{} the documentation should start on the first line.".format(member),
             member.__module__)
     if first_line.strip()[-1] != '.':
         raise ValueError("{} first line should end with a '.'".format(member),
