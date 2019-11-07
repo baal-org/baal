@@ -22,12 +22,12 @@ class Metrics(object):
         self.result = torch.FloatTensor()
 
     def reset(self):
-        """reset the private values of the class"""
+        """Reset the private values of the class."""
         raise NotImplementedError
 
     def update(self, output=None, target=None):
-        """main calculation of the metric which updated the
-        private values respectively.
+        """
+        Main calculation of the metric which updated the private values respectively.
 
         Args:
             output (tensor): predictions of model
