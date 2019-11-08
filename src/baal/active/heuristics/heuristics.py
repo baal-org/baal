@@ -480,9 +480,9 @@ class CombineHeuristics(AbstractHeuristic):
 
         reversed = [bool(heuristic.reversed) for heuristic in self.composed_heuristic]
 
-        if all(item == False for item in reversed):
+        if all(item is False for item in reversed):
             self.reversed = False
-        elif all(item == True for item in reversed):
+        elif all(item is True for item in reversed):
             self.reversed = True
         else:
             raise Exception("heuristics should have the same value for `revesed` parameter")
@@ -494,7 +494,8 @@ class CombineHeuristics(AbstractHeuristic):
         Computes the score for each part of predictions according to the assigned heuristic.
 
         NOTE: predictions is a list of each model outputs. For example for a object detection model,
-        the predictions should be as [confidence_predictions: nd.array(), boundingbox_predictions: nd.array()]
+        the predictions should be as:
+            [confidence_predictions: nd.array(), boundingbox_predictions: nd.array()]
 
         Args:
             predictions (list[ndarray]): list of predictions arrays
@@ -517,7 +518,8 @@ class CombineHeuristics(AbstractHeuristic):
         Rank the predictions according to the weighted vote of each heuristic.
 
         Args:
-            predictions (list[ndarray]): list[[batch_size, C, ..., Iterations], [batch_size, C, ..., Iterations], ...]
+            predictions (list[ndarray]):
+                list[[batch_size, C, ..., Iterations], [batch_size, C, ..., Iterations], ...]
 
         Returns:
             Ranked index according to the uncertainty (highest to lowest).
@@ -531,7 +533,8 @@ class CombineHeuristics(AbstractHeuristic):
         self.weights = [weight / w for weight in self.weights]
 
         # num_heuristics X batch_size
-        scores_array = np.vstack([self.weights[indx] * scores for indx, scores in enumerate(scores_list)])
+        scores_array = np.vstack([self.weights[indx] * scores
+                                  for indx, scores in enumerate(scores_list)])
 
         # batch_size X num_heuristic
         final_scores = self.reduction(np.swapaxes(scores_array, 0, -1))
@@ -541,13 +544,10 @@ class CombineHeuristics(AbstractHeuristic):
 
         for indx, threshold in enumerate(self.threshold):
             if threshold:
-                ranks = np.asarray([idx for idx in ranks if np.amax(predictions[indx][idx]) > threshold])
+                ranks = np.asarray([idx for idx in ranks
+                                    if np.amax(predictions[indx][idx]) > threshold])
 
         if self.reversed:
             ranks = ranks[::-1]
         ranks = _shuffle_subset(ranks, self.shuffle_prop)
         return ranks
-
-
-
-
