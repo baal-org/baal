@@ -16,6 +16,7 @@ from baal.active.heuristics import (
     AbstractHeuristic,
     requireprobs,
     Precomputed,
+    CombineHeuristics,
 )
 
 N_ITERATIONS = 50
@@ -261,6 +262,50 @@ def test_that_precomputed_passes_back_predictions():
     ranks = np.arange(10)
     assert (precomputed(ranks) == ranks).all()
 
+
+@pytest.mark.parametrize(
+    'heuristic1, heuristic2, weights',
+    [(BALD(), Variance(), [0.7, 0.3]),
+     (BALD(), Entropy(reduction='mean'), [0.9, 0.8]),
+     (Entropy(), Variance(), [4, 8]),
+     (Certainty(), Variance(), [9, 2]),
+     (Certainty(), Certainty(reduction='mean'), [1, 3])]
+)
+def test_combine_heuristics(heuristic1, heuristic2, weights):
+    np.random.seed(1337)
+    predictions = [distributions_3d, distributions_5d]
+
+    if isinstance(heuristic1, Certainty) and not isinstance(heuristic2, Certainty):
+        with pytest.raises(Exception) as e_info:
+            heuristics = CombineHeuristics([heuristic1, heuristic2], weights=weights,
+                                           reduction='mean')
+            assert 'heuristics should have the same value for `revesed` parameter' in str(e_info.value)
+    else:
+        heuristics = CombineHeuristics([heuristic1, heuristic2], weights=weights,
+                                       reduction='mean')
+        if isinstance(heuristic1, Certainty) and isinstance(heuristic2, Certainty):
+            assert not heuristics.reversed
+        else:
+            assert heuristics.reversed
+        ranks = heuristics(predictions)
+        assert np.all(ranks==[1, 2, 0]), "Combine Heuristics is not right {}".format(ranks)
+
+def test_combine_heuristics_uncertainty_generator():
+    np.random.seed(1337)
+    prediction_chunks = [chunks(distributions_3d, 2), chunks(distributions_5d, 2)]
+    predictions = [distributions_3d, distributions_5d]
+
+    heuristics = CombineHeuristics([BALD(), Variance()], weights=[0.5, 0.5],
+                                   reduction='mean')
+
+    assert np.allclose(
+        heuristics.get_uncertainties(predictions),
+        heuristics.get_uncertainties(prediction_chunks),
+    )
+
+    prediction_chunks = [chunks(distributions_3d, 2), chunks(distributions_5d, 2)]
+    ranks = heuristics(prediction_chunks)
+    assert np.all(ranks == [1, 2, 0]), "Combine Heuristics is not right {}".format(ranks)
 
 if __name__ == '__main__':
     pytest.main()
