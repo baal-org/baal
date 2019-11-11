@@ -28,7 +28,7 @@ with open('documentation-requirements.txt') as f:
 
 setup(
     name='baal',
-    version="1.1.0",
+    version="1.1.1",
     description='Library for bayesian active learning.',
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
