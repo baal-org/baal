@@ -27,7 +27,7 @@ with open('documentation-requirements.txt') as f:
 
 setup(
     name='baal',
-    version="1.0.0",
+    version="1.1.0",
     description='Library for bayesian active learning.',
     author='Parmida Atighehchian, Frédéric Branchaud-Charron, Jan Freyberg, Lorne Schell',
     author_email="""parmida@elementai.com,

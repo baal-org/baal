@@ -33,6 +33,7 @@ source) to obtain the desired outputs at new data points
 At the moment BaaL supports the following methods to perform active learning.
 
 - Monte-Carlo Dropout (Gal et al. 2015)
+- MCDropConnect (Mobiny et al. 2019)
 
 **Please see our Roadmap [below](./README.md#roadmap-subject-to-change-depending-on-the-community).**
 
