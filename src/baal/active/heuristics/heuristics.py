@@ -1,6 +1,7 @@
 import types
 import warnings
 from functools import wraps as _wraps
+from typing import List
 
 import numpy as np
 import scipy.stats
@@ -173,11 +174,10 @@ class BALD(AbstractHeuristic):
 
     Args:
         shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias
-        (default: 0.0).
+            (default: 0.0).
         threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
         reduction (Union[str, callable]): function that aggregates the results
-        (default: 'none`).
-
+            (default: 'none`).
 
     References:
         https://arxiv.org/abs/1703.02910
@@ -218,10 +218,10 @@ class BatchBALD(BALD):
     Args:
         num_samples (int): Number of samples to select. (min 2*the amount of samples you want)
         shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias
-        (default: 0.0).
+            (default: 0.0).
         threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
         reduction (Union[str, callable]): function that aggregates the results
-        (default: 'none').
+            (default: 'none').
 
     References:
         https://arxiv.org/abs/1906.08158
@@ -325,7 +325,7 @@ class Variance(AbstractHeuristic):
 
     Args:
         shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias
-        (default: 0.0).
+            (default: 0.0).
         threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
         reduction (Union[str, callable]): function that aggregates the results (default: `mean`).
     """
@@ -348,7 +348,7 @@ class Entropy(AbstractHeuristic):
 
     Args:
         shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias
-        (default: 0.0).
+            (default: 0.0).
         threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
         reduction (Union[str, callable]): function that aggregates the results (default: `none`).
     """
@@ -371,10 +371,10 @@ class Margin(AbstractHeuristic):
 
     Args:
         shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias
-        (default: 0.0).
+            (default: 0.0).
         threshold (Optional[Float]): Will ignore sample if the maximum prob is below this.
         reduction (Union[str, callable]): function that aggregates the results
-        (default: `none`).
+            (default: `none`).
     """
 
     def __init__(self, shuffle_prop=0.0, threshold=None, reduction='none'):
@@ -473,8 +473,8 @@ class CombineHeuristics(AbstractHeuristic):
 
 
     """
-    def __init__(self, heuristics: list(), weights: list(), reduction='mean', **kwargs):
-        super(CombineHeuristics, self).__init__(reduction=reduction, **kwargs)
+    def __init__(self, heuristics: List, weights: List, reduction='mean', shuffle_prop=0.0):
+        super(CombineHeuristics, self).__init__(reduction=reduction, shuffle_prop=shuffle_prop)
         self.composed_heuristic = heuristics
         self.weights = weights
 
@@ -533,14 +533,14 @@ class CombineHeuristics(AbstractHeuristic):
         self.weights = [weight / w for weight in self.weights]
 
         # num_heuristics X batch_size
-        scores_array = np.vstack([self.weights[indx] * scores
-                                  for indx, scores in enumerate(scores_list)])
+        scores_array = np.vstack([weight * scores
+                                  for weight, scores in zip(self.weights, scores_list)])
 
         # batch_size X num_heuristic
         final_scores = self.reduction(np.swapaxes(scores_array, 0, -1))
 
         assert final_scores.ndim == 1
-        ranks = np.argsort(final_scores, -1)
+        ranks = np.argsort(final_scores)
 
         for indx, threshold in enumerate(self.threshold):
             if threshold:
