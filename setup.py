@@ -10,6 +10,7 @@ from os.path import basename
 from os.path import dirname
 from os.path import join
 from os.path import splitext
+from pathlib import Path
 
 from setuptools import find_packages
 from setuptools import setup
@@ -27,8 +28,10 @@ with open('documentation-requirements.txt') as f:
 
 setup(
     name='baal',
-    version="1.1.0",
+    version="1.1.1",
     description='Library for bayesian active learning.',
+    long_description=Path("README.md").read_text(),
+    long_description_content_type="text/markdown",
     author='Parmida Atighehchian, Frédéric Branchaud-Charron, Jan Freyberg, Lorne Schell',
     author_email="""parmida@elementai.com,
                     frederic.branchaud-charron@elementai.com,
@@ -42,9 +45,9 @@ setup(
     zip_safe=False,
     classifiers=[
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'Intended Audience :: Researchers',
+        'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Operating System :: Unix',
         'Operating System :: POSIX',
