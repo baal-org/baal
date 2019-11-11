@@ -469,8 +469,7 @@ class CombineHeuristics(AbstractHeuristic):
             before calculation of ranks
         reduction (Union[str, callable]): function that aggregates the results of the heuristics
             (default: weighted average which could be used as (reduction='mean`)
-        **kwargs : The only used keyword is `shuffle_prop` similar usage as `AbstractHeuristic`
-
+       shuffle_prop (float): shuffle proportion.
 
     """
     def __init__(self, heuristics: List, weights: List, reduction='mean', shuffle_prop=0.0):
