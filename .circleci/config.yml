@@ -48,11 +48,10 @@ jobs:
             pytest tests/
 
       - run:
-          name: run coveralls
+          name: run coverage
           command: |
             . venv/bin/activate
-            python -m pytest --cov --cov-report term-missing:skip-covered
-            coveralls
+            pytest tests --cov=src
 
       - store_artifacts:
           path: test-reports
