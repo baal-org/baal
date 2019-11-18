@@ -1,3 +1,4 @@
+import pickle
 import unittest
 
 import numpy as np
@@ -201,6 +202,14 @@ def test_numpydataset():
     assert [a == b for a, b in zip(dataset.get_raw(0), (x[0], y[0]))]
 
     assert (next(iter(dataset))[0] == dataset[0][0]).all()
+
+
+def test_pickable():
+    dataset_1 = ActiveLearningDataset(MyDataset())
+    l = len(dataset_1.pool)
+    dataset_2 = pickle.loads(pickle.dumps(dataset_1))
+    l2 = len(dataset_2.pool)
+    assert l == l2
 
 
 if __name__ == '__main__':
