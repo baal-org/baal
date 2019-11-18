@@ -79,12 +79,15 @@ class FileDataset(Dataset):
         kwargs = self.get_kwargs(self.transform, image_shape=img.size, idx=idx)
 
         if self.transform:
-            img = self.transform(img, **kwargs)
+            img_t = self.transform(img, **kwargs)
+        else:
+            img_t = img
+
         if self.target_transform:
             seed_all(batch_seed + idx)
             kwargs = self.get_kwargs(self.target_transform, image_shape=img.size, idx=idx)
             y = self.target_transform(y, **kwargs)
-        return img, y
+        return img_t, y
 
     @staticmethod
     def get_kwargs(transform, **kwargs):
