@@ -80,6 +80,9 @@ class FileDataset(Dataset):
 
         if self.transform:
             img_t = self.transform(img, **kwargs)
+        else:
+            img_t = img
+
         if self.target_transform:
             seed_all(batch_seed + idx)
             kwargs = self.get_kwargs(self.target_transform, image_shape=img.size, idx=idx)

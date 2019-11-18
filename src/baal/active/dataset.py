@@ -9,6 +9,10 @@ import torch.utils.data as torchdata
 from sklearn.utils import check_random_state
 
 
+def _identity(x):
+    return x
+
+
 class ActiveLearningDataset(torchdata.Dataset):
     """A dataset that allows for active learning.
 
@@ -32,7 +36,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         dataset: torchdata.Dataset,
         eval_transform: Optional[Callable] = None,
         labelled: Union[np.ndarray, torch.Tensor] = None,
-        make_unlabelled: Callable = lambda x: x,
+        make_unlabelled: Callable = _identity,
         random_state=None,
         pool_specifics=None
     ) -> None:
@@ -211,7 +215,7 @@ class ActiveLearningPool(torchdata.Dataset):
 
     """
 
-    def __init__(self, dataset: torchdata.Dataset, make_unlabelled: Callable = lambda x: x) -> None:
+    def __init__(self, dataset: torchdata.Dataset, make_unlabelled: Callable = _identity) -> None:
         self._dataset = dataset
         self.make_unlabelled = make_unlabelled
 
