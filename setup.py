@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import io
-import os
 from glob import glob
 from os.path import basename
 from os.path import dirname
@@ -14,6 +13,10 @@ from pathlib import Path
 
 from setuptools import find_packages
 from setuptools import setup
+
+version = {}
+with open("src/baal/version.py") as fp:
+    exec(fp.read(), version)
 
 
 def read(*names, **kwargs):
@@ -28,7 +31,7 @@ with open('documentation-requirements.txt') as f:
 
 setup(
     name='baal',
-    version="1.1.1",
+    version=version['__version__'],
     description='Library for bayesian active learning.',
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
