@@ -140,6 +140,7 @@ class AbstractHeuristic:
     def reorder_indices(self, scores):
         """
         order indices given their uncertainty score.
+
         Args:
             scores (ndarray/ List{(ndarray)): Array of uncertainties or
                 list of arrays.
@@ -306,6 +307,7 @@ class BatchBALD(BALD):
     def reorder_indices(self, ranks):
         """
         order the indices based on ranks.
+
         Args:
             ranks (nd.array): the calculated rank for each sample based
                 on uncertainties.
@@ -457,6 +459,7 @@ class Random(Precomputed):
     def reorder_indices(self, predictions):
         """
         reorder indices randomly.
+
         Args:
             predictions (ndarray): predictions for samples
 
@@ -541,6 +544,7 @@ class CombineHeuristics(AbstractHeuristic):
     def reorder_indices(self, scores_list):
         """
         reorder the indices based on the given scores.
+
         Args:
             scores_list (list(ndarray)/list(list(ndarray)):
 
