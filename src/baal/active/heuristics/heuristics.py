@@ -144,6 +144,7 @@ class AbstractHeuristic:
         Args:
             scores (ndarray/ List{(ndarray)): Array of uncertainties or
                 list of arrays.
+
         Returns:
             ordered index according to the uncertainty (highest to lowes).
         """
@@ -549,6 +550,7 @@ class CombineHeuristics(AbstractHeuristic):
             scores_list (list(ndarray)/list(list(ndarray)):
 
         Returns:
+            ordered index according to the uncertainty (highest to lowes).
 
         """
         if isinstance(scores_list[0], Sequence):
