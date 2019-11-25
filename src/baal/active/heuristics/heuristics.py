@@ -173,7 +173,6 @@ class AbstractHeuristic:
 
         return self.reorder_indices(scores)
 
-
     def __call__(self, predictions):
         """Rank the predictions according to their uncertainties."""
         return self.get_ranks(predictions)
@@ -443,6 +442,7 @@ class Precomputed(AbstractHeuristic):
     def compute_score(self, predictions):
         return predictions
 
+
 class Random(Precomputed):
     """Random heuristic.
 
@@ -513,7 +513,6 @@ class CombineHeuristics(AbstractHeuristic):
             self.reversed = True
         else:
             raise Exception("heuristics should have the same value for `revesed` parameter")
-
 
     def get_uncertainties(self, predictions):
         """
