@@ -1,4 +1,5 @@
 import numpy as np
+from random import random
 import pytest
 
 from hypothesis import given, assume, strategies as st
@@ -101,10 +102,6 @@ def test_bald(distributions, reduction):
     assert np.all(marg == [1, 2, 0]), "BALD is not right {}".format(marg)
     assert np.all(str_marg == [1, 2, 0]), "StreamingBALD is not right {}".format(marg)
 
-    bald = BALD(threshold=0.1, reduction=reduction)
-    marg = bald(distributions)
-    assert np.any(distributions[marg] <= 0.1)
-
     bald = BALD(0.99, reduction=reduction)
     marg = bald(distributions)
 
@@ -121,10 +118,6 @@ def test_batch_bald(distributions, reduction):
     marg = bald(distributions)
 
     assert np.all(marg == [1, 2, 0][:len(marg)]), "BatchBALD is not right {}".format(marg)
-
-    bald = BatchBALD(100, threshold=0.1, reduction=reduction)
-    marg = bald(distributions)
-    assert np.any(distributions[marg] <= 0.1)
 
     bald = BatchBALD(100, 0.99, reduction=reduction)
     marg = bald(distributions)
@@ -144,10 +137,6 @@ def test_variance(distributions, reduction):
     var = Variance(reduction=reduction)
     marg = var(distributions)
     assert np.all(marg == [1, 2, 0]), "Variance is not right {}".format(marg)
-
-    var = Variance(threshold=0.1, reduction=reduction)
-    marg = var(distributions)
-    assert np.any(distributions[marg] <= 0.1)
 
     var = Variance(0.99, reduction=reduction)
     marg = var(distributions)
@@ -173,10 +162,6 @@ def test_margin(distributions, reduction):
     marg = margin(distributions)
     assert np.any(marg != [1, 2, 0])
 
-    margin = Margin(threshold=0.1, reduction=reduction)
-    marg = margin(distributions)
-    assert np.any(distributions[marg] <= 0.1)
-
 
 @pytest.mark.parametrize(
     'distributions, reduction',
@@ -196,10 +181,6 @@ def test_entropy(distributions, reduction):
     entropy = Entropy(0.9, reduction=reduction)
     marg = entropy(distributions)
     assert np.any(marg != [1, 2, 0])
-
-    entropy = Entropy(threshold=0.1, reduction=reduction)
-    marg = entropy(distributions)
-    assert np.any(distributions[marg] <= 0.1)
 
 
 @pytest.mark.parametrize(
@@ -221,10 +202,6 @@ def test_certainty(distributions, reduction):
     marg = certainty(distributions)
     assert np.any(marg != [1, 2, 0])
 
-    certainty = Certainty(threshold=0.1, reduction=reduction)
-    marg = certainty(distributions)
-    assert np.any(distributions[marg] <= 0.1)
-
 
 @pytest.mark.parametrize('distributions', [distributions_5d, distributions_3d, distribution_2d])
 def test_random(distributions):
@@ -234,10 +211,6 @@ def test_random(distributions):
         [np.allclose(random(distributions), random(distributions)) for _ in range(10)]
     )
     assert not all_equals
-
-    random = Random(threshold=0.1)
-    marg = random(distributions)
-    assert np.any(distributions[marg] <= 0.1)
 
 
 @pytest.mark.parametrize('name', ('random', 'bald', 'variance'))
@@ -306,6 +279,25 @@ def test_combine_heuristics_uncertainty_generator():
     prediction_chunks = [chunks(distributions_3d, 2), chunks(distributions_5d, 2)]
     ranks = heuristics(prediction_chunks)
     assert np.all(ranks == [1, 2, 0]), "Combine Heuristics is not right {}".format(ranks)
+
+def test_combine_heuristics_reorder_list():
+
+    # we are just testing if given calculated uncertainties for chunks of data
+    # the `reorder_indices` would make correct decision. Here index 0 has the
+    # highest uncertainty chosen but both methods (uncertainties1 and uncertainties2)
+    uncertainties1 = np.array([0.98])
+    uncertainties1_1 = np.array([0.87, 0.68])
+
+    uncertainties2 = np.array([0.76])
+    uncertainties2_1 = np.array([0.63, 0.48])
+    streaming_prediction = [[uncertainties1, uncertainties2],
+                            [uncertainties1_1, uncertainties2_1]]
+
+    heuristics = CombineHeuristics([BALD(), Variance()], weights=[0.5, 0.5],
+                                   reduction='mean')
+    ranks = heuristics.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [0, 1, 2]), "Combine Heuristics is not right {}".format(ranks)
+
 
 if __name__ == '__main__':
     pytest.main()
