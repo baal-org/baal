@@ -308,8 +308,9 @@ class BatchBALD(BALD):
     def reorder_indices(self, ranks):
         """ This function is not supported for BatchBald.
         """
-        raise Exception("BatchBald needs to have the whole pool at once, to be able to have relevant informationa"
-                        "chunk processing is not supported by BatchBald")
+        raise Exception("BatchBald needs to have the whole pool at once,"
+                        "to be able to have relevant informationa chunk"
+                        " processing is not supported by BatchBald")
 
     def get_ranks(self, predictions):
         """
