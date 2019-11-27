@@ -50,7 +50,6 @@ def _make_5d_fake_dist(means, stds, dims=10):
     # [n_sample, n_class, H, W, iter]
     return d
 
-
 def _make_fake_dist(means, stds, dims=10):
     """
     Create some fake discrete distributions
@@ -280,18 +279,44 @@ def test_combine_heuristics_uncertainty_generator():
     ranks = heuristics(prediction_chunks)
     assert np.all(ranks == [1, 2, 0]), "Combine Heuristics is not right {}".format(ranks)
 
-def test_combine_heuristics_reorder_list():
-
-    # we are just testing if given calculated uncertainties for chunks of data
+def test_heuristics_reorder_list():
+    # we are just testing if given calculated uncertainty measures for chunks of data
     # the `reorder_indices` would make correct decision. Here index 0 has the
     # highest uncertainty chosen but both methods (uncertainties1 and uncertainties2)
-    uncertainties1 = np.array([0.98])
-    uncertainties1_1 = np.array([0.87, 0.68])
+    streaming_prediction = [np.array([0.98]), np.array([0.87, 0.68]),
+                              np.array([0.96, 0.54])]
+    heuristic = BALD()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for BALD is not right {}".format(ranks)
 
-    uncertainties2 = np.array([0.76])
-    uncertainties2_1 = np.array([0.63, 0.48])
-    streaming_prediction = [[uncertainties1, uncertainties2],
-                            [uncertainties1_1, uncertainties2_1]]
+    heuristic = Variance()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for Variance is not right {}".format(ranks)
+
+    heuristic = Entropy()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for Entropy is not right {}".format(ranks)
+
+    heuristic = Margin()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [4, 2, 1, 3, 0]), "reorder list for Margin is not right {}".format(ranks)
+
+    heuristic = Certainty()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [4, 2, 1, 3, 0]), "reorder list for Certainty is not right {}".format(ranks)
+
+def test_combine_heuristics_reorder_list():
+
+    # we are just testing if given calculated uncertainty measures for chunks of data
+    # the `reorder_indices` would make correct decision. Here index 0 has the
+    # highest uncertainty chosen but both methods (uncertainties1 and uncertainties2)
+    bald_firstchunk = np.array([0.98])
+    bald_secondchunk = np.array([0.87, 0.68])
+
+    variance_firstchunk = np.array([0.76])
+    variance_secondchunk = np.array([0.63, 0.48])
+    streaming_prediction = [[bald_firstchunk, variance_firstchunk],
+                            [bald_secondchunk, variance_secondchunk]]
 
     heuristics = CombineHeuristics([BALD(), Variance()], weights=[0.5, 0.5],
                                    reduction='mean')
