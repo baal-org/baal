@@ -305,8 +305,13 @@ class BatchBALD(BALD):
 
         return np.array(history)
 
-    def reorder_indices(self, ranks):
-        """ This function is not supported for BatchBald.
+    def reorder_indices(self):
+        """
+        This function is not supported for BatchBald.
+
+        Raises:
+            All the time.
+
         """
         raise Exception("BatchBald needs to have the whole pool at once,"
                         "to be able to have relevant informationa chunk"
@@ -315,10 +320,13 @@ class BatchBALD(BALD):
     def get_ranks(self, predictions):
         """
         Rank the predictions according to their uncertainties.
+
         Args:
             predictions (ndarray): [batch_size, C, ..., Iterations]
+
         Returns:
             Ranked index according to the uncertainty (highest to lowest).
+
         Raises:
             ValueError if predictions is a generator.
         """
