@@ -142,7 +142,7 @@ class AbstractHeuristic:
         Order indices given their uncertainty score.
 
         Args:
-            scores (ndarray/ List{(ndarray)): Array of uncertainties or
+            scores (ndarray/ List[ndarray]): Array of uncertainties or
                 list of arrays.
 
         Returns:
