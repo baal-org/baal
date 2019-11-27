@@ -306,43 +306,29 @@ class BatchBALD(BALD):
         return np.array(history)
 
     def reorder_indices(self, ranks):
+        """ This function is not supported for BatchBald.
         """
-        Order the indices based on ranks.
-
-        Args:
-            ranks (nd.array): the calculated rank for each sample based
-                on uncertainties.
-
-        Returns:
-            ranks (nd.array): ranks with some noise based on the value for
-                `shuffle_prop`.
-        """
-        if isinstance(ranks, Sequence):
-            np.concatenate(ranks)
-        assert ranks.ndim == 1
-        ranks = _shuffle_subset(ranks, self.shuffle_prop)
-        return ranks
+        raise Exception("BatchBald needs to have the whole pool at once, to be able to have relevant informationa"
+                        "chunk processing is not supported by BatchBald")
 
     def get_ranks(self, predictions):
         """
         Rank the predictions according to their uncertainties.
-
         Args:
             predictions (ndarray): [batch_size, C, ..., Iterations]
-
         Returns:
             Ranked index according to the uncertainty (highest to lowest).
-
         Raises:
             ValueError if predictions is a generator.
-
         """
         if isinstance(predictions, types.GeneratorType):
             raise ValueError("BatchBALD doesn't support generators.")
 
         ranks = self.get_uncertainties(predictions)
 
-        return self.reorder_indices(ranks)
+        assert ranks.ndim == 1
+        ranks = _shuffle_subset(ranks, self.shuffle_prop)
+        return ranks
 
 
 class Variance(AbstractHeuristic):
