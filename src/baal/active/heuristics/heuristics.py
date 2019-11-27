@@ -311,7 +311,6 @@ class BatchBALD(BALD):
 
         Raises:
             All the time.
-
         """
         raise Exception("BatchBald needs to have the whole pool at once,"
                         "to be able to have relevant informationa chunk"
