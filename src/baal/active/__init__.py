@@ -7,7 +7,6 @@ from .file_dataset import FileDataset
 
 
 def get_heuristic(name: str, shuffle_prop: float = 0.0,
-                  threshold: Optional[float] = None,
                   reduction: Union[str, Callable] = 'none',
                   **kwargs) -> heuristics.AbstractHeuristic:
     """
@@ -16,7 +15,6 @@ def get_heuristic(name: str, shuffle_prop: float = 0.0,
     Args:
         name (str): Name of the heuristic.
         shuffle_prop (float): Shuffling proportion when getting ranks.
-        threshold (Optional[float]): Minimal probability.
         reduction (Union[str, Callable]): Reduction used after computing the score.
         kwargs (dict): Complementary arguments.
 
@@ -32,4 +30,4 @@ def get_heuristic(name: str, shuffle_prop: float = 0.0,
         'variance': heuristics.Variance,
         'precomputed': heuristics.Precomputed,
         'batch_bald': heuristics.BatchBALD
-    }[name](shuffle_prop=shuffle_prop, threshold=threshold, reduction=reduction, **kwargs)
+    }[name](shuffle_prop=shuffle_prop, reduction=reduction, **kwargs)

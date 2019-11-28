@@ -1,4 +1,5 @@
 import numpy as np
+from random import random
 import pytest
 
 from hypothesis import given, assume, strategies as st
@@ -48,7 +49,6 @@ def _make_5d_fake_dist(means, stds, dims=10):
     d = np.rollaxis(d, 2, 5)
     # [n_sample, n_class, H, W, iter]
     return d
-
 
 def _make_fake_dist(means, stds, dims=10):
     """
@@ -101,10 +101,6 @@ def test_bald(distributions, reduction):
     assert np.all(marg == [1, 2, 0]), "BALD is not right {}".format(marg)
     assert np.all(str_marg == [1, 2, 0]), "StreamingBALD is not right {}".format(marg)
 
-    bald = BALD(threshold=0.1, reduction=reduction)
-    marg = bald(distributions)
-    assert np.any(distributions[marg] <= 0.1)
-
     bald = BALD(0.99, reduction=reduction)
     marg = bald(distributions)
 
@@ -121,10 +117,6 @@ def test_batch_bald(distributions, reduction):
     marg = bald(distributions)
 
     assert np.all(marg == [1, 2, 0][:len(marg)]), "BatchBALD is not right {}".format(marg)
-
-    bald = BatchBALD(100, threshold=0.1, reduction=reduction)
-    marg = bald(distributions)
-    assert np.any(distributions[marg] <= 0.1)
 
     bald = BatchBALD(100, 0.99, reduction=reduction)
     marg = bald(distributions)
@@ -144,10 +136,6 @@ def test_variance(distributions, reduction):
     var = Variance(reduction=reduction)
     marg = var(distributions)
     assert np.all(marg == [1, 2, 0]), "Variance is not right {}".format(marg)
-
-    var = Variance(threshold=0.1, reduction=reduction)
-    marg = var(distributions)
-    assert np.any(distributions[marg] <= 0.1)
 
     var = Variance(0.99, reduction=reduction)
     marg = var(distributions)
@@ -173,10 +161,6 @@ def test_margin(distributions, reduction):
     marg = margin(distributions)
     assert np.any(marg != [1, 2, 0])
 
-    margin = Margin(threshold=0.1, reduction=reduction)
-    marg = margin(distributions)
-    assert np.any(distributions[marg] <= 0.1)
-
 
 @pytest.mark.parametrize(
     'distributions, reduction',
@@ -196,10 +180,6 @@ def test_entropy(distributions, reduction):
     entropy = Entropy(0.9, reduction=reduction)
     marg = entropy(distributions)
     assert np.any(marg != [1, 2, 0])
-
-    entropy = Entropy(threshold=0.1, reduction=reduction)
-    marg = entropy(distributions)
-    assert np.any(distributions[marg] <= 0.1)
 
 
 @pytest.mark.parametrize(
@@ -221,10 +201,6 @@ def test_certainty(distributions, reduction):
     marg = certainty(distributions)
     assert np.any(marg != [1, 2, 0])
 
-    certainty = Certainty(threshold=0.1, reduction=reduction)
-    marg = certainty(distributions)
-    assert np.any(distributions[marg] <= 0.1)
-
 
 @pytest.mark.parametrize('distributions', [distributions_5d, distributions_3d, distribution_2d])
 def test_random(distributions):
@@ -234,10 +210,6 @@ def test_random(distributions):
         [np.allclose(random(distributions), random(distributions)) for _ in range(10)]
     )
     assert not all_equals
-
-    random = Random(threshold=0.1)
-    marg = random(distributions)
-    assert np.any(distributions[marg] <= 0.1)
 
 
 @pytest.mark.parametrize('name', ('random', 'bald', 'variance'))
@@ -306,6 +278,51 @@ def test_combine_heuristics_uncertainty_generator():
     prediction_chunks = [chunks(distributions_3d, 2), chunks(distributions_5d, 2)]
     ranks = heuristics(prediction_chunks)
     assert np.all(ranks == [1, 2, 0]), "Combine Heuristics is not right {}".format(ranks)
+
+def test_heuristics_reorder_list():
+    # we are just testing if given calculated uncertainty measures for chunks of data
+    # the `reorder_indices` would make correct decision. Here index 0 has the
+    # highest uncertainty chosen but both methods (uncertainties1 and uncertainties2)
+    streaming_prediction = [np.array([0.98]), np.array([0.87, 0.68]),
+                              np.array([0.96, 0.54])]
+    heuristic = BALD()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for BALD is not right {}".format(ranks)
+
+    heuristic = Variance()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for Variance is not right {}".format(ranks)
+
+    heuristic = Entropy()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for Entropy is not right {}".format(ranks)
+
+    heuristic = Margin()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [4, 2, 1, 3, 0]), "reorder list for Margin is not right {}".format(ranks)
+
+    heuristic = Certainty()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [4, 2, 1, 3, 0]), "reorder list for Certainty is not right {}".format(ranks)
+
+def test_combine_heuristics_reorder_list():
+
+    # we are just testing if given calculated uncertainty measures for chunks of data
+    # the `reorder_indices` would make correct decision. Here index 0 has the
+    # highest uncertainty chosen but both methods (uncertainties1 and uncertainties2)
+    bald_firstchunk = np.array([0.98])
+    bald_secondchunk = np.array([0.87, 0.68])
+
+    variance_firstchunk = np.array([0.76])
+    variance_secondchunk = np.array([0.63, 0.48])
+    streaming_prediction = [[bald_firstchunk, variance_firstchunk],
+                            [bald_secondchunk, variance_secondchunk]]
+
+    heuristics = CombineHeuristics([BALD(), Variance()], weights=[0.5, 0.5],
+                                   reduction='mean')
+    ranks = heuristics.reorder_indices(streaming_prediction)
+    assert np.all(ranks == [0, 1, 2]), "Combine Heuristics is not right {}".format(ranks)
+
 
 if __name__ == '__main__':
     pytest.main()
