@@ -306,8 +306,7 @@ class BatchBALD(BALD):
         return np.array(history)
 
     def reorder_indices(self):
-        """
-        This function is not supported for BatchBald.
+        """This function is not supported by BatchBald.
 
         Raises:
             All the time.
