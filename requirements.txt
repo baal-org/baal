@@ -1,6 +1,7 @@
 numpy
 matplotlib
 pandas
+Pillow>=6.2.0
 scikit-learn
 scipy
 torch>=1.2.0
