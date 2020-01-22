@@ -1,8 +1,6 @@
 import numpy as np
-from random import random
 import pytest
-
-from hypothesis import given, assume, strategies as st
+from hypothesis import given
 from torch_hypothesis import class_logits
 
 from baal.active import get_heuristic
@@ -28,7 +26,7 @@ N_CLASS = 10
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
-        yield l[i : i + n]
+        yield l[i: i + n]
 
 
 def _make_3d_fake_dist(means, stds, dims=10):
@@ -49,6 +47,7 @@ def _make_5d_fake_dist(means, stds, dims=10):
     d = np.rollaxis(d, 2, 5)
     # [n_sample, n_class, H, W, iter]
     return d
+
 
 def _make_fake_dist(means, stds, dims=10):
     """
@@ -220,6 +219,7 @@ def test_getting_heuristics(name):
 @given(logits=class_logits(batch_size=(1, 64), n_classes=(2, 50)))
 def test_that_logits_get_converted_to_probabilities(logits):
     logits = logits.numpy()
+
     # define a random func:
     @requireprobs
     def wrapped(_, logits):
@@ -251,7 +251,8 @@ def test_combine_heuristics(heuristic1, heuristic2, weights):
         with pytest.raises(Exception) as e_info:
             heuristics = CombineHeuristics([heuristic1, heuristic2], weights=weights,
                                            reduction='mean')
-            assert 'heuristics should have the same value for `revesed` parameter' in str(e_info.value)
+            assert 'heuristics should have the same value for `revesed` parameter' in str(
+                e_info.value)
     else:
         heuristics = CombineHeuristics([heuristic1, heuristic2], weights=weights,
                                        reduction='mean')
@@ -260,7 +261,8 @@ def test_combine_heuristics(heuristic1, heuristic2, weights):
         else:
             assert heuristics.reversed
         ranks = heuristics(predictions)
-        assert np.all(ranks==[1, 2, 0]), "Combine Heuristics is not right {}".format(ranks)
+        assert np.all(ranks == [1, 2, 0]), "Combine Heuristics is not right {}".format(ranks)
+
 
 def test_combine_heuristics_uncertainty_generator():
     np.random.seed(1337)
@@ -279,23 +281,26 @@ def test_combine_heuristics_uncertainty_generator():
     ranks = heuristics(prediction_chunks)
     assert np.all(ranks == [1, 2, 0]), "Combine Heuristics is not right {}".format(ranks)
 
+
 def test_heuristics_reorder_list():
     # we are just testing if given calculated uncertainty measures for chunks of data
     # the `reorder_indices` would make correct decision. Here index 0 has the
     # highest uncertainty chosen but both methods (uncertainties1 and uncertainties2)
     streaming_prediction = [np.array([0.98]), np.array([0.87, 0.68]),
-                              np.array([0.96, 0.54])]
+                            np.array([0.96, 0.54])]
     heuristic = BALD()
     ranks = heuristic.reorder_indices(streaming_prediction)
     assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for BALD is not right {}".format(ranks)
 
     heuristic = Variance()
     ranks = heuristic.reorder_indices(streaming_prediction)
-    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for Variance is not right {}".format(ranks)
+    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for Variance is not right {}".format(
+        ranks)
 
     heuristic = Entropy()
     ranks = heuristic.reorder_indices(streaming_prediction)
-    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for Entropy is not right {}".format(ranks)
+    assert np.all(ranks == [0, 3, 1, 2, 4]), "reorder list for Entropy is not right {}".format(
+        ranks)
 
     heuristic = Margin()
     ranks = heuristic.reorder_indices(streaming_prediction)
@@ -303,10 +308,16 @@ def test_heuristics_reorder_list():
 
     heuristic = Certainty()
     ranks = heuristic.reorder_indices(streaming_prediction)
-    assert np.all(ranks == [4, 2, 1, 3, 0]), "reorder list for Certainty is not right {}".format(ranks)
+    assert np.all(ranks == [4, 2, 1, 3, 0]), "reorder list for Certainty is not right {}".format(
+        ranks)
+
+    heuristic = Random()
+    ranks = heuristic.reorder_indices(streaming_prediction)
+    assert ranks.size == 5, "reorder list for Random is not right {}".format(
+        ranks)
+
 
 def test_combine_heuristics_reorder_list():
-
     # we are just testing if given calculated uncertainty measures for chunks of data
     # the `reorder_indices` would make correct decision. Here index 0 has the
     # highest uncertainty chosen but both methods (uncertainties1 and uncertainties2)

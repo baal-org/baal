@@ -460,6 +460,8 @@ class Random(Precomputed):
         Returns:
             ranked indices (randomly)
         """
+        if isinstance(predictions, Sequence):
+            predictions = np.concatenate(predictions)
         ranks = np.arange(predictions.shape[0])
         ranks = _shuffle_subset(ranks, self.shuffle_prop)
         return ranks
