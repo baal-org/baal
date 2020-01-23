@@ -90,7 +90,7 @@ class FileDatasetTest(unittest.TestCase):
 
         target_trans = BaaLCompose(
             [GetCanvas(), DrawSquare(3), ToPILImage(mode=None), Resize(60, interpolation=0),
-             RandomRotation(10, resample=NEAREST), PILToLongTensor()])
+             RandomRotation(10, resample=NEAREST, fill=0.0), PILToLongTensor()])
         file_dataset = FileDataset(self.paths, [1] * len(self.paths), self.transform, target_trans)
 
         x, y = file_dataset[0]
