@@ -162,6 +162,12 @@ class ActiveLearningDataset(torchdata.Dataset):
             if self.can_label and val is not None:
                 self._dataset.label(index, val)
                 self._labelled[index] = 1
+            elif self.can_label and val is None:
+                warnings.warn("""The dataset is able to label data, but no label was provided.
+                                 The dataset will be unchanged from this action!
+                                 If this is a research setting, please set the
+                                  `ActiveLearningDataset.can_label` to `False`.
+                                  """, UserWarning)
             elif not self.can_label:
                 self._labelled[index] = 1
                 if val is not None:
