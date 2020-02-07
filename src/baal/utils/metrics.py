@@ -337,11 +337,11 @@ class PRAuC(Metrics):
         fp: int = 0
         fn: int = 0
 
-    def __init__(self, num_classes, n_bins):
+    def __init__(self, num_classes, n_bins, average):
         self.num_classes = num_classes
         self.threshold = np.linspace(0.02, 0.99, n_bins)
         self._data = defaultdict(lambda: defaultdict(lambda: self.Report(0, 0, 0)))
-        super().__init__(False)
+        super().__init__(average)
 
     def reset(self):
         self._data.clear()
@@ -385,4 +385,6 @@ class PRAuC(Metrics):
             recalls = recalls[idx]
 
             result.append(auc(recalls, precisions))
+        if self._average:
+            return np.mean(result)
         return result

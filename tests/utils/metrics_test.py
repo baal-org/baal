@@ -121,10 +121,15 @@ def test_that_accuracy_string_repr_doesnt_throw_errors(y_ypred):
 def test_auc(y_ypred):
     predicted, true = y_ypred
     num_classes = predicted.shape[1]
-    met = PRAuC(num_classes=num_classes, n_bins=10)
+    met = PRAuC(num_classes=num_classes, n_bins=10, average=False)
     met.update(predicted, true)
     met.update(predicted, true)
     assert len(met.value) == num_classes
+
+    met = PRAuC(num_classes=num_classes, n_bins=10, average=True)
+    met.update(predicted, true)
+    met.update(predicted, true)
+    assert isinstance(met.value, float)
 
 
 def test_accuracy():
