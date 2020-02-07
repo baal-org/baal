@@ -1,10 +1,27 @@
 # From https://github.com/pytorch/ignite with slight changes
+import dataclasses
 import math
 import warnings
+from collections import defaultdict
 
 import numpy as np
 import torch
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, auc
+
+
+def to_prob(probabilities):
+    """
+    If the output is not a distrubution will softmax it.
+    Args:
+        probabilities (tensor): [batch_size, num_classes, ...]
+
+    Returns:
+        Same as probabilities.
+    """
+    bounded = torch.min(probabilities) < 0 or torch.max(probabilities) > 1.0
+    if bounded or not torch.allclose(probabilities.sum(1), torch.ones_like(probabilities)[..., 0]):
+        probabilities = torch.softmax(probabilities, 1)
+    return probabilities
 
 
 class Metrics(object):
@@ -307,3 +324,65 @@ class ClassificationReport(Metrics):
         precision = tp / np.maximum(1, tp + fp)
         recall = tp / np.maximum(1, tp + fn)
         return {'accuracy': acc, 'precision': precision, 'recall': recall}
+
+
+class PRAuC(Metrics):
+    """
+    Precision-Recall Area under the curve.
+    """
+
+    @dataclasses.dataclass
+    class Report:
+        tp: int = 0
+        fp: int = 0
+        fn: int = 0
+
+    def __init__(self, num_classes, n_bins):
+        self.num_classes = num_classes
+        self.threshold = np.linspace(0.02, 0.99, n_bins)
+        self._data = defaultdict(lambda: defaultdict(lambda: self.Report(0, 0, 0)))
+        super().__init__(False)
+
+    def reset(self):
+        self._data.clear()
+
+    def update(self, output=None, target=None):
+        """
+        Update the confusion matrice according to output and target.
+
+        Args:
+            output (tensor): predictions of model
+            target (tensor): labels
+        """
+        output = to_prob(output)
+        output = output.detach().cpu().numpy()
+        target = target.detach().cpu().numpy()
+
+        assert output.ndim > target.ndim, 'Only multiclass classification is supported.'
+        for cls in range(self.num_classes):
+            target_cls = (target == cls).astype(np.int8)
+            for th in self.threshold:
+                report = self._make_report(output[:, cls, ...], target_cls, th)
+                self._data[cls][th].fp += report.fp
+                self._data[cls][th].tp += report.tp
+                self._data[cls][th].fn += report.fn
+
+    def _make_report(self, output, target, threshold):
+        output = (output > threshold).astype(np.int8)
+        output = output.reshape([-1])
+        target = target.reshape([-1])
+        _, fp, fn, tp = confusion_matrix(target, output, labels=[0, 1]).ravel()
+        return self.Report(tp=tp, fp=fp, fn=fn)
+
+    @property
+    def value(self):
+        result = []
+        for cls in range(self.num_classes):
+            precisions = np.array([r.tp / max(1, r.tp + r.fp) for r in self._data[cls].values()])
+            recalls = np.array([r.tp / max(1, r.tp + r.fn) for r in self._data[cls].values()])
+            idx = np.argsort(recalls)
+            precisions = precisions[idx]
+            recalls = recalls[idx]
+
+            result.append(auc(recalls, precisions))
+        return result

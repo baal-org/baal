@@ -1,13 +1,10 @@
 import numpy as np
 import pytest
 import torch
-
-from baal.utils.metrics import Loss, Accuracy, Precision, ECE, ClassificationReport
-
-from hypothesis import given, assume, strategies as st
-from hypothesis.extra import numpy as numpy_strategies
-
+from hypothesis import given
 from torch_hypothesis import classification_logits_and_labels
+
+from baal.utils.metrics import Loss, Accuracy, Precision, ECE, ClassificationReport, PRAuC
 
 
 def test_loss():
@@ -118,6 +115,16 @@ def test_that_accuracy_string_repr_doesnt_throw_errors(y_ypred):
     accuracy = Accuracy(average=True, topk=(1, 2))
     accuracy.update(predicted, true)
     assert "±" in str(accuracy)
+
+
+@given(y_ypred=classification_logits_and_labels(batch_size=(1, 32), n_classes=(2, 50)))
+def test_auc(y_ypred):
+    predicted, true = y_ypred
+    num_classes = predicted.shape[1]
+    met = PRAuC(num_classes=num_classes, n_bins=10)
+    met.update(predicted, true)
+    met.update(predicted, true)
+    assert len(met.value) == num_classes
 
 
 def test_accuracy():
