@@ -11,7 +11,8 @@ from sklearn.metrics import confusion_matrix, auc
 
 def to_prob(probabilities):
     """
-    If the output is not a distrubution will softmax it.
+    If the probabilities tensor is not a distrubution will softmax it.
+
     Args:
         probabilities (tensor): [batch_size, num_classes, ...]
 
