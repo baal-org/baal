@@ -326,21 +326,27 @@ class ClassificationReport(Metrics):
         return {'accuracy': acc, 'precision': precision, 'recall': recall}
 
 
+@dataclasses.dataclass
+class Report:
+    tp: int = 0
+    fp: int = 0
+    fn: int = 0
+
+
 class PRAuC(Metrics):
     """
     Precision-Recall Area under the curve.
-    """
 
-    @dataclasses.dataclass
-    class Report:
-        tp: int = 0
-        fp: int = 0
-        fn: int = 0
+    Args:
+        num_classes (int): Number of classes
+        n_bins (int): number of confidence threshold to evaluate on.
+        average (bool): If true will return the mean AuC of all classes.
+    """
 
     def __init__(self, num_classes, n_bins, average):
         self.num_classes = num_classes
         self.threshold = np.linspace(0.02, 0.99, n_bins)
-        self._data = defaultdict(lambda: defaultdict(lambda: self.Report(0, 0, 0)))
+        self._data = defaultdict(lambda: defaultdict(lambda: Report()))
         super().__init__(average)
 
     def reset(self):
@@ -372,7 +378,7 @@ class PRAuC(Metrics):
         output = output.reshape([-1])
         target = target.reshape([-1])
         _, fp, fn, tp = confusion_matrix(target, output, labels=[0, 1]).ravel()
-        return self.Report(tp=tp, fp=fp, fn=fn)
+        return Report(tp=tp, fp=fp, fn=fn)
 
     @property
     def value(self):
