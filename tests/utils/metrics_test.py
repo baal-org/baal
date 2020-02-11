@@ -185,6 +185,19 @@ def test_ece():
     ece_calculator = ECE(n_bins=3)
 
     # start with multiclass classification
+    pred = torch.FloatTensor([[-40, 50, 10], [10, 80, 10]])
+    target = torch.LongTensor([[2], [1]])
+
+    for i in range(2):
+        ece_calculator.update(output=pred[i, :].unsqueeze(0), target=target[i, :].unsqueeze(0))
+
+    assert np.allclose(ece_calculator.samples, [0, 0, 2])
+    assert np.allclose(ece_calculator.tp, [0, 0, 1])
+    assert round(ece_calculator.value, 2) == 0.5
+
+    ece_calculator.reset()
+
+    # start with multiclass classification
     pred = torch.FloatTensor([[0.4, 0.5, 0.1], [0.1, 0.8, 0.1]])
     target = torch.LongTensor([[2], [1]])
 
@@ -194,7 +207,6 @@ def test_ece():
     assert np.allclose(ece_calculator.samples, [0, 1, 1])
     assert np.allclose(ece_calculator.tp, [0, 0, 1])
     assert round(ece_calculator.value, 2) == 0.25
-
 
 def test_classification_report():
     met = ClassificationReport(num_classes=3)

@@ -116,9 +116,17 @@ class ECE(Metrics):
         super().__init__(average=False)
 
     def update(self, output=None, target=None):
+        output = to_prob(output)
+
+        # this is to make sure handling negative and 1.0 confidence to be assigned to a bin
+        output = torch.clamp(output, 0, 0.9999)
+        output = output.detach().cpu().numpy()
+        target = target.detach().cpu().numpy()
+
         for pred, t in zip(output, target):
             conf, p_cls = pred.max(), pred.argmax()
-            bin_id = int(math.floor(conf / (1.0 / self.n_bins)))
+
+            bin_id = int(math.floor(conf * self.n_bins))
             self.samples[bin_id] += 1
             self.tp[bin_id] += int(p_cls == t)
 
