@@ -8,21 +8,7 @@ import numpy as np
 import torch
 from sklearn.metrics import confusion_matrix, auc
 
-
-def to_prob(probabilities):
-    """
-    If the probabilities tensor is not a distrubution will softmax it.
-
-    Args:
-        probabilities (tensor): [batch_size, num_classes, ...]
-
-    Returns:
-        Same as probabilities.
-    """
-    bounded = torch.min(probabilities) < 0 or torch.max(probabilities) > 1.0
-    if bounded or not torch.allclose(probabilities.sum(1), torch.ones_like(probabilities)[..., 0]):
-        probabilities = torch.softmax(probabilities, 1)
-    return probabilities
+from baal.utils.array_utils import to_prob
 
 
 class Metrics(object):
@@ -361,9 +347,9 @@ class PRAuC(Metrics):
             output (tensor): predictions of model
             target (tensor): labels
         """
-        output = to_prob(output)
         output = output.detach().cpu().numpy()
         target = target.detach().cpu().numpy()
+        output = to_prob(output)
 
         assert output.ndim > target.ndim, 'Only multiclass classification is supported.'
         for cls in range(self.num_classes):
