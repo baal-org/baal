@@ -116,7 +116,6 @@ class ECE(Metrics):
         # this is to make sure handling 1.0 value confidence to be assigned to a bin
         output = np.clip(output, 0, 0.9999)
 
-
         for pred, t in zip(output, target):
             conf, p_cls = pred.max(), pred.argmax()
 
