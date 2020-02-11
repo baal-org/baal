@@ -109,12 +109,13 @@ class ECE(Metrics):
             output (tensor): logits or predictions of model
             target (tensor): labels
         """
+        output = output.detach().cpu().numpy()
+        target = target.detach().cpu().numpy()
         output = to_prob(output)
 
         # this is to make sure handling 1.0 value confidence to be assigned to a bin
-        output = torch.clamp(output, 0, 0.9999)
-        output = output.detach().cpu().numpy()
-        target = target.detach().cpu().numpy()
+        output = np.clip(output, 0, 0.9999)
+
 
         for pred, t in zip(output, target):
             conf, p_cls = pred.max(), pred.argmax()
