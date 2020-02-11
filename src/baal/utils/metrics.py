@@ -125,7 +125,7 @@ class ECE(Metrics):
         """
         output = to_prob(output)
 
-        # this is to make sure handling negative and 1.0 confidence to be assigned to a bin
+        # this is to make sure handling 1.0 value confidence to be assigned to a bin
         output = torch.clamp(output, 0, 0.9999)
         output = output.detach().cpu().numpy()
         target = target.detach().cpu().numpy()
