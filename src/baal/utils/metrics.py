@@ -135,7 +135,7 @@ class ECE(Metrics):
     def value(self):
         return self.calculate_result()
 
-    def plot(self):
+    def plot(self, pth=None):
         """ Plot each bins, ideally this would be a diagonal line."""
         import matplotlib.pyplot as plt
 
@@ -148,6 +148,9 @@ class ECE(Metrics):
         plt.xlabel('Uncertainty')
         plt.grid()
         plt.show()
+
+        if pth:
+            plt.savefig(pth)
 
     def reset(self):
         self.tp = np.zeros([self.n_bins])
