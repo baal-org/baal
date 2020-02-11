@@ -116,6 +116,13 @@ class ECE(Metrics):
         super().__init__(average=False)
 
     def update(self, output=None, target=None):
+        """
+        Updating the true positive (tp) and number of samples in each bin.
+
+        Args:
+            output (tensor): logits or predictions of model
+            target (tensor): labels
+        """
         output = to_prob(output)
 
         # this is to make sure handling negative and 1.0 confidence to be assigned to a bin
