@@ -136,7 +136,9 @@ class ECE(Metrics):
         return self.calculate_result()
 
     def plot(self, pth=None):
-        """ Plot each bins, ideally this would be a diagonal line.
+        """
+        Plot each bins, ideally this would be a diagonal line.
+
         Args:
             pth (str): if provided the figure will be saved under the given path
         """
@@ -166,6 +168,7 @@ class ECE_PerCLs(Metrics):
     Expected Calibration Error (ECE)
 
     Args:
+        n_cls (int): number of existing target classes
         n_bins (int): number of bins to discretize the uncertainty.
 
     References:
@@ -194,13 +197,11 @@ class ECE_PerCLs(Metrics):
         # this is to make sure handling 1.0 value confidence to be assigned to a bin
         output = np.clip(output, 0, 0.9999)
 
-
-        for pred, t in zip(output, target):
-            conf, p_cls = pred.max(), pred.argmax()
-
-            bin_id = int(math.floor(conf * self.n_bins))
-            self.samples[p_cls, bin_id] += 1
-            self.tp[p_cls, bin_id] += int(p_cls == t)
+        for cls in range(self.n_cls):
+            for pred, t in zip(output[:, cls], target):
+                bin_id = int(math.floor(pred * self.n_bins))
+                self.samples[cls, bin_id] += 1
+                self.tp[cls, bin_id] += int(cls == t)
 
     def _acc(self):
         accuracy_per_class = np.zeros([self.n_cls, self.n_bins], dtype=float)
@@ -209,6 +210,11 @@ class ECE_PerCLs(Metrics):
         return accuracy_per_class
 
     def calculate_result(self):
+        """calculates the ece per class.
+
+        Returns:
+            ece (nd.array): ece value per class
+        """
         bin_confs = np.linspace(0, 1, self.n_bins)
         accuracy = self._acc()
         ece = np.zeros([self.n_cls])
@@ -225,26 +231,13 @@ class ECE_PerCLs(Metrics):
         return self.calculate_result()
 
     def plot(self, pth=None):
-        """ Plot each bins, ideally this would be a diagonal line.
+        """
+        Plot each bins, ideally this would be a diagonal line.
+
         Args:
             pth (str): if provided the figure will be saved under the given path
         """
-        # import matplotlib.pyplot as plt
-        import matplotlib
-        gui_env = ['TKAgg', 'GTKAgg', 'Qt4Agg', 'WXAgg']
-        for gui in gui_env:
-            try:
-                print("testing", gui)
-                matplotlib.use(gui, warn=False, force=True)
-                from matplotlib import pyplot as plt
-
-                break
-            except Exception as e:
-                print(e)
-                continue
-
-        print("Using:", matplotlib.get_backend())
-
+        import matplotlib.pyplot as plt
         accuracy = self._acc()
         # Plot the ECE
         fig, axs = plt.subplots(self.n_cls)
