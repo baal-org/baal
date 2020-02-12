@@ -1,5 +1,8 @@
+import os
+from pathlib import Path
 import numpy as np
 import pytest
+import shutil
 import torch
 from hypothesis import given
 from torch_hypothesis import classification_logits_and_labels
@@ -194,6 +197,12 @@ def test_ece():
     assert np.allclose(ece_calculator.samples, [0, 0, 2])
     assert np.allclose(ece_calculator.tp, [0, 0, 1])
     assert round(ece_calculator.value, 2) == 0.5
+
+    pth = 'tmp'
+    Path(pth).mkdir(exist_ok=True)
+    ece_calculator.plot(pth=os.path.join(pth, 'figure.png'))
+    assert os.path.exists(os.path.join(pth, 'figure.png'))
+    shutil.rmtree(pth)
 
     ece_calculator.reset()
 

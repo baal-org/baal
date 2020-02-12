@@ -136,7 +136,10 @@ class ECE(Metrics):
         return self.calculate_result()
 
     def plot(self, pth=None):
-        """ Plot each bins, ideally this would be a diagonal line."""
+        """ Plot each bins, ideally this would be a diagonal line.
+        Args:
+            pth (str): if provided the figure will be saved under the given path
+        """
         import matplotlib.pyplot as plt
 
         # Plot the ECE
@@ -147,10 +150,11 @@ class ECE(Metrics):
         plt.ylabel('Accuracy')
         plt.xlabel('Uncertainty')
         plt.grid()
-        plt.show()
 
         if pth:
             plt.savefig(pth)
+        else:
+            plt.show()
 
     def reset(self):
         self.tp = np.zeros([self.n_bins])
