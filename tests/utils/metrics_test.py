@@ -7,7 +7,7 @@ import torch
 from hypothesis import given
 from torch_hypothesis import classification_logits_and_labels
 
-from baal.utils.metrics import Loss, Accuracy, Precision, ECE, ClassificationReport, PRAuC
+from baal.utils.metrics import Loss, Accuracy, Precision, ECE, ClassificationReport, PRAuC, ECE_PerCLs
 
 
 def test_loss():
@@ -216,6 +216,27 @@ def test_ece():
     assert np.allclose(ece_calculator.samples, [0, 1, 1])
     assert np.allclose(ece_calculator.tp, [0, 0, 1])
     assert round(ece_calculator.value, 2) == 0.25
+
+def test_ece_percls():
+    ece_calculator = ECE_PerCLs(n_cls=3, n_bins=3)
+
+    # start with multiclass classification
+    pred = torch.FloatTensor([[-40, 50, 10], [10, 80, 10]])
+    target = torch.LongTensor([[2], [1]])
+
+    for i in range(2):
+        ece_calculator.update(output=pred[i, :].unsqueeze(0), target=target[i, :].unsqueeze(0))
+
+    assert np.allclose(ece_calculator.samples, np.array([[0, 0, 0], [0, 0, 2], [0, 0, 0]]))
+    assert np.allclose(ece_calculator.tp, np.array([[0, 0, 0], [0, 0, 1], [0, 0, 0]]))
+    assert np.allclose(ece_calculator.value, np.array([0, 0.5, 0]))
+
+    pth = 'tmp'
+    Path(pth).mkdir(exist_ok=True)
+    print(pth)
+    ece_calculator.plot(pth=os.path.join(pth, 'figure.png'))
+    assert os.path.exists(os.path.join(pth, 'figure.png'))
+    shutil.rmtree(pth)
 
 def test_classification_report():
     met = ClassificationReport(num_classes=3)

@@ -161,6 +161,111 @@ class ECE(Metrics):
         self.samples = np.zeros([self.n_bins])
 
 
+class ECE_PerCLs(Metrics):
+    """
+    Expected Calibration Error (ECE)
+
+    Args:
+        n_bins (int): number of bins to discretize the uncertainty.
+
+    References:
+        https://arxiv.org/pdf/1706.04599.pdf
+    """
+
+    def __init__(self, n_cls, n_bins=10, **kwargs):
+        self.n_bins = n_bins
+        self.n_cls = n_cls
+        self.samples = np.zeros([self.n_cls, self.n_bins], dtype=int)
+        self.tp = np.zeros([self.n_cls, self.n_bins], dtype=int)
+        super().__init__(average=False)
+
+    def update(self, output=None, target=None):
+        """
+        Updating the true positive (tp) and number of samples in each bin.
+
+        Args:
+            output (tensor): logits or predictions of model
+            target (tensor): labels
+        """
+        output = output.detach().cpu().numpy()
+        target = target.detach().cpu().numpy()
+        output = to_prob(output)
+
+        # this is to make sure handling 1.0 value confidence to be assigned to a bin
+        output = np.clip(output, 0, 0.9999)
+
+
+        for pred, t in zip(output, target):
+            conf, p_cls = pred.max(), pred.argmax()
+
+            bin_id = int(math.floor(conf * self.n_bins))
+            self.samples[p_cls, bin_id] += 1
+            self.tp[p_cls, bin_id] += int(p_cls == t)
+
+    def _acc(self):
+        accuracy_per_class = np.zeros([self.n_cls, self.n_bins], dtype=float)
+        for cls in range(self.n_cls):
+            accuracy_per_class[cls, :] = self.tp[cls, :] / np.maximum(1, self.samples[cls, :])
+        return accuracy_per_class
+
+    def calculate_result(self):
+        bin_confs = np.linspace(0, 1, self.n_bins)
+        accuracy = self._acc()
+        ece = np.zeros([self.n_cls])
+        for cls in range(self.n_cls):
+            n = self.samples[cls, :].sum()
+            if n == 0 :
+                ece[cls] = 0
+            else:
+                ece[cls] = ((self.samples[cls, :] / n) * np.abs(accuracy[cls, :] - bin_confs)).sum()
+        return ece
+
+    @property
+    def value(self):
+        return self.calculate_result()
+
+    def plot(self, pth=None):
+        """ Plot each bins, ideally this would be a diagonal line.
+        Args:
+            pth (str): if provided the figure will be saved under the given path
+        """
+        # import matplotlib.pyplot as plt
+        import matplotlib
+        gui_env = ['TKAgg', 'GTKAgg', 'Qt4Agg', 'WXAgg']
+        for gui in gui_env:
+            try:
+                print("testing", gui)
+                matplotlib.use(gui, warn=False, force=True)
+                from matplotlib import pyplot as plt
+
+                break
+            except Exception as e:
+                print(e)
+                continue
+
+        print("Using:", matplotlib.get_backend())
+
+        accuracy = self._acc()
+        # Plot the ECE
+        fig, axs = plt.subplots(self.n_cls)
+        for cls in range(self.n_cls):
+            axs[cls].bar(np.linspace(0, 1, self.n_bins), accuracy[cls, :], align='edge', width=0.1)
+            axs[cls].plot([0, 1], [0, 1], '--', color='tab:gray')
+            axs[cls].set_ylim(0, 1)
+            axs[cls].set_xlim(0, 1)
+            axs[cls].set_ylabel('Accuracy')
+            axs[cls].set_xlabel('Uncertainty')
+            axs[cls].grid()
+        if pth:
+            plt.savefig(pth)
+        else:
+            plt.show()
+
+    def reset(self):
+        self.tp = np.zeros([self.n_cls, self.n_bins])
+        self.samples = np.zeros([self.n_cls, self.n_bins])
+
+
 class Loss(Metrics):
     """
     Args:
