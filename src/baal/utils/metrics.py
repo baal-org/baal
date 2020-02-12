@@ -136,8 +136,25 @@ class ECE(Metrics):
         return self.calculate_result()
 
     def plot(self, pth=None):
-        """ Plot each bins, ideally this would be a diagonal line."""
-        import matplotlib.pyplot as plt
+        """ Plot each bins, ideally this would be a diagonal line.
+        Args:
+            pth (str): if provided the figure will be saved under the given path
+        """
+        # import matplotlib.pyplot as plt
+        import matplotlib
+        gui_env = ['TKAgg', 'GTKAgg', 'Qt4Agg', 'WXAgg']
+        for gui in gui_env:
+            try:
+                print("testing", gui)
+                matplotlib.use(gui, warn=False, force=True)
+                from matplotlib import pyplot as plt
+
+                break
+            except Exception as e:
+                print(e)
+                continue
+
+        print("Using:", matplotlib.get_backend())
 
         # Plot the ECE
         plt.bar(np.linspace(0, 1, self.n_bins), self._acc(), align='edge', width=0.1)
@@ -147,10 +164,11 @@ class ECE(Metrics):
         plt.ylabel('Accuracy')
         plt.xlabel('Uncertainty')
         plt.grid()
-        plt.show()
 
         if pth:
             plt.savefig(pth)
+        else:
+            plt.show()
 
     def reset(self):
         self.tp = np.zeros([self.n_bins])
