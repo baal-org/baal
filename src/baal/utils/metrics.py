@@ -136,7 +136,8 @@ class ECE(Metrics):
         return self.calculate_result()
 
     def plot(self, pth=None):
-        """ Plot each bins, ideally this would be a diagonal line.
+        """
+        Plot each bins, ideally this would be a diagonal line.
 
         Args:
             pth (str): if provided the figure will be saved under the given path
