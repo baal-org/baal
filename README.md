@@ -10,6 +10,8 @@ and reusable components to make active learning accessible for all.
 
 Read the documentation at https://baal.readthedocs.io.
 
+You can also read our [blog post](https://www.elementai.com/news/2019/element-ai-makes-its-bayesian-active-learning-library-open-source).
+
 ## Installation and requirements
 
 BaaL requires `Python>=3.6`.
