@@ -6,8 +6,10 @@ from collections.abc import Sequence
 
 import numpy as np
 import scipy.stats
-from scipy.special import softmax, xlogy
+from scipy.special import xlogy
 from torch import Tensor
+
+from baal.utils.array_utils import to_prob
 
 available_reductions = {
     'max': lambda x: np.max(x, axis=tuple(range(1, x.ndim))),
@@ -60,9 +62,7 @@ def requireprobs(fn):
     @_wraps(fn)
     def wrapper(self, probabilities):
         # Expected shape : [n_sample, n_classes, ..., n_iterations]
-        bounded = np.min(probabilities) < 0 or np.max(probabilities) > 1.0
-        if bounded or not np.allclose(probabilities.sum(1), 1):
-            probabilities = softmax(probabilities, 1)
+        probabilities = to_prob(probabilities)
         return fn(self, probabilities)
 
     return wrapper

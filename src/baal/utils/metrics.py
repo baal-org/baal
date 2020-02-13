@@ -1,10 +1,14 @@
 # From https://github.com/pytorch/ignite with slight changes
+import dataclasses
 import math
 import warnings
+from collections import defaultdict
 
 import numpy as np
 import torch
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, auc
+
+from baal.utils.array_utils import to_prob
 
 
 class Metrics(object):
@@ -98,9 +102,24 @@ class ECE(Metrics):
         super().__init__(average=False)
 
     def update(self, output=None, target=None):
+        """
+        Updating the true positive (tp) and number of samples in each bin.
+
+        Args:
+            output (tensor): logits or predictions of model
+            target (tensor): labels
+        """
+        output = output.detach().cpu().numpy()
+        target = target.detach().cpu().numpy()
+        output = to_prob(output)
+
+        # this is to make sure handling 1.0 value confidence to be assigned to a bin
+        output = np.clip(output, 0, 0.9999)
+
         for pred, t in zip(output, target):
             conf, p_cls = pred.max(), pred.argmax()
-            bin_id = int(math.floor(conf / (1.0 / self.n_bins)))
+
+            bin_id = int(math.floor(conf * self.n_bins))
             self.samples[bin_id] += 1
             self.tp[bin_id] += int(p_cls == t)
 
@@ -116,8 +135,13 @@ class ECE(Metrics):
     def value(self):
         return self.calculate_result()
 
-    def plot(self):
-        """ Plot each bins, ideally this would be a diagonal line."""
+    def plot(self, pth=None):
+        """
+        Plot each bins, ideally this would be a diagonal line.
+
+        Args:
+            pth (str): if provided the figure will be saved under the given path
+        """
         import matplotlib.pyplot as plt
 
         # Plot the ECE
@@ -128,7 +152,11 @@ class ECE(Metrics):
         plt.ylabel('Accuracy')
         plt.xlabel('Uncertainty')
         plt.grid()
-        plt.show()
+
+        if pth:
+            plt.savefig(pth)
+        else:
+            plt.show()
 
     def reset(self):
         self.tp = np.zeros([self.n_bins])
@@ -307,3 +335,73 @@ class ClassificationReport(Metrics):
         precision = tp / np.maximum(1, tp + fp)
         recall = tp / np.maximum(1, tp + fn)
         return {'accuracy': acc, 'precision': precision, 'recall': recall}
+
+
+@dataclasses.dataclass
+class Report:
+    tp: int = 0
+    fp: int = 0
+    fn: int = 0
+
+
+class PRAuC(Metrics):
+    """
+    Precision-Recall Area under the curve.
+
+    Args:
+        num_classes (int): Number of classes
+        n_bins (int): number of confidence threshold to evaluate on.
+        average (bool): If true will return the mean AuC of all classes.
+    """
+
+    def __init__(self, num_classes, n_bins, average):
+        self.num_classes = num_classes
+        self.threshold = np.linspace(0.02, 0.99, n_bins)
+        self._data = defaultdict(lambda: defaultdict(lambda: Report()))
+        super().__init__(average)
+
+    def reset(self):
+        self._data.clear()
+
+    def update(self, output=None, target=None):
+        """
+        Update the confusion matrice according to output and target.
+
+        Args:
+            output (tensor): predictions of model
+            target (tensor): labels
+        """
+        output = output.detach().cpu().numpy()
+        target = target.detach().cpu().numpy()
+        output = to_prob(output)
+
+        assert output.ndim > target.ndim, 'Only multiclass classification is supported.'
+        for cls in range(self.num_classes):
+            target_cls = (target == cls).astype(np.int8)
+            for th in self.threshold:
+                report = self._make_report(output[:, cls, ...], target_cls, th)
+                self._data[cls][th].fp += report.fp
+                self._data[cls][th].tp += report.tp
+                self._data[cls][th].fn += report.fn
+
+    def _make_report(self, output, target, threshold):
+        output = (output > threshold).astype(np.int8)
+        output = output.reshape([-1])
+        target = target.reshape([-1])
+        _, fp, fn, tp = confusion_matrix(target, output, labels=[0, 1]).ravel()
+        return Report(tp=tp, fp=fp, fn=fn)
+
+    @property
+    def value(self):
+        result = []
+        for cls in range(self.num_classes):
+            precisions = np.array([r.tp / max(1, r.tp + r.fp) for r in self._data[cls].values()])
+            recalls = np.array([r.tp / max(1, r.tp + r.fn) for r in self._data[cls].values()])
+            idx = np.argsort(recalls)
+            precisions = precisions[idx]
+            recalls = recalls[idx]
+
+            result.append(auc(recalls, precisions))
+        if self._average:
+            return np.mean(result)
+        return result

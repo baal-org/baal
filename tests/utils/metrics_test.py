@@ -1,13 +1,13 @@
+import os
+from pathlib import Path
 import numpy as np
 import pytest
+import shutil
 import torch
-
-from baal.utils.metrics import Loss, Accuracy, Precision, ECE, ClassificationReport
-
-from hypothesis import given, assume, strategies as st
-from hypothesis.extra import numpy as numpy_strategies
-
+from hypothesis import given
 from torch_hypothesis import classification_logits_and_labels
+
+from baal.utils.metrics import Loss, Accuracy, Precision, ECE, ClassificationReport, PRAuC
 
 
 def test_loss():
@@ -120,6 +120,21 @@ def test_that_accuracy_string_repr_doesnt_throw_errors(y_ypred):
     assert "±" in str(accuracy)
 
 
+@given(y_ypred=classification_logits_and_labels(batch_size=(1, 32), n_classes=(2, 50)))
+def test_auc(y_ypred):
+    predicted, true = y_ypred
+    num_classes = predicted.shape[1]
+    met = PRAuC(num_classes=num_classes, n_bins=10, average=False)
+    met.update(predicted, true)
+    met.update(predicted, true)
+    assert len(met.value) == num_classes
+
+    met = PRAuC(num_classes=num_classes, n_bins=10, average=True)
+    met.update(predicted, true)
+    met.update(predicted, true)
+    assert isinstance(met.value, float)
+
+
 def test_accuracy():
     acc_calculator = Accuracy(average=False, topk=(2,))
 
@@ -173,6 +188,25 @@ def test_ece():
     ece_calculator = ECE(n_bins=3)
 
     # start with multiclass classification
+    pred = torch.FloatTensor([[-40, 50, 10], [10, 80, 10]])
+    target = torch.LongTensor([[2], [1]])
+
+    for i in range(2):
+        ece_calculator.update(output=pred[i, :].unsqueeze(0), target=target[i, :].unsqueeze(0))
+
+    assert np.allclose(ece_calculator.samples, [0, 0, 2])
+    assert np.allclose(ece_calculator.tp, [0, 0, 1])
+    assert round(ece_calculator.value, 2) == 0.5
+
+    pth = 'tmp'
+    Path(pth).mkdir(exist_ok=True)
+    ece_calculator.plot(pth=os.path.join(pth, 'figure.png'))
+    assert os.path.exists(os.path.join(pth, 'figure.png'))
+    shutil.rmtree(pth)
+
+    ece_calculator.reset()
+
+    # start with multiclass classification
     pred = torch.FloatTensor([[0.4, 0.5, 0.1], [0.1, 0.8, 0.1]])
     target = torch.LongTensor([[2], [1]])
 
@@ -182,7 +216,6 @@ def test_ece():
     assert np.allclose(ece_calculator.samples, [0, 1, 1])
     assert np.allclose(ece_calculator.tp, [0, 0, 1])
     assert round(ece_calculator.value, 2) == 0.25
-
 
 def test_classification_report():
     met = ClassificationReport(num_classes=3)
