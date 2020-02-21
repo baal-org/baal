@@ -155,8 +155,8 @@ class ECE(Metrics):
 
         if pth:
             plt.savefig(pth)
-        else:
-            plt.show()
+        plt.close()
+
 
     def reset(self):
         self.tp = np.zeros([self.n_bins])
@@ -251,8 +251,7 @@ class ECE_PerCLs(Metrics):
             axs[cls].grid()
         if pth:
             plt.savefig(pth)
-        else:
-            plt.show()
+        plt.close()
 
     def reset(self):
         self.tp = np.zeros([self.n_cls, self.n_bins])
