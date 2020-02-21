@@ -157,7 +157,6 @@ class ECE(Metrics):
             plt.savefig(pth)
         plt.close()
 
-
     def reset(self):
         self.tp = np.zeros([self.n_bins])
         self.samples = np.zeros([self.n_bins])
