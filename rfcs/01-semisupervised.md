@@ -59,10 +59,42 @@ class ActiveLearningDataset:
 In this setting, we combine two iterators, the standard ActiveLearning iterator,
  but also the pool iterator.
   We will guarantee that they will alternate between the two.
+  
+### ModelWrapper Support
+
+
+We can then modify `ModelWrapper`:
+
+```python
+class PoolCriterion:
+    def __call__(self, data, output, target):
+        raise NotImplementedError
+
+class ModelWrapper:
+    def __init__(self, model, criterion, pool_criterion: PoolCriterion=None):
+        self._is_semi_supervised = pool_criterion is not None
+        ... 
+
+    def train_on_pool_batch(self, data, target, optimizer, cuda=False):
+        if cuda:
+            data, target = to_cuda(data), to_cuda(target)
+        optimizer.zero_grad()
+        output = self.model(data)
+        loss = self.pool_criterion(data, output, target)
+        loss.backward()
+        optimizer.step()
+        self._update_metrics(output, target, loss, filter='train', is_labelled=False)
+        return loss
+```
+
+Note the `is_labelled` in _update_metrics. Users will specify if a metric is for supervised or unsupervised loss.
+`train_on_dataset` will be changed accordingdly to call `train_on_pool_batch` or `train_on_batch`.
+`train_on_dataset` will also be changed to support both standard dataset and datasets from iter_alternate.
 
 ## Unresolved questions
 
-How to include this in ModelWrapper seemlessly?
+* Not sure how to make this backward compatible.
+* Should this be a new ModelWrapper entirely?
 
 ## Future possibilities
 
