@@ -1,7 +1,7 @@
 # Semi-supervised learning support
 
 ---
-| Status        | (Proposed / Accepted / Implemented / Obsolete)       |
+| Status        | Proposed       |
 :-------------- |:---------------------------------------------------- |
 | **RFC #**     | 1|
 | **Author(s)** | @Dref360 |
