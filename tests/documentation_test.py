@@ -11,7 +11,7 @@ modules = ['baal', 'baal.active', 'baal.bayesian',
            'baal.active.dataset', 'baal.active.file_dataset',
            'baal.utils.metrics', 'baal.utils.cuda_utils']
 # We do not force these functions to be compliant.
-accepted_name = ['set_logger_config']
+accepted_name = ['set_logger_config', 'Report']
 # We do not force these modules to be compliant.
 accepted_module = []
 
