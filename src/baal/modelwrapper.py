@@ -24,7 +24,7 @@ class ModelWrapper:
 
     Args:
         model (nn.Module): The model to optimize.
-        criterion (Callable): a loss function.
+        criterion (Callable): A loss function.
         replicate_in_memory (bool): Replicate in memory optional.
     """
 
@@ -63,8 +63,8 @@ class ModelWrapper:
         Update all metrics.
 
         Args:
-            out (Tensor): Prediction
-            target (Tensor): Ground truth
+            out (Tensor): Prediction.
+            target (Tensor): Ground truth.
             loss (Tensor): Loss from the criterion.
             filter (str): Only update metrics according to this filter.
         """
@@ -161,7 +161,7 @@ class ModelWrapper:
             test_dataset (Dataset): Dataset to evaluate on.
             optimizer (Optimizer): Optimizer to use during training.
             batch_size (int): Batch size used.
-            epoch (int): number of epoch to train on.
+            epoch (int): Number of epoch to train on.
             use_cuda (bool): Use Cuda or not.
             workers (int): Number of workers to use.
             collate_fn (Optional[Callable]): The collate function to use.
@@ -210,13 +210,13 @@ class ModelWrapper:
             use_cuda (bool): Use CUDA or not.
             workers (int): Number of workers to use.
             collate_fn (Optional[Callable]): The collate function to use.
-            half (bool): if True use half precision.
+            half (bool): If True use half precision.
 
         Notes:
             The "batch" is made of `batch_size` * `iterations` samples.
 
         Returns:
-            Generators [batch_size, n_classes, ..., n_iterations]
+            Generators [batch_size, n_classes, ..., n_iterations].
         """
         self.eval()
         if len(dataset) == 0:
@@ -248,7 +248,7 @@ class ModelWrapper:
             use_cuda (bool): Use CUDA or not.
             workers (int): Number of workers to use.
             collate_fn (Optional[Callable]): The collate function to use.
-            half (bool): if True use half precision
+            half (bool): If True use half precision.
 
         Notes:
             The "batch" is made of `batch_size` * `iterations` samples.
@@ -271,10 +271,10 @@ class ModelWrapper:
         Train the current model on a batch using `optimizer`.
 
         Args:
-            data (Tensor): the model input
-            target (Tensor): the ground truth
-            optimizer (optim.Optimizer): an optimizer
-            cuda (bool): use cuda or not
+            data (Tensor): The model input.
+            target (Tensor): The ground truth.
+            optimizer (optim.Optimizer): An optimizer.
+            cuda (bool): Use CUDA or not.
 
         Returns:
             Tensor, the loss computed from the criterion.
@@ -301,9 +301,9 @@ class ModelWrapper:
         Test the current model on a batch.
 
         Args:
-            data (Tensor): the model input
-            target (Tensor): the ground truth
-            cuda (bool): use cuda or not
+            data (Tensor): The model input.
+            target (Tensor): The ground truth.
+            cuda (bool): Use CUDA or not.
             average_predictions (int): The number of predictions to average to
                 compute the test loss.
 
@@ -330,16 +330,16 @@ class ModelWrapper:
         Get the model's prediction on a batch.
 
         Args:
-            data (Tensor): the model input
-            iterations (int): number of prediction to perform.
-            cuda (bool): use cuda or not
+            data (Tensor): The model input.
+            iterations (int): Number of prediction to perform.
+            cuda (bool): Use CUDA or not.
 
         Returns:
             Tensor, the loss computed from the criterion.
-                    shape = {batch_size, nclass, n_iteration}
+                    shape = {batch_size, nclass, n_iteration}.
 
         Raises:
-            raises RuntimeError if CUDA rans out of memory during data replication.
+            Raises RuntimeError if CUDA rans out of memory during data replication.
         """
         with torch.no_grad():
             if cuda:
@@ -382,11 +382,11 @@ class ModelWrapper:
         return self.model.parameters()
 
     def state_dict(self):
-        """Get the state dict(s)"""
+        """Get the state dict(s)."""
         return self.model.state_dict()
 
     def load_state_dict(self, state_dict, strict=True):
-        """Load the model with `state_dict`"""
+        """Load the model with `state_dict`."""
         self.model.load_state_dict(state_dict, strict=strict)
 
     def train(self):

@@ -17,12 +17,12 @@ class Dropout(_DropoutNd):
     Furthermore, the outputs are scaled by a factor of :math:`\frac{1}{1-p}` during
     training.
     Shape:
-        - Input: :math:`(*)`. Input can be of any shape
+        - Input: :math:`(*)`. Input can be of any shape.
         - Output: :math:`(*)`. Output is of the same shape as input.
 
     Args:
         p (float, optional):
-            probability of an element to be zeroed. Default: 0.5
+            Probability of an element to be zeroed. Default: 0.5
         inplace (bool, optional):
             If set to ``True``, will do this operation in-place. Default: ``False``
 
@@ -62,9 +62,9 @@ class Dropout2d(_DropoutNd):
 
     Args:
         p (float, optional):
-            probability of an element to be zero-ed.
+            Probability of an element to be zero-ed.
         inplace (bool, optional):
-            If set to ``True``, will do this operation in-place
+            If set to ``True``, will do this operation in-place.
 
     Examples::
 
