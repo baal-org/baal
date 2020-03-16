@@ -14,7 +14,7 @@ def get_weight_drop_module(name: str, weight_dropout, **kwargs):
     }[name](weight_dropout, **kwargs)
 
 
-# code from https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/nn/weight_drop.html
+# Code from https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/nn/weight_drop.html
 def _weight_drop(module, weights, dropout):
     """
     Helper for `WeightDrop`.
@@ -62,13 +62,13 @@ class WeightDropLinear(torch.nn.Linear):
 
 class WeightDropConv2d(torch.nn.Conv2d):
     """
-    reimplemmentation of WeightDrop for Conv2D. Thanks to PytorchNLP for the initial implementation
+    Reimplemmentation of WeightDrop for Conv2D. Thanks to PytorchNLP for the initial implementation
     of class WeightDropLinear. Their `License
     <https://github.com/PetrochukM/PyTorch-NLP/blob/master/LICENSE>`__.
     Wrapper around :class: 'torch.nn.Conv' that adds '' weight_dropout '' named argument.
 
     Args:
-        weight_dropout (float): The probability a weight will be dropped
+        weight_dropout (float): The probability a weight will be dropped.
     """
     def __init__(self, weight_dropout=0.0, **kwargs):
         wanted = ['in_channels', 'out_channels', 'kernel_size', 'dilation', 'padding']
@@ -88,7 +88,7 @@ def patch_module(module: torch.nn.Module,
         module : torch.nn.Module
             The module in which you would like to replace dropout layers.
         layers : list[str]
-            name of layers to be replaced from ['Conv', 'Linear', 'LSTM', 'GRU']
+            Name of layers to be replaced from ['Conv', 'Linear', 'LSTM', 'GRU'].
         weight_dropout (float): The probability a weight will be dropped.
         inplace : bool, optional
             Whether to modify the module in place or return a copy of the module.
@@ -120,11 +120,11 @@ def _patch_layers(module: torch.nn.Module, layers: Sequence, weight_dropout: flo
         if new_module is not None:
             module.add_module(name, new_module)
 
-        # the dropout layer should be deactivated to use DropConnect
+        # The dropout layer should be deactivated to use DropConnect.
         if isinstance(child, torch.nn.Dropout):
             child.p = 0
 
-        # recursively apply to child
+        # Recursively apply to child.
         _patch_layers(child, layers, weight_dropout)
 
 
@@ -137,7 +137,7 @@ class MCDropoutConnectModule(torch.nn.Module):
         module (torch.nn.Module):
             A fully specified neural network.
         layers (list[str]):
-            name of layers to be replaced from ['Conv', 'Linear', 'LSTM', 'GRU']
+            Name of layers to be replaced from ['Conv', 'Linear', 'LSTM', 'GRU'].
         weight_dropout (float): The probability a weight will be dropped.
     """
     def __init__(self, module: torch.nn.Module, layers: Sequence, weight_dropout=0.0):

@@ -25,10 +25,10 @@ class FileDataset(Dataset):
     Dataset object that load the files and apply a transformation.
 
     Args:
-        files (List[str]): the files
-        lbls (List[Any]): the labels, -1 indicates that the label is unknown.
+        files (List[str]): The files.
+        lbls (List[Any]): The labels, -1 indicates that the label is unknown.
         transform (Optional[Callable]): torchvision.transform pipeline.
-        target_transform (Optional[Callable]): Function that modifies the target
+        target_transform (Optional[Callable]): Function that modifies the target.
         image_load_fn (Optional[Callable]): Function that loads the image, by default uses PIL.
         seed (Optional[int]): Will set a seed before and between DA.
     """
@@ -55,8 +55,8 @@ class FileDataset(Dataset):
         Label the sample `idx` with `lbl`.
 
         Args:
-            idx (int): the sample index.
-            lbl (Any): the label to assign.
+            idx (int): The sample index.
+            lbl (Any): The label to assign.
         """
         if self.lbls[idx] >= 0:
             warnings.warn(
