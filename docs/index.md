@@ -17,16 +17,16 @@ Therefore, baal has several components:
     :caption: Components of baal
     :maxdepth: 2
 
-    Active learning dataset and training loop classes <active-learning.ipynb>
-    Methods for approximating bayesian posteriors <posteriors.ipynb>
+    Active learning dataset and training loop classes <notebooks/active-learning.ipynb>
+    Methods for approximating bayesian posteriors <notebooks/posteriors.ipynb>
     API Index <api/index>
 
 .. toctree ::
     :caption: Tutorials
     :maxdepth: 1
-
-    Use BaaL in production (Classification) <baal_prod_cls.ipynb>
-    Use BaaL with SkLearn (Classification) <sklearn_tutorial.ipynb>
+    
+    Use BaaL in production (Classification) <notebooks/baal_prod_cls.ipynb>
+    Use BaaL with SkLearn (Classification) <notebooks/sklearn_tutorial.ipynb>
 
 .. toctree::
     :caption: Literature and support

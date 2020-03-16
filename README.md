@@ -41,7 +41,7 @@ At the moment BaaL supports the following methods to perform active learning.
 
 The **Monte-Carlo Dropout** method is a known approximation for Bayesian neural
 networks. In this method, the dropout layer is used both in training and test
-time. By running the model multiple times whilst randomly dropping weights, we calculate the uncertainty of the prediction using one of the uncertainty measurements in _src/baal/active/heuristics.py_.
+time. By running the model multiple times whilst randomly dropping weights, we calculate the uncertainty of the prediction using one of the uncertainty measurements in [src/baal/active/heuristics.py](src/baal/active/heuristics.py).
 
 The framework consists of four main parts, as demonstrated in the flowchart below:
 
@@ -111,7 +111,7 @@ nvidia-docker run --rm baal python3 experiments/vgg_mcdropout_cifar10.py
 ### Use BaaL for YOUR Experiments
 
 Simply clone the repo, and create your own experiment script similar to the
-example at _experiments/vgg_experiment.py_. Make sure to use the four main parts
+example at [experiments/vgg_experiment.py](experiments/vgg_experiment.py). Make sure to use the four main parts
 of BaaL framework. _Happy running experiments_
 
 ### Dev install

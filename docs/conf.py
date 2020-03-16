@@ -13,9 +13,16 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import pathlib
+import shutil
 import sys
 
+pjoin = os.path.join
+parent_dir = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, os.path.abspath('./../src'))
+
+shutil.rmtree('notebooks', ignore_errors=True)
+shutil.copytree(pjoin(parent_dir, 'notebooks'), 'notebooks')
 
 # -- Project information -----------------------------------------------------
 
