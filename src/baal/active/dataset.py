@@ -19,14 +19,14 @@ class ActiveLearningDataset(torchdata.Dataset):
     Args:
         dataset (torch.data.Dataset): The baseline dataset.
         eval_transform (Optional(Callable)): DEPRECATED
-                                            transformations to call on the evaluation dataset.
+                                            Transformations to call on the evaluation dataset.
         labelled (Union[np.ndarray, torch.Tensor]):
             An array/tensor that acts as a boolean mask which is True for every
             data point that is labelled, and False for every data point that is not
             labelled.
-        make_unlabelled (Callable): the function that returns an
+        make_unlabelled (Callable): The function that returns an
             unlabelled version of a datum so that it can still be used in the DataLoader.
-        random_state (None, int, RandomState): set the random seed for label_randomly().
+        random_state (None, int, RandomState): Set the random seed for label_randomly().
         pool_specifics (Optional[Dict]): Attributes to set when creating the pool.
                                          Useful to remove data augmentation.
     """
@@ -180,7 +180,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         Label `n` data-points randomly.
 
         Args:
-            n (int): number of samples to label.
+            n (int): Number of samples to label.
         """
         for i in range(n):
             """Making multiple call to self.n_unlabelled is inefficient, but
@@ -193,7 +193,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         self._labelled = np.zeros(len(self._dataset), dtype=np.bool)
 
     def is_labelled(self, idx: int) -> bool:
-        """Check if a datapoint is labelled"""
+        """Check if a datapoint is labelled."""
         return self._labelled[idx] == 1
 
     def get_raw(self, idx: int) -> None:
@@ -201,12 +201,12 @@ class ActiveLearningDataset(torchdata.Dataset):
         return self._dataset[idx]
 
     def state_dict(self):
-        """Return the state_dict, ie. the labelled map and random_state"""
+        """Return the state_dict, ie. the labelled map and random_state."""
         return {'labelled': self._labelled,
                 'random_state': self.random_state}
 
     def load_state_dict(self, state_dict):
-        """Load the labelled map and random_state with give state_dict"""
+        """Load the labelled map and random_state with give state_dict."""
         self._labelled = state_dict['labelled']
         self.random_state = state_dict['random_state']
 
@@ -215,8 +215,8 @@ class ActiveLearningPool(torchdata.Dataset):
     """ A dataset that represents the unlabelled pool for active learning.
 
     Args:
-        dataset (Dataset): A Dataset object providing unlabeled sample.
-        make_unlabelled (Callable): the function that returns an
+        dataset (Dataset): A Dataset object providing unlabelled sample.
+        make_unlabelled (Callable): The function that returns an
             unlabelled version of a datum so that it can still be used in the DataLoader.
 
     """
@@ -226,7 +226,7 @@ class ActiveLearningPool(torchdata.Dataset):
         self.make_unlabelled = make_unlabelled
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, ...]:
-        # this datum is marked as unlabelled, so clear the label
+        # This datum is marked as unlabelled, so clear the label.
         return self.make_unlabelled(self._dataset[index])
 
     def __len__(self) -> int:
@@ -239,7 +239,7 @@ class ActiveNumpyArray(ActiveLearningDataset):
     Active dataset for numpy arrays. Useful when using sklearn.
 
     Args:
-        dataset (Tuple[ndarray, ndarray]): [Train x, train y], the dataset.
+        dataset (Tuple[ndarray, ndarray]): [Train x, train y], The dataset.
         labelled (Union[np.ndarray, torch.Tensor]):
             An array/tensor that acts as a boolean mask which is True for every
             data point that is labelled, and False for every data point that is not
