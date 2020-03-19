@@ -26,14 +26,18 @@ class ModelWrapper:
         model (nn.Module): The model to optimize.
         criterion (Callable): a loss function.
         replicate_in_memory (bool): Replicate in memory optional.
+        calibrator (object): Predefined class.
     """
 
-    def __init__(self, model, criterion, replicate_in_memory=True):
+    def __init__(self, model, criterion,
+                 replicate_in_memory=True, calibrator=None):
         self.model = model
         self.criterion = criterion
         self.metrics = dict()
         self.add_metric('loss', lambda: Loss())
         self.replicate_in_memory = replicate_in_memory
+        self.calibrator = calibrator
+
 
     def add_metric(self, name: str, initializer: Callable):
         """
@@ -265,6 +269,40 @@ class ModelWrapper:
             # Is an Array or a Tensor
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
+
+    def calibrate_on_dataset(self, train_data: Dataset, val_data: Dataset, batch_size: int, epoch: int,
+                             use_cuda: bool, double_fit: bool = False, **kwargs):
+        """
+        Calls the calibrate function, in the defined calibration class
+        Args:
+            train_data (Dataset): The training set.
+            val_data (Dataset): The validation set.
+            batch_size (int): Batch size for training and validation.
+            epoch (int): Number of epochs to train the linear layer for.
+            use_cuda (bool): If "True" will train on GPU.
+            double_fit (bool): If "True" would fit twice on the train set.
+
+        Returns:
+            loss_history (list[float]): List of loss values for each epoch.
+            weights (dict): Model weights.
+
+        """
+
+        loss_history, weights = self.calibrator.calibrate(train_data, val_data, epoch=epoch,
+                                                          batch_size=batch_size, use_cuda=use_cuda,
+                                                           double_fit=double_fit, **kwargs)
+
+        model_dict = self.state_dict()
+
+        # 1. filter out unnecessary keys
+        trained_dict = {k: v for k, v in self.calibrator.model.state_dict().items() if k in model_dict}
+        # 2. overwrite entries in the existing state dict
+        model_dict.update(trained_dict)
+        # 3. load the new state dict
+        self.load_state_dict(model_dict)
+
+        return loss_history, weights
+
 
     def train_on_batch(self, data, target, optimizer, cuda=False):
         """
