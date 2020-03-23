@@ -13,6 +13,7 @@ from baal.active import ActiveLearningDataset
 from baal.active import ActiveLearningLoop
 from baal.active import heuristics
 from baal.modelwrapper import ModelWrapper
+from baal.calibration import DirichletCalibrator
 
 
 class DummyDataset(Dataset):
@@ -73,6 +74,50 @@ def test_integration():
         assert any([not np.allclose(i.detach(), j.detach())
                     for i, j in zip(old_param, new_param)])
     assert step == 4  # 10 + (4 * 10) = 50, so it stops at iterations 4
+
+
+@pytest.mark.skipif('CIRCLECI' in os.environ, reason="slow")
+def test_calibration_integration():
+    transform_pipeline = Compose([Resize((64, 64)), ToTensor()])
+    cifar10_train = DummyDataset(transform_pipeline)
+    cifar10_test = DummyDataset(transform_pipeline)
+
+    # we don't create different trainset for calibration since the goal is not
+    # to calibrate
+    al_dataset = ActiveLearningDataset(cifar10_train,
+                                       pool_specifics={'transform': transform_pipeline})
+    al_dataset.label_randomly(10)
+    use_cuda = False
+    model = vgg.vgg16(pretrained=False,
+                      num_classes=10)
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=0.0005)
+
+    wrapper = ModelWrapper(model, criterion)
+    calibrator = DirichletCalibrator(wrapper=wrapper, num_classes=10,
+                                     lr=0.001, l=0.01)
+    calibrated_wrapper = ModelWrapper(model, criterion=criterion, calibrator=calibrator)
+
+
+    for step in range(2):
+
+        calibrated_wrapper.train_on_dataset(al_dataset, optimizer=optimizer, batch_size=10,
+                                            epoch=1, use_cuda=use_cuda, workers=0)
+        calibrated_wrapper.test_on_dataset(cifar10_test, batch_size=10, use_cuda=use_cuda,
+                                           workers=0)
+
+        before_calib_param = list(map(lambda x: x.clone(), calibrated_wrapper.model.parameters()))
+
+        calibrated_wrapper.calibrate_on_dataset(al_dataset, cifar10_test, batch_size=10, epoch=5,
+                                                use_cuda=use_cuda, double_fit=False, workers=0)
+        after_calib_param = list(map(lambda x: x.clone(), calibrated_wrapper.model.parameters()))
+
+
+        assert all([np.allclose(i.detach(), j.detach())
+                    for i, j in zip(before_calib_param, after_calib_param)])
+
+        assert len(list(calibrated_wrapper.model.modules())) < len(list(calibrated_wrapper.calibrator.calibrated_model.modules()))
 
 
 if __name__ == '__main__':

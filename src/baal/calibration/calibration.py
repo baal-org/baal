@@ -35,7 +35,7 @@ class DirichletCalibrator(object):
         self.mu = mu or l
 
         # TODO: need to support kwargs for initializer for ece_per_class
-        self.wrapper.add_metrics("ece", lambda: ECE())
+        self.wrapper.add_metric("ece", lambda: ECE())
         self.dirichlet_linear = nn.Linear(self.num_classes, self.num_classes)
         self.model = nn.Sequential(
             self.init_model,
@@ -81,14 +81,14 @@ class DirichletCalibrator(object):
             model.state_dict (dict): Model weights.
 
         """
-        model_dict = self.model.state_dict()
+        model_dict = self.init_model.state_dict()
 
         # 1. filter out unnecessary keys
         trained_dict = {k: v for k, v in self.wrapper.state_dict().items() if k in model_dict}
         # 2. overwrite entries in the existing state dict
         model_dict.update(trained_dict)
         # 3. load the new state dict
-        self.model.load_state_dict(model_dict)
+        self.init_model.load_state_dict(model_dict)
 
         # make sure that we are not retraining the model
         for param in self.init_model.parameters():
@@ -102,16 +102,16 @@ class DirichletCalibrator(object):
 
 
         optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
-        loss_history, weights = self.wrapper.train_and_test_on_dataset(dataset, val_dataset, optimizer,
+        loss_history, weights = self.wrapper.train_and_test_on_datasets(dataset, val_dataset, optimizer,
                                                                        batch_size, epoch, use_cuda,
                                                                        return_best_weights=True,
                                                                        patience=None, **kwargs)
-        self.model.load_state_dict(weights)
+        self.init_model.load_state_dict(weights)
 
         if double_fit:
             self.lr = self.lr / 10
             optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
-            loss_history, weights = self.wrapper.train_and_test_on_dataset(dataset, val_dataset, optimizer,
+            loss_history, weights = self.wrapper.train_and_test_on_datasets(dataset, val_dataset, optimizer,
                                                                            batch_size, epoch, use_cuda,
                                                                            return_best_weights=True,
                                                                            patience=None, **kwargs)
@@ -119,10 +119,12 @@ class DirichletCalibrator(object):
 
         return loss_history, self.model.state_dict()
 
-    def get_calibrated_model(self):
+    @property
+    def calibrated_model(self):
         return self.model
 
-    def get_metrics(self):
+    @property
+    def metrics(self):
         return self.wrapper.metrics
 
 

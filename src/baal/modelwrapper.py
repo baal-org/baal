@@ -79,31 +79,25 @@ class ModelWrapper:
                 else:
                     v.update(out, target)
 
-    def train_on_dataset(self, dataset, optimizer, batch_size, epoch, use_cuda, workers=4,
-                         collate_fn: Optional[Callable] = None):
+    def train_on_dataset(self, dataloader, optimizer, epoch, use_cuda):
         """
         Train for `epoch` epochs on a Dataset `dataset.
 
         Args:
-            dataset (Dataset): Pytorch Dataset to be trained on.
+            dataloader (DataLoader): Pytorch dataloader to be trained on.
             optimizer (optim.Optimizer): Optimizer to use.
-            batch_size (int): The batch size used in the DataLoader.
             epoch (int): Number of epoch to train for.
             use_cuda (bool): Use cuda or not.
-            workers (int): Number of workers for the multiprocessing.
-            collate_fn (Optional[Callable]): The collate function to use.
 
         Returns:
             The training history.
         """
         self.train()
         history = []
-        log.info("Starting training", epoch=epoch, dataset=len(dataset))
-        collate_fn = collate_fn or default_collate
+        log.info("Starting training", epoch=epoch, num_batches=len(DataLoader))
         for _ in range(epoch):
             self._reset_metrics('train')
-            for data, target in DataLoader(dataset, batch_size, True, num_workers=workers,
-                                           collate_fn=collate_fn):
+            for data, target in dataloader:
                 _ = self.train_on_batch(data, target, optimizer, use_cuda)
             history.append(self.metrics['train_loss'].value)
 
@@ -113,22 +107,16 @@ class ModelWrapper:
 
     def test_on_dataset(
         self,
-        dataset: Dataset,
-        batch_size: int,
+        dataloader: DataLoader,
         use_cuda: bool,
-        workers: int = 4,
-        collate_fn: Optional[Callable] = None,
         average_predictions: int = 1,
     ):
         """
         Test the model on a Dataset `dataset`.
 
         Args:
-            dataset (Dataset): Dataset to evaluate on.
-            batch_size (int): Batch size used for evaluation.
+            dataloader (DataLoader): Pytorch dataloader to evaluate on.
             use_cuda (bool): Use Cuda or not.
-            workers (int): Number of workers to use.
-            collate_fn (Optional[Callable]): The collate function to use.
             average_predictions (int): The number of predictions to average to
                 compute the test loss.
 
@@ -136,12 +124,10 @@ class ModelWrapper:
             Average loss value over the dataset.
         """
         self.eval()
-        log.info("Starting evaluating", dataset=len(dataset))
+        log.info("Starting evaluating", num_batches=len(dataloader))
         self._reset_metrics('test')
 
-        collate_fn = collate_fn or default_collate
-        for data, target in DataLoader(dataset, batch_size, False, num_workers=workers,
-                                       collate_fn=collate_fn):
+        for data, target in dataloader:
             _ = self.test_on_batch(
                 data, target, cuda=use_cuda, average_predictions=average_predictions
             )
@@ -291,16 +277,6 @@ class ModelWrapper:
         loss_history, weights = self.calibrator.calibrate(train_data, val_data, epoch=epoch,
                                                           batch_size=batch_size, use_cuda=use_cuda,
                                                            double_fit=double_fit, **kwargs)
-
-        model_dict = self.state_dict()
-
-        # 1. filter out unnecessary keys
-        trained_dict = {k: v for k, v in self.calibrator.model.state_dict().items() if k in model_dict}
-        # 2. overwrite entries in the existing state dict
-        model_dict.update(trained_dict)
-        # 3. load the new state dict
-        self.load_state_dict(model_dict)
-
         return loss_history, weights
 
 
