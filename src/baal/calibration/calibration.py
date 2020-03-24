@@ -97,7 +97,6 @@ class DirichletCalibrator(object):
         if use_cuda:
             self.dirichlet_linear.cuda()
 
-
         optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
         loss_history, weights = self.wrapper.train_and_test_on_datasets(train_loader, test_loader,
                                                                         optimizer, epoch, use_cuda,
