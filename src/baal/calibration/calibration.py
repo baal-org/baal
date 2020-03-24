@@ -60,18 +60,17 @@ class DirichletCalibrator(object):
         return self.l * w_l2_factor + self.mu * b_l2_factor
 
 
-    def calibrate(self, dataset, val_dataset, epoch,
-                  batch_size, use_cuda,
+    def calibrate(self, train_loader, test_loader,
+                  epoch, use_cuda,
                   double_fit=False, **kwargs):
         """
         Training the linear layer given a training set and a validation set.
         The training set should be different from what model is trained on.
 
         Args:
-            dataset (torch.Dataset): The training set.
-            val_dataset (torch.Dataset): The validation set.
+            train_loader (torch.Dataloader): The training set loader.
+            test_loader (torch.Dataloader): The validation set loader.
             epoch (int): Number of epochs to train the linear layer for.
-            batch_size (int): Batch size for training and validation.
             use_cuda (bool): If "True", will use GPU.
             double_fit (bool): If "True" would fit twice on the train set.
             kwargs : Rest of parameters for baal.ModelWrapper.train_and_test_on_dataset().
@@ -102,8 +101,8 @@ class DirichletCalibrator(object):
 
 
         optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
-        loss_history, weights = self.wrapper.train_and_test_on_datasets(dataset, val_dataset, optimizer,
-                                                                       batch_size, epoch, use_cuda,
+        loss_history, weights = self.wrapper.train_and_test_on_datasets(train_loader, test_loader,
+                                                                        optimizer, epoch, use_cuda,
                                                                        return_best_weights=True,
                                                                        patience=None, **kwargs)
         self.init_model.load_state_dict(weights)
@@ -111,8 +110,8 @@ class DirichletCalibrator(object):
         if double_fit:
             self.lr = self.lr / 10
             optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
-            loss_history, weights = self.wrapper.train_and_test_on_datasets(dataset, val_dataset, optimizer,
-                                                                           batch_size, epoch, use_cuda,
+            loss_history, weights = self.wrapper.train_and_test_on_datasets(train_loader, test_loader,
+                                                                            optimizer, epoch, use_cuda,
                                                                            return_best_weights=True,
                                                                            patience=None, **kwargs)
             self.model.load_state_dict(weights)

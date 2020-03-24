@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 from torch import nn
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 from baal.modelwrapper import ModelWrapper
 from baal.utils.metrics import ClassificationReport
@@ -131,20 +131,22 @@ class ModelWrapperMultiOutTest(unittest.TestCase):
             self.wrapper.predict_on_batch(input, 1, True)
 
     def test_train(self):
-        history = self.wrapper.train_on_dataset(self.dataset, self.optim, 10, 2, use_cuda=False,
-                                                workers=0)
+        loader = DataLoader(self.dataset, 10, True, num_workers=0)
+        history = self.wrapper.train_on_dataset(loader, self.optim, 2, use_cuda=False,)
         assert len(history) == 2
 
     def test_test(self):
-        l = self.wrapper.test_on_dataset(self.dataset, 10, use_cuda=False, workers=0)
+        loader = DataLoader(self.dataset, 10, False, num_workers=0)
+        l = self.wrapper.test_on_dataset(loader, use_cuda=False)
         assert np.isfinite(l)
         l = self.wrapper.test_on_dataset(
-            self.dataset, 10, use_cuda=False, workers=0, average_predictions=10
+            loader, use_cuda=False, average_predictions=10
         )
         assert np.isfinite(l)
 
     def test_predict(self):
-        l = self.wrapper.predict_on_dataset(self.dataset, 10, 20, use_cuda=False, workers=0)
+        loader = DataLoader(self.dataset, 10, False, num_workers=0)
+        l = self.wrapper.predict_on_dataset(loader, 20, use_cuda=False)
         self.wrapper.eval()
         assert np.allclose(
             self.wrapper.predict_on_batch(self.dataset[0][0].unsqueeze(0), 20)[0].detach().numpy(),
@@ -156,24 +158,21 @@ class ModelWrapperMultiOutTest(unittest.TestCase):
         assert l[0].shape == (len(self.dataset), 1, 20)
 
         # Test generators
-        l_gen = self.wrapper.predict_on_dataset_generator(self.dataset, 10, 20, use_cuda=False,
-                                                          workers=0)
+        l_gen = self.wrapper.predict_on_dataset_generator(loader, 20, use_cuda=False)
         assert np.allclose(next(l_gen)[0][0], l[0][0])
         for last in l_gen:
             pass  # Get last item
         assert np.allclose(last[0][-1], l[0][-1])
 
         # Test Half
-        l_gen = self.wrapper.predict_on_dataset_generator(self.dataset, 10, 20, use_cuda=False,
-                                                          workers=0, half=True)
-        l = self.wrapper.predict_on_dataset(self.dataset, 10, 20, use_cuda=False, workers=0,
-                                            half=True)
+        l_gen = self.wrapper.predict_on_dataset_generator(loader, 20, use_cuda=False, half=True)
+        l = self.wrapper.predict_on_dataset(loader, 20, use_cuda=False, half=True)
         assert next(l_gen)[0].dtype == np.float16
         assert l[0].dtype == np.float16
 
         data_s = []
-        l_gen = self.wrapper.predict_on_dataset_generator(data_s, 10, 20, use_cuda=False,
-                                                          workers=0, half=True)
+        loader = DataLoader(data_s, 10, False, num_workers=0)
+        l_gen = self.wrapper.predict_on_dataset_generator(loader, 20, use_cuda=False, half=True)
 
         assert len(list(l_gen)) == 0
 
@@ -254,20 +253,22 @@ class ModelWrapperTest(unittest.TestCase):
         assert pred.size() == (2, 1, 10)
 
     def test_train(self):
-        history = self.wrapper.train_on_dataset(self.dataset, self.optim, 10, 2, use_cuda=False,
-                                                workers=0)
+        loader = DataLoader(self.dataset, 10, True, num_workers=0)
+        history = self.wrapper.train_on_dataset(loader, self.optim, 2, use_cuda=False)
         assert len(history) == 2
 
     def test_test(self):
-        l = self.wrapper.test_on_dataset(self.dataset, 10, use_cuda=False, workers=0)
+        loader = DataLoader(self.dataset, 10, False, num_workers=0)
+        l = self.wrapper.test_on_dataset(loader, use_cuda=False)
         assert np.isfinite(l)
         l = self.wrapper.test_on_dataset(
-            self.dataset, 10, use_cuda=False, workers=0, average_predictions=10
+            loader, use_cuda=False, average_predictions=10
         )
         assert np.isfinite(l)
 
     def test_predict(self):
-        l = self.wrapper.predict_on_dataset(self.dataset, 10, 20, use_cuda=False, workers=0)
+        loader = DataLoader(self.dataset, 10, False, num_workers=0)
+        l = self.wrapper.predict_on_dataset(loader, 20, use_cuda=False)
         self.wrapper.eval()
         assert np.allclose(
             self.wrapper.predict_on_batch(self.dataset[0][0].unsqueeze(0), 20)[0].detach().numpy(),
@@ -278,18 +279,15 @@ class ModelWrapperTest(unittest.TestCase):
         assert l.shape == (len(self.dataset), 1, 20)
 
         # Test generators
-        l_gen = self.wrapper.predict_on_dataset_generator(self.dataset, 10, 20, use_cuda=False,
-                                                          workers=0)
+        l_gen = self.wrapper.predict_on_dataset_generator(loader, 20, use_cuda=False)
         assert np.allclose(next(l_gen)[0], l[0])
         for last in l_gen:
             pass  # Get last item
         assert np.allclose(last[-1], l[-1])
 
         # Test Half
-        l_gen = self.wrapper.predict_on_dataset_generator(self.dataset, 10, 20, use_cuda=False,
-                                                          workers=0, half=True)
-        l = self.wrapper.predict_on_dataset(self.dataset, 10, 20, use_cuda=False, workers=0,
-                                            half=True)
+        l_gen = self.wrapper.predict_on_dataset_generator(loader, 20, use_cuda=False, half=True)
+        l = self.wrapper.predict_on_dataset(loader, 20, use_cuda=False, half=True)
         assert next(l_gen).dtype == np.float16
         assert l.dtype == np.float16
 
@@ -329,20 +327,24 @@ class ModelWrapperTest(unittest.TestCase):
         pred_without_dropout(replicate_in_memory=False)
 
     def test_add_metric(self):
+        train_loader = DataLoader(self.dataset, 32, True, num_workers=0)
+        test_loader = DataLoader(self.dataset, 32, False, num_workers=0)
         self.wrapper.add_metric('cls_report', lambda: ClassificationReport(2))
         assert 'test_cls_report' in self.wrapper.metrics
         assert 'train_cls_report' in self.wrapper.metrics
-        self.wrapper.train_on_dataset(self.dataset, self.optim, 32, 2, False)
-        self.wrapper.test_on_dataset(self.dataset, 32, False)
+        self.wrapper.train_on_dataset(train_loader, self.optim, 2, False)
+        self.wrapper.test_on_dataset(test_loader, False)
         assert (self.wrapper.metrics['train_cls_report'].value['accuracy'] != 0).any()
         assert (self.wrapper.metrics['test_cls_report'].value['accuracy'] != 0).any()
 
     def test_train_and_test(self):
+        train_loader = DataLoader(self.dataset, 32, True, num_workers=0)
+        test_loader = DataLoader(self.dataset, 32, False, num_workers=0)
 
-        res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset, self.optim, 32, 5,
+        res = self.wrapper.train_and_test_on_datasets(train_loader, test_loader, self.optim, 5,
                                                       False, return_best_weights=False)
         assert len(res) == 5
-        res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset, self.optim, 32, 5,
+        res = self.wrapper.train_and_test_on_datasets(train_loader, test_loader, self.optim, 5,
                                                       False, return_best_weights=True)
         assert len(res) == 2
         assert len(res[0]) == 5
@@ -350,8 +352,8 @@ class ModelWrapperTest(unittest.TestCase):
         mock = Mock()
         mock.side_effect = (((np.linspace(0, 50) - 10) / 10) ** 2).tolist()
         self.wrapper.test_on_dataset = mock
-        res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset,
-                                                      self.optim, 32, 50,
+        res = self.wrapper.train_and_test_on_datasets(train_loader, test_loader,
+                                                      self.optim, 50,
                                                       False, return_best_weights=True, patience=1)
 
         assert len(res) == 2
@@ -360,8 +362,8 @@ class ModelWrapperTest(unittest.TestCase):
         mock = Mock()
         mock.side_effect = (((np.linspace(0, 50) - 10) / 10) ** 2).tolist()
         self.wrapper.test_on_dataset = mock
-        res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset,
-                                                      self.optim, 32, 50,
+        res = self.wrapper.train_and_test_on_datasets(train_loader, test_loader,
+                                                      self.optim, 50,
                                                       False, return_best_weights=True, patience=1,
                                                       min_epoch_for_es=20)
         assert len(res) == 2

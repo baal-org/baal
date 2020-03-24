@@ -3,7 +3,7 @@ from typing import Optional, Callable, Sequence
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
 
 from baal import ModelWrapper
 
@@ -76,19 +76,15 @@ class AbstractGPUHeuristic(ModelWrapper):
         """Rank the predictions according to their uncertainties."""
         return self.get_uncertainties(self.model.predict_on_batch(data, iterations, cuda=use_cuda))
 
-    def predict_on_dataset(self, dataset: Dataset, batch_size: int, iterations: int, use_cuda: bool,
-                           workers: int = 4, collate_fn: Optional[Callable] = None,
+    def predict_on_dataset(self, dataloader: DataLoader, iterations: int, use_cuda: bool,
                            half=False):
         """
         Use the model to predict on a dataset `iterations` time.
 
         Args:
-            dataset (Dataset): Dataset to predict on.
-            batch_size (int):  Batch size to use during prediction.
+            dataloader (DataLoader): Dataloader to predict on.
             iterations (int): Number of iterations per sample.
             use_cuda (bool): Use CUDA or not.
-            workers (int): Number of workers to use.
-            collate_fn (Optional[Callable]): The collate function to use.
             half (bool): if True use half precision
 
         Notes:
@@ -97,9 +93,9 @@ class AbstractGPUHeuristic(ModelWrapper):
         Returns:
             Array [n_samples, n_outputs, ..., n_iterations].
         """
-        preds = list(self.predict_on_dataset_generator(dataset=dataset, batch_size=batch_size,
-                                                       iterations=iterations, use_cuda=use_cuda,
-                                                       workers=workers, collate_fn=collate_fn,
+        preds = list(self.predict_on_dataset_generator(dataloader=dataloader,
+                                                       iterations=iterations,
+                                                       use_cuda=use_cuda,
                                                        half=half))
 
         if len(preds) > 0 and not isinstance(preds[0], Sequence):
