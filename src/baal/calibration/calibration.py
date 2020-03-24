@@ -20,19 +20,19 @@ class DirichletCalibrator(object):
         wrapper (baal.ModelWrapper): Provides training and testing methods.
         num_classes (int): Number of classes in classification task.
         lr (float): Learning rate.
-        l (float): Regularization factor for the linear layer weights.
+        reg_factor (float): Regularization factor for the linear layer weights.
         mu (float): Regularization factor for the linear layer biases.
             If not given, will be initialized by "l".
 
     """
-    def __init__(self, wrapper, num_classes, lr, l, mu=None):
+    def __init__(self, wrapper, num_classes, lr, reg_factor, mu=None):
         self.wrapper = wrapper
         self.init_model = deepcopy(wrapper.model)
         self.num_classes = num_classes
         self.loss = nn.CrossEntropyLoss()
-        self.lr =lr
-        self.l = l
-        self.mu = mu or l
+        self.lr = lr
+        self.reg_factor = reg_factor
+        self.mu = mu or reg_factor
 
         # TODO: need to support kwargs for initializer for ece_per_class
         self.wrapper.add_metric("ece", lambda: ECE())
@@ -41,7 +41,6 @@ class DirichletCalibrator(object):
             self.init_model,
             self.dirichlet_linear
         )
-
 
     def l2_reg(self):
         """ Using trainable layer's parameters for l2 regularization.
@@ -57,8 +56,7 @@ class DirichletCalibrator(object):
         assert 'bias' in name
         b_l2_factor = params.norm(2)
 
-        return self.l * w_l2_factor + self.mu * b_l2_factor
-
+        return self.reg_factor * w_l2_factor + self.mu * b_l2_factor
 
     def calibrate(self, train_loader, test_loader,
                   epoch, use_cuda,
@@ -103,17 +101,17 @@ class DirichletCalibrator(object):
         optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
         loss_history, weights = self.wrapper.train_and_test_on_datasets(train_loader, test_loader,
                                                                         optimizer, epoch, use_cuda,
-                                                                       return_best_weights=True,
-                                                                       patience=None, **kwargs)
+                                                                        return_best_weights=True,
+                                                                        patience=None, **kwargs)
         self.init_model.load_state_dict(weights)
 
         if double_fit:
             self.lr = self.lr / 10
             optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
-            loss_history, weights = self.wrapper.train_and_test_on_datasets(train_loader, test_loader,
-                                                                            optimizer, epoch, use_cuda,
-                                                                           return_best_weights=True,
-                                                                           patience=None, **kwargs)
+            loss_history, weights = self.wrapper.train_and_test_on_datasets(
+                train_loader, test_loader, optimizer, epoch, use_cuda,
+                eturn_best_weights=True, patience=None, **kwargs
+            )
             self.model.load_state_dict(weights)
 
         return loss_history, self.model.state_dict()
@@ -125,5 +123,3 @@ class DirichletCalibrator(object):
     @property
     def metrics(self):
         return self.wrapper.metrics
-
-

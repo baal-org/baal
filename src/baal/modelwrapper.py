@@ -37,7 +37,6 @@ class ModelWrapper:
         self.replicate_in_memory = replicate_in_memory
         self.calibrator = calibrator
 
-
     def add_metric(self, name: str, initializer: Callable):
         """
         Add a baal.utils.metric.Metric to the Model.
@@ -210,7 +209,8 @@ class ModelWrapper:
                 pred = map_on_tensor(lambda x: x.half(), pred)
             yield map_on_tensor(lambda x: x.cpu().numpy(), pred)
 
-    def predict_on_dataset(self, dataloader: DataLoader, iterations: int, use_cuda: bool, half=False):
+    def predict_on_dataset(self, dataloader: DataLoader, iterations: int,
+                           use_cuda: bool, half=False):
         """
         Use the model to predict on a dataset `iterations` time.
 
@@ -257,7 +257,6 @@ class ModelWrapper:
                                                           epoch=epoch, use_cuda=use_cuda,
                                                           double_fit=double_fit, **kwargs)
         return loss_history, weights
-
 
     def train_on_batch(self, data, target, optimizer, cuda=False):
         """
