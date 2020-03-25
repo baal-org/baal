@@ -1,9 +1,11 @@
 import structlog
 from copy import deepcopy
 import torch
+from torch.utils.data import Dataset
 from torch.optim import Adam
 from torch import nn
 from baal.utils.metrics import ECE
+from baal import ModelWrapper
 
 log = structlog.get_logger("Calibrating...")
 
@@ -17,7 +19,7 @@ class DirichletCalibrator(object):
 
     Args:
 
-        wrapper (baal.ModelWrapper): Provides training and testing methods.
+        wrapper (ModelWrapper): Provides training and testing methods.
         num_classes (int): Number of classes in classification task.
         lr (float): Learning rate.
         reg_factor (float): Regularization factor for the linear layer weights.
@@ -25,7 +27,8 @@ class DirichletCalibrator(object):
             If not given, will be initialized by "l".
 
     """
-    def __init__(self, wrapper, num_classes, lr, reg_factor, mu=None):
+    def __init__(self, wrapper: ModelWrapper, num_classes: int, lr: float,
+                 reg_factor: float, mu: float = None):
         self.wrapper = wrapper
         self.init_model = deepcopy(wrapper.model)
         self.num_classes = num_classes
@@ -58,20 +61,21 @@ class DirichletCalibrator(object):
 
         return self.reg_factor * w_l2_factor + self.mu * b_l2_factor
 
-    def calibrate(self, train_loader, test_loader,
-                  epoch, use_cuda,
-                  double_fit=False, **kwargs):
+    def calibrate(self, train_set: Dataset, test_set: Dataset,
+                  batch_size: int, epoch: int, use_cuda: bool,
+                  double_fit: bool = False, **kwargs):
         """
         Training the linear layer given a training set and a validation set.
         The training set should be different from what model is trained on.
 
         Args:
-            train_loader (torch.Dataloader): The training set loader.
-            test_loader (torch.Dataloader): The validation set loader.
+            train_set (Dataset): The training set.
+            test_set (Dataset): The validation set.
+            batch_size (int): Batch size used.
             epoch (int): Number of epochs to train the linear layer for.
             use_cuda (bool): If "True", will use GPU.
             double_fit (bool): If "True" would fit twice on the train set.
-            kwargs : Rest of parameters for baal.ModelWrapper.train_and_test_on_dataset().
+            kwargs (dict): Rest of parameters for baal.ModelWrapper.train_and_test_on_dataset().
 
         Returns:
             loss_history (list[float]): List of loss values for each epoch.
@@ -98,8 +102,9 @@ class DirichletCalibrator(object):
             self.dirichlet_linear.cuda()
 
         optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
-        loss_history, weights = self.wrapper.train_and_test_on_datasets(train_loader, test_loader,
-                                                                        optimizer, epoch, use_cuda,
+        loss_history, weights = self.wrapper.train_and_test_on_datasets(train_set, test_set,
+                                                                        optimizer, batch_size,
+                                                                        epoch, use_cuda,
                                                                         return_best_weights=True,
                                                                         patience=None, **kwargs)
         self.init_model.load_state_dict(weights)
@@ -107,10 +112,11 @@ class DirichletCalibrator(object):
         if double_fit:
             self.lr = self.lr / 10
             optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
-            loss_history, weights = self.wrapper.train_and_test_on_datasets(
-                train_loader, test_loader, optimizer, epoch, use_cuda,
-                eturn_best_weights=True, patience=None, **kwargs
-            )
+            loss_history, weights = self.wrapper.train_and_test_on_datasets(train_set, test_set,
+                                                                            optimizer, batch_size,
+                                                                            epoch, use_cuda,
+                                                                            return_best_weights=True,
+                                                                            patience=None, **kwargs)
             self.model.load_state_dict(weights)
 
         return loss_history, self.model.state_dict()

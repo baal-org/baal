@@ -7,7 +7,8 @@ import numpy as np
 import structlog
 import torch
 from torch.optim import Optimizer
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.dataloader import default_collate
 from tqdm import tqdm
 
 from baal.utils.iterutils import map_on_tensor
@@ -77,25 +78,31 @@ class ModelWrapper:
                 else:
                     v.update(out, target)
 
-    def train_on_dataset(self, dataloader, optimizer, epoch, use_cuda):
+    def train_on_dataset(self, dataset, optimizer, batch_size, epoch, use_cuda, workers=4,
+                         collate_fn: Optional[Callable] = None):
         """
         Train for `epoch` epochs on a Dataset `dataset.
 
         Args:
-            dataloader (DataLoader): Pytorch dataloader to be trained on.
+            dataset (Dataset): Pytorch Dataset to be trained on.
             optimizer (optim.Optimizer): Optimizer to use.
+            batch_size (int): The batch size used in the DataLoader.
             epoch (int): Number of epoch to train for.
             use_cuda (bool): Use cuda or not.
+            workers (int): Number of workers for the multiprocessing.
+            collate_fn (Optional[Callable]): The collate function to use.
 
         Returns:
             The training history.
         """
         self.train()
         history = []
-        log.info("Starting training", epoch=epoch, num_batches=len(dataloader))
+        log.info("Starting training", epoch=epoch, dataset=len(dataset))
+        collate_fn = collate_fn or default_collate
         for _ in range(epoch):
             self._reset_metrics('train')
-            for data, target in dataloader:
+            for data, target in DataLoader(dataset, batch_size, True, num_workers=workers,
+                                           collate_fn = collate_fn):
                 _ = self.train_on_batch(data, target, optimizer, use_cuda)
             history.append(self.metrics['train_loss'].value)
 
@@ -105,16 +112,22 @@ class ModelWrapper:
 
     def test_on_dataset(
         self,
-        dataloader: DataLoader,
+        dataset: Dataset,
+        batch_size: int,
         use_cuda: bool,
+        workers: int = 4,
+        collate_fn: Optional[Callable] = None,
         average_predictions: int = 1,
     ):
         """
         Test the model on a Dataset `dataset`.
 
         Args:
-            dataloader (DataLoader): Pytorch dataloader to evaluate on.
+            dataset (Dataset): Dataset to evaluate on.
+            batch_size (int): Batch size used for evaluation.
             use_cuda (bool): Use Cuda or not.
+            workers (int): Number of workers to use.
+            collate_fn (Optional[Callable]): The collate function to use.
             average_predictions (int): The number of predictions to average to
                 compute the test loss.
 
@@ -122,10 +135,11 @@ class ModelWrapper:
             Average loss value over the dataset.
         """
         self.eval()
-        log.info("Starting evaluating", num_batches=len(dataloader))
+        log.info("Starting evaluating", dataset=len(dataset))
         self._reset_metrics('test')
 
-        for data, target in dataloader:
+        for data, target in DataLoader(dataset, batch_size, False, num_workers=workers,
+                                       collate_fn=collate_fn):
             _ = self.test_on_batch(
                 data, target, cuda=use_cuda, average_predictions=average_predictions
             )
@@ -133,8 +147,11 @@ class ModelWrapper:
         log.info("Evaluation complete", test_loss=self.metrics['test_loss'].value)
         return self.metrics['test_loss'].value
 
-    def train_and_test_on_datasets(self, train_loader: DataLoader, test_loader: DataLoader,
-                                   optimizer: Optimizer, epoch: int, use_cuda: bool,
+    def train_and_test_on_datasets(self, train_dataset: Dataset, test_dataset: Dataset,
+                                   optimizer: Optimizer, batch_size: int, epoch: int,
+                                   use_cuda: bool,
+                                   workers: int = 4,
+                                   collate_fn: Optional[Callable] = None,
                                    return_best_weights=False,
                                    patience=None,
                                    min_epoch_for_es=0):
@@ -142,11 +159,14 @@ class ModelWrapper:
         Train and test the model on both Dataset `train_dataset`, `test_dataset`.
 
         Args:
-            train_loader (DataLoader): Dataloader to train on.
-            test_loader (DataLoader): Dataloader to evaluate on.
+            train_dataset (Dataset): Dataset to train on.
+            test_dataset (Dataset): Dataset to evaluate on.
             optimizer (Optimizer): Optimizer to use during training.
+            batch_size (int): Batch size used.
             epoch (int): number of epoch to train on.
             use_cuda (bool): Use Cuda or not.
+            workers (int): Number of workers to use.
+            collate_fn (Optional[Callable]): The collate function to use.
             return_best_weights (bool): If True, will keep the best weights and return them.
             patience (Optional[int]): If provided, will use early stopping to stop after
                                         `patience` epoch without improvement.
@@ -160,8 +180,10 @@ class ModelWrapper:
         best_epoch = 0
         hist = []
         for e in range(epoch):
-            _ = self.train_on_dataset(train_loader, optimizer, 1, use_cuda)
-            te_loss = self.test_on_dataset(test_loader, use_cuda)
+            _ = self.train_on_dataset(train_dataset, optimizer, batch_size, 1,
+                                      use_cuda, workers, collate_fn)
+            te_loss = self.test_on_dataset(test_dataset, batch_size, use_cuda, workers,
+                                           collate_fn)
             hist.append({k: v.value for k, v in self.metrics.items()})
             if te_loss < best_loss:
                 best_epoch = e
@@ -178,15 +200,19 @@ class ModelWrapper:
         else:
             return hist
 
-    def predict_on_dataset_generator(self, dataloader: DataLoader, iterations: int,
-                                     use_cuda: bool, half=False):
+    def predict_on_dataset_generator(self, dataset: Dataset, batch_size: int, iterations: int,
+                                     use_cuda: bool, workers: int = 4,
+                                     collate_fn: Optional[Callable] = None, half=False):
         """
         Use the model to predict on a dataset `iterations` time.
 
         Args:
-            dataloader (DataLoader): Dataloader to predict on.
+            dataset (Dataset): Dataset to predict on.
+            batch_size (int):  Batch size to use during prediction.
             iterations (int): Number of iterations per sample.
             use_cuda (bool): Use CUDA or not.
+            workers (int): Number of workers to use.
+            collate_fn (Optional[Callable]): The collate function to use.
             half (bool): if True use half precision.
 
         Notes:
@@ -196,12 +222,16 @@ class ModelWrapper:
             Generators [batch_size, n_classes, ..., n_iterations]
         """
         self.eval()
-        if len(dataloader) == 0:
+        if len(dataset) == 0:
             return None
 
-        log.info("Start Predict", num_batches=len(dataloader))
-
-        for idx, (data, _) in enumerate(tqdm(dataloader, total=len(dataloader), file=sys.stdout)):
+        log.info("Start Predict", dataset=len(dataset))
+        collate_fn = collate_fn or default_collate
+        loader = DataLoader(dataset,
+                            batch_size,
+                            False, num_workers=workers,
+                            collate_fn=collate_fn)
+        for idx, (data, _) in enumerate(tqdm(loader, total=len(loader), file=sys.stdout)):
 
             pred = self.predict_on_batch(data, iterations, use_cuda)
             pred = map_on_tensor(lambda x: x.detach(), pred)
@@ -209,15 +239,19 @@ class ModelWrapper:
                 pred = map_on_tensor(lambda x: x.half(), pred)
             yield map_on_tensor(lambda x: x.cpu().numpy(), pred)
 
-    def predict_on_dataset(self, dataloader: DataLoader, iterations: int,
-                           use_cuda: bool, half=False):
+    def predict_on_dataset(self, dataset: Dataset, batch_size: int, iterations: int,
+                           use_cuda: bool, workers: int = 4,
+                           collate_fn: Optional[Callable] = None, half=False):
         """
         Use the model to predict on a dataset `iterations` time.
 
         Args:
-            dataloader (DataLoader): Dataloader to predict on.
+            dataset (Dataset): Dataset to predict on.
+            batch_size (int):  Batch size to use during prediction.
             iterations (int): Number of iterations per sample.
             use_cuda (bool): Use CUDA or not.
+            workers (int): Number of workers to use.
+            collate_fn (Optional[Callable]): The collate function to use.
             half (bool): if True use half precision
 
         Notes:
@@ -226,9 +260,9 @@ class ModelWrapper:
         Returns:
             Array [n_samples, n_outputs, ..., n_iterations].
         """
-        preds = list(self.predict_on_dataset_generator(dataloader=dataloader,
-                                                       iterations=iterations,
-                                                       use_cuda=use_cuda,
+        preds = list(self.predict_on_dataset_generator(dataset=dataset, batch_size=batch_size,
+                                                       iterations=iterations, use_cuda=use_cuda,
+                                                       workers=workers, collate_fn=collate_fn,
                                                        half=half))
 
         if len(preds) > 0 and not isinstance(preds[0], Sequence):
@@ -236,16 +270,21 @@ class ModelWrapper:
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
 
-    def calibrate_on_dataset(self, train_loader: DataLoader, val_loader: DataLoader, epoch: int,
+    def calibrate_on_dataset(self, train_set: Dataset, test_set: Dataset, epoch: int,
                              use_cuda: bool, double_fit: bool = False, **kwargs):
         """
-        Calls the calibrate function, in the defined calibration class
+        Calls the calibrate function, in the defined calibration class.
+
         Args:
-            train_loader (DataLoader): The training set loader.
-            val_loader (DataLoader): The validation set loader.
+            train_set (Dataset): The training set.
+            test_set (Dataset): The validation set.
             epoch (int): Number of epochs to train the linear layer for.
             use_cuda (bool): If "True" will train on GPU.
             double_fit (bool): If "True" would fit twice on the train set.
+            kwargs (dict): Rest of parameters for baal.ModelWrapper.train_and_test_on_dataset().
+
+        Raises:
+            If self.calibrator is not initialized.
 
         Returns:
             loss_history (list[float]): List of loss values for each epoch.
@@ -253,10 +292,14 @@ class ModelWrapper:
 
         """
 
-        loss_history, weights = self.calibrator.calibrate(train_loader, val_loader,
-                                                          epoch=epoch, use_cuda=use_cuda,
-                                                          double_fit=double_fit, **kwargs)
-        return loss_history, weights
+        if self.calibrator:
+
+            loss_history, weights = self.calibrator.calibrate(train_set, test_set,
+                                                              epoch=epoch, use_cuda=use_cuda,
+                                                              double_fit=double_fit, **kwargs)
+            return loss_history, weights
+        else:
+            raise Exception("calibrator is not initialized!")
 
     def train_on_batch(self, data, target, optimizer, cuda=False):
         """

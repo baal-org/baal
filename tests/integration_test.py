@@ -5,7 +5,7 @@ import pytest
 from PIL import Image
 from torch import nn
 from torch import optim
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torchvision.models import vgg
 from torchvision.transforms import ToTensor, Resize, Compose
 
@@ -49,29 +49,29 @@ def test_integration():
 
     # We can now use BaaL to create the active learning loop.
 
-    model = ModelWrapper(model, criterion, replicate_in_memory=False)
+    model = ModelWrapper(model, criterion)
     # We create an ActiveLearningLoop that will automatically label the most uncertain samples.
     # In this case, we use the widely used BALD heuristic.
 
-    loader = DataLoader(al_dataset, 10, True, num_workers=2)
-    test_loader = DataLoader(cifar10_test, 10, False, num_workers=2)
     active_loop = ActiveLearningLoop(al_dataset,
                                      model.predict_on_dataset,
                                      heuristic=heuristics.BALD(),
                                      ndata_to_label=10,
+                                     batch_size=10,
                                      iterations=10,
-                                     use_cuda=use_cuda)
+                                     use_cuda=use_cuda,
+                                     workers=4)
 
     # We're all set!
     num_steps = 10
     for step in range(num_steps):
         old_param = list(map(lambda x: x.clone(), model.model.parameters()))
-        model.train_on_dataset(loader, optimizer=optimizer, epoch=5, use_cuda=use_cuda)
-        model.test_on_dataset(test_loader, use_cuda=use_cuda)
+        model.train_on_dataset(al_dataset, optimizer=optimizer, batch_size=10,
+                               epoch=5, use_cuda=use_cuda, workers=2)
+        model.test_on_dataset(cifar10_test, batch_size=10, use_cuda=use_cuda,
+                              workers=2)
 
-        pool_loader = DataLoader(al_dataset.pool, 10, False, num_workers=4)
-
-        if not active_loop.step(pool_loader):
+        if not active_loop.step():
             break
         new_param = list(map(lambda x: x.clone(), model.model.parameters()))
         assert any([not np.allclose(i.detach(), j.detach())
@@ -99,22 +99,25 @@ def test_calibration_integration():
 
     wrapper = ModelWrapper(model, criterion)
     calibrator = DirichletCalibrator(wrapper=wrapper, num_classes=10,
-                                     lr=0.001, l=0.01)
+                                     lr=0.001, reg_factor=0.01)
     calibrated_wrapper = ModelWrapper(model, criterion=criterion, calibrator=calibrator)
 
-    loader = DataLoader(al_dataset, 10, True, num_workers=0)
-    test_loader = DataLoader(cifar10_test, 10, False, num_workers=0)
 
     for step in range(2):
 
-        calibrated_wrapper.train_on_dataset(loader, optimizer=optimizer,
-                                            epoch=1, use_cuda=use_cuda)
-        calibrated_wrapper.test_on_dataset(test_loader, use_cuda=use_cuda)
+        calibrated_wrapper.train_on_dataset(al_dataset, optimizer=optimizer,
+                                            batch_size=10, epoch=1,
+                                            use_cuda=use_cuda,
+                                            workers=0)
+        calibrated_wrapper.test_on_dataset(cifar10_test, batch_size=10,
+                                           use_cuda=use_cuda, workers=0)
 
         before_calib_param = list(map(lambda x: x.clone(), calibrated_wrapper.model.parameters()))
 
-        calibrated_wrapper.calibrate_on_dataset(loader, test_loader, epoch=5, use_cuda=use_cuda,
-                                                double_fit=False)
+        calibrated_wrapper.calibrate_on_dataset(al_dataset, cifar10_test,
+                                                batch_size=10, epoch=5,
+                                                use_cuda=use_cuda,
+                                                double_fit=False, workers=0)
         after_calib_param = list(map(lambda x: x.clone(), calibrated_wrapper.model.parameters()))
 
 

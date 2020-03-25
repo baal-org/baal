@@ -4,7 +4,6 @@ import random
 import torch
 import torch.backends
 from torch import optim
-from torch.utils.data import DataLoader
 from torch.hub import load_state_dict_from_url
 from torch.nn import CrossEntropyLoss
 from torchvision import datasets
@@ -107,17 +106,14 @@ def main():
                                      use_cuda=use_cuda)
 
     for epoch in tqdm(range(args.epoch)):
-        train_loader = DataLoader(active_set, hyperparams["batch_size"], shuffle=True, num_workers=4)
-        model.train_on_dataset(train_loader, optimizer, 1, use_cuda)
+        model.train_on_dataset(active_set, optimizer, hyperparams["batch_size"], 1, use_cuda)
 
         # Validation!
-        test_loader = DataLoader(test_set, hyperparams["batch_size"], shuffle=False, num_workers=4)
-        model.test_on_dataset(test_loader, use_cuda)
+        model.test_on_dataset(test_set, hyperparams["batch_size"], use_cuda)
         metrics = model.metrics
 
         if epoch % hyperparams['learning_epoch'] == 0:
-            pool_loader = DataLoader(active_set.pool, 10, shuffle=False, num_workers=4)
-            should_continue = active_loop.step(pool_loader)
+            should_continue = active_loop.step()
             model.reset_fcs()
             if not should_continue:
                 break
