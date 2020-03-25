@@ -76,8 +76,9 @@ class AbstractGPUHeuristic(ModelWrapper):
         """Rank the predictions according to their uncertainties."""
         return self.get_uncertainties(self.model.predict_on_batch(data, iterations, cuda=use_cuda))
 
-    def predict_on_dataset(self, dataset: Dataset, iterations: int, use_cuda: bool,
-                           workers: int = 4, collate_fn: Optional[Callable] = None,
+    def predict_on_dataset(self, dataset: Dataset, batch_size: int, iterations: int,
+                           use_cuda: bool, workers: int = 4,
+                           collate_fn: Optional[Callable] = None,
                            half=False):
         """
         Use the model to predict on a dataset `iterations` time.

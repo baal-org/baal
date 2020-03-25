@@ -116,7 +116,8 @@ class DirichletCalibrator(object):
                                                                             optimizer, batch_size,
                                                                             epoch, use_cuda,
                                                                             return_best_weights=True,
-                                                                            patience=None, **kwargs)
+                                                                            patience=None,
+                                                                            **kwargs)
             self.model.load_state_dict(weights)
 
         return loss_history, self.model.state_dict()

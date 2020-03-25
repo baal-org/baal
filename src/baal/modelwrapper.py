@@ -102,7 +102,7 @@ class ModelWrapper:
         for _ in range(epoch):
             self._reset_metrics('train')
             for data, target in DataLoader(dataset, batch_size, True, num_workers=workers,
-                                           collate_fn = collate_fn):
+                                           collate_fn=collate_fn):
                 _ = self.train_on_batch(data, target, optimizer, use_cuda)
             history.append(self.metrics['train_loss'].value)
 
