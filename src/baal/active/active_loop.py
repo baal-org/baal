@@ -12,13 +12,13 @@ class ActiveLearningLoop:
     """Object that perform the active learning iteration.
 
     Args:
-        dataset (ActiveLearningDataset): dataset with some sample already labelled.
+        dataset (ActiveLearningDataset): Dataset with some sample already labelled.
         get_probabilities (Function): Dataset -> **kwargs ->
-                                        ndarray [n_samples, n_outputs, n_iterations]
+                                        ndarray [n_samples, n_outputs, n_iterations].
         heuristic (Heuristic): Heuristic from baal.active.heuristics.
         ndata_to_label (int): Number of sample to label per step.
         max_sample (int): Limit the number of sample used (-1 is no limit).
-        **kwargs: parameters forwarded to `get_probabilities`
+        **kwargs: Parameters forwarded to `get_probabilities`.
     """
 
     def __init__(
