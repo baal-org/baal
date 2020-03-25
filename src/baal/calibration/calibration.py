@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset
 from torch.optim import Adam
 from torch import nn
-from baal.utils.metrics import ECE
+from baal.utils.metrics import ECE, ECE_PerCLs
 from baal import ModelWrapper
 
 log = structlog.get_logger("Calibrating...")
@@ -37,7 +37,6 @@ class DirichletCalibrator(object):
         self.reg_factor = reg_factor
         self.mu = mu or reg_factor
 
-        # TODO: need to support kwargs for initializer for ece_per_class
         self.wrapper.add_metric("ece", lambda: ECE())
         self.dirichlet_linear = nn.Linear(self.num_classes, self.num_classes)
         self.model = nn.Sequential(
