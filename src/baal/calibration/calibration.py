@@ -91,17 +91,13 @@ class DirichletCalibrator(object):
         # 3. load the new state dict
         self.init_model.load_state_dict(model_dict)
 
-        # make sure that we are not retraining the model
-        for param in self.init_model.parameters():
-            param.requires_grad = False
-
         # reinitialize the dirichlet calibration layer
         self.dirichlet_linear.weight.data.copy_(torch.eye(self.dirichlet_linear.weight.shape[0]))
         self.dirichlet_linear.bias.data.copy_(torch.zeros(*self.dirichlet_linear.bias.shape))
         if use_cuda:
             self.dirichlet_linear.cuda()
 
-        optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
+        optimizer = Adam(self.dirichlet_linear.parameters(), lr=self.lr)
         loss_history, weights = self.wrapper.train_and_test_on_datasets(train_set, test_set,
                                                                         optimizer, batch_size,
                                                                         epoch, use_cuda,
@@ -111,13 +107,15 @@ class DirichletCalibrator(object):
 
         if double_fit:
             self.lr = self.lr / 10
-            optimizer = Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=self.lr)
-            loss_history, weights = self.wrapper.train_and_test_on_datasets(train_set, test_set,
-                                                                            optimizer, batch_size,
-                                                                            epoch, use_cuda,
-                                                                            return_best_weights=True,
-                                                                            patience=None,
-                                                                            **kwargs)
+            optimizer = Adam(self.dirichlet_linear.parameters(), lr=self.lr)
+            loss_history, weights = self.wrapper.train_and_test_on_datasets(
+                train_set, test_set,
+                optimizer, batch_size,
+                epoch, use_cuda,
+                return_best_weights=True,
+                patience=None,
+                **kwargs)
+
             self.model.load_state_dict(weights)
 
         return loss_history, self.model.state_dict()
