@@ -13,9 +13,9 @@ A key component of their method is that they use three discriminators.
 * Global discriminator
   * Compare the global encoding to the local feature.
 * Local discriminator
-  * Compare the local features
+  * Compare the local features.
 * Prior discriminator
-  * Force the embedding to a known prior
+  * Force the embedding to a known prior.
   
  
 They achieve impressive results on classification and on other tasks. For example, by using a SVM on the embeddings, they get an accuracy of
