@@ -1,11 +1,13 @@
-import structlog
 from copy import deepcopy
+
+import structlog
 import torch
-from torch.utils.data import Dataset
-from torch.optim import Adam
 from torch import nn
-from baal.utils.metrics import ECE, ECE_PerCLs
+from torch.optim import Adam
+from torch.utils.data import Dataset
+
 from baal import ModelWrapper
+from baal.utils.metrics import ECE, ECE_PerCLs
 
 log = structlog.get_logger("Calibrating...")
 
@@ -16,6 +18,16 @@ class DirichletCalibrator(object):
     trained and train this new layer until convergence.
     Together with the linear layer, the model is now calibrated.
     Source: https://arxiv.org/abs/1910.12656
+    Code inspired from: https://github.com/dirichletcal/experiments_neurips
+
+    References:
+        @article{kullbeyond,
+                title={Beyond temperature scaling: Obtaining well-calibrated multi-class
+                 probabilities with Dirichlet calibration Supplementary material},
+                author={Kull, Meelis and Perello-Nieto,
+                 Miquel and K{\"a}ngsepp, Markus and Silva Filho,
+                  Telmo and Song, Hao and Flach, Peter}
+                }
 
     Args:
 
@@ -27,6 +39,7 @@ class DirichletCalibrator(object):
             If not given, will be initialized by "l".
 
     """
+
     def __init__(self, wrapper: ModelWrapper, num_classes: int, lr: float,
                  reg_factor: float, mu: float = None):
         self.wrapper = wrapper
