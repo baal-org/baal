@@ -45,7 +45,6 @@ class ActiveLearningLoop:
         """
         # High to low
         pool = self.dataset.pool
-
         if len(pool) > 0:
 
             # Limit number of samples

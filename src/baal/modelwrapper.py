@@ -28,7 +28,8 @@ class ModelWrapper:
         replicate_in_memory (bool): Replicate in memory optional.
     """
 
-    def __init__(self, model, criterion, replicate_in_memory=True):
+    def __init__(self, model, criterion,
+                 replicate_in_memory=True):
         self.model = model
         self.criterion = criterion
         self.metrics = dict()
@@ -135,7 +136,6 @@ class ModelWrapper:
         log.info("Starting evaluating", dataset=len(dataset))
         self._reset_metrics('test')
 
-        collate_fn = collate_fn or default_collate
         for data, target in DataLoader(dataset, batch_size, False, num_workers=workers,
                                        collate_fn=collate_fn):
             _ = self.test_on_batch(
@@ -180,7 +180,8 @@ class ModelWrapper:
         for e in range(epoch):
             _ = self.train_on_dataset(train_dataset, optimizer, batch_size, 1,
                                       use_cuda, workers, collate_fn)
-            te_loss = self.test_on_dataset(test_dataset, batch_size, use_cuda, workers, collate_fn)
+            te_loss = self.test_on_dataset(test_dataset, batch_size, use_cuda, workers,
+                                           collate_fn)
             hist.append({k: v.value for k, v in self.metrics.items()})
             if te_loss < best_loss:
                 best_epoch = e
@@ -236,8 +237,9 @@ class ModelWrapper:
                 pred = map_on_tensor(lambda x: x.half(), pred)
             yield map_on_tensor(lambda x: x.cpu().numpy(), pred)
 
-    def predict_on_dataset(self, dataset: Dataset, batch_size: int, iterations: int, use_cuda: bool,
-                           workers: int = 4, collate_fn: Optional[Callable] = None, half=False):
+    def predict_on_dataset(self, dataset: Dataset, batch_size: int, iterations: int,
+                           use_cuda: bool, workers: int = 4,
+                           collate_fn: Optional[Callable] = None, half=False):
         """
         Use the model to predict on a dataset `iterations` time.
 

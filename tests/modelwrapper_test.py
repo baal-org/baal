@@ -144,7 +144,8 @@ class ModelWrapperMultiOutTest(unittest.TestCase):
         assert np.isfinite(l)
 
     def test_predict(self):
-        l = self.wrapper.predict_on_dataset(self.dataset, 10, 20, use_cuda=False, workers=0)
+        l = self.wrapper.predict_on_dataset(self.dataset, 10, 20, use_cuda=False,
+                                            workers=0)
         self.wrapper.eval()
         assert np.allclose(
             self.wrapper.predict_on_batch(self.dataset[0][0].unsqueeze(0), 20)[0].detach().numpy(),
@@ -267,7 +268,8 @@ class ModelWrapperTest(unittest.TestCase):
         assert np.isfinite(l)
 
     def test_predict(self):
-        l = self.wrapper.predict_on_dataset(self.dataset, 10, 20, use_cuda=False, workers=0)
+        l = self.wrapper.predict_on_dataset(self.dataset, 10, 20, use_cuda=False,
+                                            workers=0)
         self.wrapper.eval()
         assert np.allclose(
             self.wrapper.predict_on_batch(self.dataset[0][0].unsqueeze(0), 20)[0].detach().numpy(),
@@ -329,6 +331,7 @@ class ModelWrapperTest(unittest.TestCase):
         pred_without_dropout(replicate_in_memory=False)
 
     def test_add_metric(self):
+
         self.wrapper.add_metric('cls_report', lambda: ClassificationReport(2))
         assert 'test_cls_report' in self.wrapper.metrics
         assert 'train_cls_report' in self.wrapper.metrics
@@ -339,11 +342,11 @@ class ModelWrapperTest(unittest.TestCase):
 
     def test_train_and_test(self):
 
-        res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset, self.optim, 32, 5,
-                                                      False, return_best_weights=False)
+        res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset, self.optim,
+                                                      32, 5, False, return_best_weights=False)
         assert len(res) == 5
-        res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset, self.optim, 32, 5,
-                                                      False, return_best_weights=True)
+        res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset, self.optim,
+                                                      32, 5, False, return_best_weights=True)
         assert len(res) == 2
         assert len(res[0]) == 5
         assert isinstance(res[1], dict)
