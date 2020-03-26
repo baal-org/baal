@@ -114,7 +114,7 @@ class DirichletCalibrator(object):
                 return_best_weights=True,
                 patience=None,
                 **kwargs)
-
+            self.lr = self.lr * 10
             self.model.load_state_dict(weights)
 
         return loss_history, self.model.state_dict()

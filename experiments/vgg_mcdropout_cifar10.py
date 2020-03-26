@@ -102,6 +102,7 @@ def main():
                                      model.predict_on_dataset,
                                      heuristic,
                                      hyperparams.get('n_data_to_label', 1),
+                                     batch_size=10,
                                      iterations=hyperparams['iterations'],
                                      use_cuda=use_cuda)
 
