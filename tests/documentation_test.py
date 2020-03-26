@@ -6,7 +6,7 @@ from itertools import compress
 
 import pytest
 
-modules = ['baal', 'baal.active', 'baal.bayesian',
+modules = ['baal', 'baal.active', 'baal.bayesian', 'baal.calibration',
            'baal.active.heuristics', 'baal.active.active_loop',
            'baal.active.dataset', 'baal.active.file_dataset',
            'baal.utils.metrics', 'baal.utils.cuda_utils']
