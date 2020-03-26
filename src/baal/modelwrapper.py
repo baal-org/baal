@@ -11,8 +11,8 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.dataloader import default_collate
 from tqdm import tqdm
 
-from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
+from baal.utils.cuda_utils import to_cuda
 from baal.utils.metrics import Loss
 
 log = structlog.get_logger("ModelWrapper")
@@ -401,7 +401,6 @@ class ModelWrapper:
 
     def reset_fcs(self):
         """Reset all torch.nn.Linear layers."""
-
         def reset(m):
             if isinstance(m, torch.nn.Linear):
                 m.reset_parameters()
@@ -410,7 +409,6 @@ class ModelWrapper:
 
     def reset_all(self):
         """Reset all *resetable* layers."""
-
         def reset(m):
             for m in self.model.modules():
                 getattr(m, 'reset_parameters', lambda: None)()
