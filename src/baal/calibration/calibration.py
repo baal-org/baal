@@ -53,8 +53,6 @@ class DirichletCalibrator(object):
         weight_p, bias_p = self.dirichlet_linear.parameters()
         w_l2_factor = weight_p.norm(2)
         b_l2_factor = bias_p.norm(2)
-``
-
         return self.reg_factor * w_l2_factor + self.mu * b_l2_factor
 
     def calibrate(self, train_set: Dataset, test_set: Dataset,
