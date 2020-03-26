@@ -100,31 +100,30 @@ def test_calibration_integration():
     wrapper = ModelWrapper(model, criterion)
     calibrator = DirichletCalibrator(wrapper=wrapper, num_classes=10,
                                      lr=0.001, reg_factor=0.01)
-    calibrated_wrapper = ModelWrapper(model, criterion=criterion, calibrator=calibrator)
 
 
     for step in range(2):
+        wrapper.train_on_dataset(al_dataset, optimizer=optimizer,
+                                 batch_size=10, epoch=1,
+                                 use_cuda=use_cuda, workers=0)
 
-        calibrated_wrapper.train_on_dataset(al_dataset, optimizer=optimizer,
-                                            batch_size=10, epoch=1,
-                                            use_cuda=use_cuda,
-                                            workers=0)
-        calibrated_wrapper.test_on_dataset(cifar10_test, batch_size=10,
-                                           use_cuda=use_cuda, workers=0)
+        wrapper.test_on_dataset(cifar10_test, batch_size=10,
+                                use_cuda=use_cuda, workers=0)
 
-        before_calib_param = list(map(lambda x: x.clone(), calibrated_wrapper.model.parameters()))
 
-        calibrated_wrapper.calibrate_on_dataset(al_dataset, cifar10_test,
-                                                batch_size=10, epoch=5,
-                                                use_cuda=use_cuda,
-                                                double_fit=False, workers=0)
-        after_calib_param = list(map(lambda x: x.clone(), calibrated_wrapper.model.parameters()))
+        before_calib_param = list(map(lambda x: x.clone(), wrapper.model.parameters()))
+
+        calibrator.calibrate(al_dataset, cifar10_test,
+                            batch_size=10, epoch=5,
+                            use_cuda=use_cuda, double_fit=False, workers=0)
+
+        after_calib_param = list(map(lambda x: x.clone(), calibrator.init_model.parameters()))
 
 
         assert all([np.allclose(i.detach(), j.detach())
                     for i, j in zip(before_calib_param, after_calib_param)])
 
-        assert len(list(calibrated_wrapper.model.modules())) < len(list(calibrated_wrapper.calibrator.calibrated_model.modules()))
+        assert len(list(wrapper.model.modules())) < len(list(calibrator.calibrated_model.modules()))
 
 
 if __name__ == '__main__':

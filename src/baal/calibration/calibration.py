@@ -38,6 +38,7 @@ class DirichletCalibrator(object):
         self.mu = mu or reg_factor
 
         self.wrapper.add_metric("ece", lambda: ECE())
+        self.wrapper.add_metric("ece", lambda: ECE_PerCLs(num_classes))
         self.dirichlet_linear = nn.Linear(self.num_classes, self.num_classes)
         self.model = nn.Sequential(
             self.init_model,
@@ -92,12 +93,16 @@ class DirichletCalibrator(object):
             self.dirichlet_linear.cuda()
 
         optimizer = Adam(self.dirichlet_linear.parameters(), lr=self.lr)
+
+        # making sure that the training is done on linear layer
+        self.wrapper.model = self.model
+
         loss_history, weights = self.wrapper.train_and_test_on_datasets(train_set, test_set,
                                                                         optimizer, batch_size,
                                                                         epoch, use_cuda,
                                                                         return_best_weights=True,
                                                                         patience=None, **kwargs)
-        self.init_model.load_state_dict(weights)
+        self.model.load_state_dict(weights)
 
         if double_fit:
             self.lr = self.lr / 10
@@ -111,6 +116,8 @@ class DirichletCalibrator(object):
                 **kwargs)
             self.lr = self.lr * 10
             self.model.load_state_dict(weights)
+
+        self.wrapper.model = self.init_model
 
         return loss_history, self.model.state_dict()
 

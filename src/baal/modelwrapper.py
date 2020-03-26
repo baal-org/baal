@@ -26,17 +26,15 @@ class ModelWrapper:
         model (nn.Module): The model to optimize.
         criterion (Callable): A loss function.
         replicate_in_memory (bool): Replicate in memory optional.
-        calibrator (object): Predefined class.
     """
 
     def __init__(self, model, criterion,
-                 replicate_in_memory=True, calibrator=None):
+                 replicate_in_memory=True):
         self.model = model
         self.criterion = criterion
         self.metrics = dict()
         self.add_metric('loss', lambda: Loss())
         self.replicate_in_memory = replicate_in_memory
-        self.calibrator = calibrator
 
     def add_metric(self, name: str, initializer: Callable):
         """
@@ -269,37 +267,6 @@ class ModelWrapper:
             # Is an Array or a Tensor
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
-
-    def calibrate_on_dataset(self, train_set: Dataset, test_set: Dataset, epoch: int,
-                             use_cuda: bool, double_fit: bool = False, **kwargs):
-        """
-        Calls the calibrate function, in the defined calibration class.
-
-        Args:
-            train_set (Dataset): The training set.
-            test_set (Dataset): The validation set.
-            epoch (int): Number of epochs to train the linear layer for.
-            use_cuda (bool): If "True" will train on GPU.
-            double_fit (bool): If "True" would fit twice on the train set.
-            kwargs (dict): Rest of parameters for baal.ModelWrapper.train_and_test_on_dataset().
-
-        Raises:
-            If self.calibrator is not initialized.
-
-        Returns:
-            loss_history (list[float]): List of loss values for each epoch.
-            weights (dict): Model weights.
-
-        """
-
-        if self.calibrator:
-
-            loss_history, weights = self.calibrator.calibrate(train_set, test_set,
-                                                              epoch=epoch, use_cuda=use_cuda,
-                                                              double_fit=double_fit, **kwargs)
-            return loss_history, weights
-        else:
-            raise Exception("calibrator is not initialized!")
 
     def train_on_batch(self, data, target, optimizer, cuda=False):
         """

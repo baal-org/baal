@@ -11,15 +11,13 @@ from baal.modelwrapper import ModelWrapper
 
 
 class DummyDataset(Dataset):
-    def __init__(self, mse=True):
-        self.mse = mse
 
     def __len__(self):
         return 20
 
     def __getitem__(self, item):
         return torch.from_numpy(np.ones([3, 10, 10]) * item / 255.).float(), \
-               (torch.FloatTensor([item % 2]))
+               (item % 2)
 
 
 class DummyModel(nn.Module):
@@ -28,8 +26,7 @@ class DummyModel(nn.Module):
         self.conv = nn.Conv2d(3, 8, kernel_size=10)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout()
-        self.linear = nn.Linear(8, 1)
-        self.sigmoid = nn.Sigmoid()
+        self.linear = nn.Linear(8, 2)
 
     def forward(self, x):
         x = self.conv(x)
@@ -37,16 +34,15 @@ class DummyModel(nn.Module):
         x = x.view(x.shape[0], -1)
         x = self.dropout(x)
         x = self.linear(x)
-        x = self.sigmoid(x)
         return x
 
 class CalibrationTest(unittest.TestCase):
     def setUp(self):
         self.model = DummyModel()
-        self.criterion = nn.BCEWithLogitsLoss()
+        self.criterion = nn.CrossEntropyLoss()
         self.wrapper = ModelWrapper(self.model, self.criterion)
         self.optim = torch.optim.SGD(self.wrapper.get_params(), 0.01)
-        self.dataset = DummyDataset(mse=False)
+        self.dataset = DummyDataset()
         self.calibrator = DirichletCalibrator(self.wrapper, 2, lr=0.001, reg_factor=0.001)
 
     def test_calibrated_model(self):
