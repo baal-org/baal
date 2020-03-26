@@ -50,13 +50,10 @@ class DirichletCalibrator(object):
         Returns:
             The regularization term for the linear layer.
         """
-        name, params = list(self.model.named_parameters())[-2]
-        assert 'weight' in name
-        w_l2_factor = params.norm(2)
-
-        name, params = list(self.model.named_parameters())[-1]
-        assert 'bias' in name
-        b_l2_factor = params.norm(2)
+        weight_p, bias_p = self.dirichlet_linear.parameters()
+        w_l2_factor = weight_p.norm(2)
+        b_l2_factor = bias_p.norm(2)
+``
 
         return self.reg_factor * w_l2_factor + self.mu * b_l2_factor
 
