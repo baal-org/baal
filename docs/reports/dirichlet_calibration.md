@@ -13,9 +13,9 @@ Here is a figure from the authors' NeurIPS 2019 presentation. You can find the f
    :align: center
 
 
-Our hypothesis was as follow: by modelling the uncertainty on an held-out set, we want to create a better estimation of the overall uncertainty.
+Our hypothesis is as follows: by modelling the uncertainty on an held-out set, we want to create a better estimation of the overall uncertainty.
 
-A common flaw on uncertainty estimation technique using variational inference such as MC-Dropout is that they only model the epistemic uncertainty ie. the uncertainty of the model.
+A common flaw on uncertainty estimation technique using Variational Inference (VI) such as MC-Dropout is that they only model the epistemic uncertainty ie. the uncertainty of the model.
 
 
 Current SotA methods for active learning rely on VI to estimate the model uncertainty. Due to the lack of data, those methods are often not better than random due to overfitting or underfitting. By introducing calibration, we hope to reduce the need for VI and to rely on calibrated predictions to select the next sample to label.
