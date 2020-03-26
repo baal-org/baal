@@ -77,7 +77,7 @@ class ModelWrapper:
                     v.update(out, target)
 
     def train_on_dataset(self, dataset, optimizer, batch_size, epoch, use_cuda, workers=4,
-                         collate_fn: Optional[Callable] = None):
+                         collate_fn: Optional[Callable] = None, regularizer: Optional[Callable] = None):
         """
         Train for `epoch` epochs on a Dataset `dataset.
 
@@ -89,6 +89,7 @@ class ModelWrapper:
             use_cuda (bool): Use cuda or not.
             workers (int): Number of workers for the multiprocessing.
             collate_fn (Optional[Callable]): The collate function to use.
+            regularizer (Optional[Callable]): The loss regularization for training.
 
         Returns:
             The training history.
@@ -101,7 +102,7 @@ class ModelWrapper:
             self._reset_metrics('train')
             for data, target in DataLoader(dataset, batch_size, True, num_workers=workers,
                                            collate_fn=collate_fn):
-                _ = self.train_on_batch(data, target, optimizer, use_cuda)
+                _ = self.train_on_batch(data, target, optimizer, use_cuda, regularizer)
             history.append(self.metrics['train_loss'].value)
 
         optimizer.zero_grad()  # Assert that the gradient is flushed.
@@ -150,6 +151,7 @@ class ModelWrapper:
                                    use_cuda: bool,
                                    workers: int = 4,
                                    collate_fn: Optional[Callable] = None,
+                                   regularizer: Optional[Callable] = None,
                                    return_best_weights=False,
                                    patience=None,
                                    min_epoch_for_es=0):
@@ -165,6 +167,7 @@ class ModelWrapper:
             use_cuda (bool): Use Cuda or not.
             workers (int): Number of workers to use.
             collate_fn (Optional[Callable]): The collate function to use.
+            regularizer (Optional[Callable]): The loss regularization for training.
             return_best_weights (bool): If True, will keep the best weights and return them.
             patience (Optional[int]): If provided, will use early stopping to stop after
                                         `patience` epoch without improvement.
@@ -179,7 +182,7 @@ class ModelWrapper:
         hist = []
         for e in range(epoch):
             _ = self.train_on_dataset(train_dataset, optimizer, batch_size, 1,
-                                      use_cuda, workers, collate_fn)
+                                      use_cuda, workers, collate_fn, regularizer)
             te_loss = self.test_on_dataset(test_dataset, batch_size, use_cuda, workers,
                                            collate_fn)
             hist.append({k: v.value for k, v in self.metrics.items()})
@@ -268,7 +271,8 @@ class ModelWrapper:
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
 
-    def train_on_batch(self, data, target, optimizer, cuda=False):
+    def train_on_batch(self, data, target, optimizer, cuda=False,
+                       regularizer: Optional[Callable] = None):
         """
         Train the current model on a batch using `optimizer`.
 
@@ -277,6 +281,8 @@ class ModelWrapper:
             target (Tensor): The ground truth.
             optimizer (optim.Optimizer): An optimizer.
             cuda (bool): Use CUDA or not.
+            regularizer (Optional[Callable]): The loss regularization for training.
+
 
         Returns:
             Tensor, the loss computed from the criterion.
@@ -287,6 +293,9 @@ class ModelWrapper:
         optimizer.zero_grad()
         output = self.model(data)
         loss = self.criterion(output, target)
+
+        if regularizer:
+            loss = loss + regularizer()
         loss.backward()
         optimizer.step()
         self._update_metrics(output, target, loss, filter='train')
