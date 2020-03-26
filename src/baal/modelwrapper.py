@@ -77,7 +77,8 @@ class ModelWrapper:
                     v.update(out, target)
 
     def train_on_dataset(self, dataset, optimizer, batch_size, epoch, use_cuda, workers=4,
-                         collate_fn: Optional[Callable] = None, regularizer: Optional[Callable] = None):
+                         collate_fn: Optional[Callable] = None,
+                         regularizer: Optional[Callable] = None):
         """
         Train for `epoch` epochs on a Dataset `dataset.
 
