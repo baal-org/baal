@@ -27,6 +27,12 @@ Therefore, baal has several components:
     
     Use BaaL in production (Classification) <notebooks/baal_prod_cls.ipynb>
     Use BaaL with SkLearn (Classification) <notebooks/sklearn_tutorial.ipynb>
+    
+.. toctree ::
+    :caption: Reports
+    :maxdepth: 1
+    
+    Combining calibration and variational inference for active learning <reports/dirichlet_calibration>
 
 .. toctree::
     :caption: Literature and support
