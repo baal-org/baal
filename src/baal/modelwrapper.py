@@ -293,14 +293,17 @@ class ModelWrapper:
             data, target = to_cuda(data), to_cuda(target)
         optimizer.zero_grad()
         output = self.model(data)
-        initial_loss = self.criterion(output, target)
+        loss = self.criterion(output, target)
 
         if regularizer:
-            loss = initial_loss + regularizer()
-        loss.backward()
+            regularized_loss = loss + regularizer()
+            regularized_loss.backward()
+        else:
+            loss.backward()
+
         optimizer.step()
-        self._update_metrics(output, target, initial_loss, filter='train')
-        return initial_loss
+        self._update_metrics(output, target, loss, filter='train')
+        return loss
 
     def test_on_batch(
         self,
