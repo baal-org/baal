@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -50,13 +51,12 @@ class CalibrationTest(unittest.TestCase):
             list(self.calibrator.calibrated_model.modules()))
 
     def test_calibration(self):
-        use_cuda = False
         before_calib_param_init = list(map(lambda x: x.clone(), self.calibrator.init_model.parameters()))
         before_calib_param = list(map(lambda x: x.clone(), self.calibrator.calibrated_model.parameters()))
 
         self.calibrator.calibrate(self.dataset, self.dataset,
                                   batch_size=10, epoch=5,
-                                  use_cuda=use_cuda,
+                                  use_cuda=False,
                                   double_fit=False, workers=0)
         after_calib_param_init = list(map(lambda x: x.clone(), self.calibrator.init_model.parameters()))
         after_calib_param = list(map(lambda x: x.clone(), self.calibrator.calibrated_model.parameters()))
@@ -66,6 +66,15 @@ class CalibrationTest(unittest.TestCase):
 
         assert not all([np.allclose(i.detach(), j.detach())
                         for i, j in zip(before_calib_param, after_calib_param)])
+
+    def test_reg_l2_called(self):
+        self.calibrator.l2_reg = Mock(return_value=torch.Tensor([0]))
+        self.calibrator.calibrate(self.dataset, self.dataset,
+                                  batch_size=10, epoch=5,
+                                  use_cuda=False,
+                                  double_fit=False, workers=0)
+        self.calibrator.l2_reg.assert_called()
+
 
 if __name__ == '__main__':
     pytest.main()
