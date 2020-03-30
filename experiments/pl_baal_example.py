@@ -113,10 +113,6 @@ class VGG16(LightningModule, ActiveLearningMixin):
         })
         return output
 
-    def predict_step(self, batch, batch_idx):
-        x, _ = batch
-        return x
-
     def configure_optimizers(self):
         """
         return whatever optimizers we want here
@@ -148,6 +144,9 @@ class HParams(BaseModel):
     learning_rate: float = 0.001
     query_size: int = 100
     max_sample: int = -1
+    iterations: int = 20
+    replicate_in_memory: bool = True
+
 
 
 def main(hparams):
