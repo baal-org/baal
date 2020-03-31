@@ -331,7 +331,6 @@ class ModelWrapperTest(unittest.TestCase):
         pred_without_dropout(replicate_in_memory=False)
 
     def test_add_metric(self):
-
         self.wrapper.add_metric('cls_report', lambda: ClassificationReport(2))
         assert 'test_cls_report' in self.wrapper.metrics
         assert 'train_cls_report' in self.wrapper.metrics
@@ -341,7 +340,6 @@ class ModelWrapperTest(unittest.TestCase):
         assert (self.wrapper.metrics['test_cls_report'].value['accuracy'] != 0).any()
 
     def test_train_and_test(self):
-
         res = self.wrapper.train_and_test_on_datasets(self.dataset, self.dataset, self.optim,
                                                       32, 5, False, return_best_weights=False)
         assert len(res) == 5
