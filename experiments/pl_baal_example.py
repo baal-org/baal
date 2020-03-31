@@ -66,6 +66,8 @@ class BaalTrainer(Trainer):
 class VGG16(LightningModule, ActiveLearningMixin):
     def __init__(self, active_dataset, hparams):
         super().__init__()
+        self.name = "VGG16"
+        self.version = "0.0.1"
         self.active_dataset = active_dataset
         self.hparams = hparams
         self.criterion = CrossEntropyLoss()
@@ -76,6 +78,12 @@ class VGG16(LightningModule, ActiveLearningMixin):
 
     def forward(self, x):
         return self.model(x)
+
+    def log_hyperparams(self,*args):
+        print(args)
+
+    def save(self):
+        print("SAVED")
 
     def training_step(self, batch, batch_idx):
         """
@@ -88,7 +96,7 @@ class VGG16(LightningModule, ActiveLearningMixin):
         y_hat = self(x)
 
         # calculate loss
-        loss_val = self.criterion(y, y_hat)
+        loss_val = self.criterion(y_hat, y)
 
         tqdm_dict = {'train_loss': loss_val}
         output = OrderedDict({
@@ -129,7 +137,7 @@ class VGG16(LightningModule, ActiveLearningMixin):
     def test_dataloader(self):
         ds = CIFAR10(root=self.hparams.data_root, train=False,
                      transform=self.test_transform, download=True)
-        return DataLoader(ds, self.hparams.batch_size, shuffle=True,
+        return DataLoader(ds, self.hparams.batch_size, shuffle=False,
                           num_workers=4)
 
     def pool_loader(self):
@@ -159,6 +167,7 @@ def main(hparams):
         pool_specifics={
             'transform': test_transform
         })
+    active_set.label_randomly(10)
     heuristic = BALD()
     model = VGG16(active_set, hparams)
     trainer = BaalTrainer(model, max_nb_epochs=60)
@@ -173,3 +182,6 @@ def main(hparams):
         should_continue = loop.step()
         if not should_continue:
             break
+
+if __name__ == '__main__':
+    main(HParams())
