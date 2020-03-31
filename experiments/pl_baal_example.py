@@ -41,7 +41,7 @@ class ActiveLearningMixin(ABC):
 
 
 class BaalTrainer(Trainer):
-    def predict_on_dataset(self):
+    def predict_on_dataset(self, *args, **kwargs):
         preds = list(self.predict_on_dataset_generator())
 
         if len(preds) > 0 and not isinstance(preds[0], Sequence):
@@ -49,7 +49,7 @@ class BaalTrainer(Trainer):
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
 
-    def predict_on_dataset_generator(self):
+    def predict_on_dataset_generator(self, *args, **kwargs):
         self.model.eval()
         dataloader = self.model.pool_loader()
         if len(dataloader) == 0:
