@@ -113,6 +113,7 @@ class DirichletCalibrator(object):
         loss_history, weights = self.wrapper.train_and_test_on_datasets(train_set, test_set,
                                                                         optimizer, batch_size,
                                                                         epoch, use_cuda,
+                                                                        regularizer=self.l2_reg,
                                                                         return_best_weights=True,
                                                                         patience=None, **kwargs)
         self.model.load_state_dict(weights)
@@ -124,6 +125,7 @@ class DirichletCalibrator(object):
                 train_set, test_set,
                 optimizer, batch_size,
                 epoch, use_cuda,
+                regularizer=self.l2_reg,
                 return_best_weights=True,
                 patience=None,
                 **kwargs)

@@ -26,4 +26,10 @@
 .. autoclass:: baal.active.heuristics.Random
 
 .. autoclass:: baal.active.heuristics.Entropy
+
+
+## Calibration Wrapper
+
+.. autoclass:: baal.calibration.DirichletCalibrator
+    :members:
     
