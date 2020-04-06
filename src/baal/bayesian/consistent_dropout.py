@@ -13,6 +13,9 @@ class ConsistentDropout(_DropoutNd):
 
     This is slower than using regular Dropout, but it is useful
     when you want to use the same set of weights for each unlabelled sample.
+
+    Args:
+        p (float): probability of an element to be zeroed. Default: 0.5
     """
 
     def __init__(self, p=0.5):
@@ -46,7 +49,10 @@ class ConsistentDropout2d(_DropoutNd):
 
     This is slower than using regular Dropout, but it is useful
     when you want to use the same set of weights for each unlabelled sample.
-        """
+
+    Args:
+        p (float): probability of an element to be zeroed. Default: 0.5
+    """
 
     def __init__(self, p=0.5):
         super().__init__(p=p, inplace=False)
