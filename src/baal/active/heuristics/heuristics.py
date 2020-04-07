@@ -261,6 +261,9 @@ class BatchBALD(BALD):
         reduction (Union[str, callable]): function that aggregates the results
             (default: 'none').
 
+    Notes:
+        This implementation only returns the ranking and not the score.
+
     References:
         https://arxiv.org/abs/1906.08158
 
