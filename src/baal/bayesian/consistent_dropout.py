@@ -8,11 +8,14 @@ from torch.nn.modules.dropout import _DropoutNd
 class ConsistentDropout(_DropoutNd):
     """
     ConsistentDropout is useful when doing research.
-    It guarantees that while the mask are the same between batches,
-    they are different inside the batch.
+    It guarantees that while the masks are the same between batches
+    during inference. The masks are different inside the batch.
 
     This is slower than using regular Dropout, but it is useful
-    when you want to use the same set of weights for each unlabelled sample.
+    when you want to use the same set of weights for each sample used in inference.
+    
+    From BatchBALD (Kirsch et al, 2019), this is necessary to use BatchBALD and remove noise 
+    from the prediction.
 
     Args:
         p (float): probability of an element to be zeroed. Default: 0.5
