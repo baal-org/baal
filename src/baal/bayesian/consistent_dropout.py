@@ -16,6 +16,14 @@ class ConsistentDropout(_DropoutNd):
 
     Args:
         p (float): probability of an element to be zeroed. Default: 0.5
+	
+	Notes:
+		For optimal results, you should use a batch size of one
+		during inference time.
+		Furthermore, to guarantee that each sample uses the same
+		set of weights,
+		you must use `replicate_in_memory=True` in ModelWrapper
+		, which is the default.  
     """
 
     def __init__(self, p=0.5):
