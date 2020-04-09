@@ -13,20 +13,20 @@ class ConsistentDropout(_DropoutNd):
 
     This is slower than using regular Dropout, but it is useful
     when you want to use the same set of weights for each sample used in inference.
-    
+
     From BatchBALD (Kirsch et al, 2019), this is necessary to use BatchBALD and remove noise 
     from the prediction.
 
     Args:
         p (float): probability of an element to be zeroed. Default: 0.5
-	
-	Notes:
-		For optimal results, you should use a batch size of one
-		during inference time.
-		Furthermore, to guarantee that each sample uses the same
-		set of weights,
-		you must use `replicate_in_memory=True` in ModelWrapper
-		, which is the default.  
+
+    Notes:
+        For optimal results, you should use a batch size of one
+        during inference time.
+        Furthermore, to guarantee that each sample uses the same
+        set of weights,
+        you must use `replicate_in_memory=True` in ModelWrapper,
+        which is the default.
     """
 
     def __init__(self, p=0.5):
@@ -63,6 +63,14 @@ class ConsistentDropout2d(_DropoutNd):
 
     Args:
         p (float): probability of an element to be zeroed. Default: 0.5
+
+    Notes:
+        For optimal results, you should use a batch size of one
+        during inference time.
+        Furthermore, to guarantee that each sample uses the same
+        set of weights,
+        you must use `replicate_in_memory=True` in ModelWrapper,
+        which is the default.
     """
 
     def __init__(self, p=0.5):
