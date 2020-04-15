@@ -341,6 +341,18 @@ class BatchBALD(BALD):
         return np.sum(-xlogy(probs, probs), axis=(1, -1)) / K
 
     def _joint_entropy(self, predictions, selected):
+        """
+        Compute the joint entropy between `preditions` and `selected`
+        Args:
+            predictions (Tensor): First tensor with shape [B, C, ..., Iterations]
+            selected (Tensor): Second tensor with shape [M, Iterations].
+
+        References:
+            Code from https://github.com/BlackHC/BatchBALD/blob/master/src/joint_entropy/sampling.py
+
+        Returns:
+            Generator yield B entropies.
+        """
         K = predictions.shape[-1]
         C = predictions.shape[1]
         B = predictions.shape[0]
