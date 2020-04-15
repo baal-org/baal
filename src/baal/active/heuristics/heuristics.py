@@ -78,6 +78,9 @@ def gather_expand(data, dim, index):
         dim (int): dimension to expand along.
         index (tensor): tensor with the indices to gather.
 
+    References:
+        Code from https://github.com/BlackHC/BatchBALD/blob/master/src/torch_utils.py
+
     Returns:
         Tensor with the same shape as `index`.
     """
@@ -250,10 +253,10 @@ class BALD(AbstractHeuristic):
 
 class BatchBALD(BALD):
     """
-    Implementation of BatchBALD.
+    Implementation of BatchBALD from https://github.com/BlackHC/BatchBALD
 
     Args:
-        num_samples (int): Number of samples to select. (min 2*the amount of samples you want)
+        num_samples (int): Number of samples to select.
         num_draw (int): Number of draw to perform from the history.
                         From the paper `40000 // num_classes` is suggested.
         shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias
@@ -283,8 +286,12 @@ class BatchBALD(BALD):
         """
         Draw `n_choices` sample from `probs`.
 
+        References:
+            Code from https://github.com/BlackHC/BatchBALD/blob/master/src/torch_utils.py#L187
+
         Returns:
             choices: B... x `n_choices`
+
         """
         probs = probs.permute(0, 2, 1)
         probs_B_C = probs.reshape((-1, probs.shape[-1]))
@@ -297,6 +304,19 @@ class BatchBALD(BALD):
         return choices_b_M.long()
 
     def _sample_from_history(self, probs, num_draw=1000):
+        """
+        Sample `num_draw` choices from `probs`
+
+        Args:
+            probs (Tensor[batch, classes, ..., iterations]): Tensor to be sampled from.
+            num_draw (int): Number of draw.
+
+        References:
+            Code from https://github.com/BlackHC/BatchBALD/blob/master/src/joint_entropy/sampling.py
+
+        Returns:
+            Tensor[num_draw, iterations]
+        """
         probs = torch.from_numpy(probs).double()
 
         n_iterations = probs.shape[-1]
@@ -356,7 +376,7 @@ class BatchBALD(BALD):
         bald_out = super().compute_score(predictions)
         # We start with the most uncertain sample according to BALD.
         history = self.reduction(bald_out).argsort()[-1:].tolist()
-        for step in range(2 * self.num_samples):
+        for step in range(self.num_samples):
             # Draw `num_draw` example from history, take entropy
             # TODO use numpy/numba
             selected = self._sample_from_history(predictions[history], num_draw=self.num_draw)
