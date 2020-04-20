@@ -115,9 +115,9 @@ def test_batch_bald(distributions, reduction):
     bald = BatchBALD(100, reduction=reduction)
     marg = bald(distributions)
 
-    assert np.all(marg == [1, 2, 0][:len(marg)]), "BatchBALD is not right {}".format(marg)
+    assert np.all(marg[:3] == [1, 2, 0]), "BatchBALD is not right {}".format(marg)
 
-    bald = BatchBALD(100, 0.99, reduction=reduction)
+    bald = BatchBALD(100, shuffle_prop=0.99, reduction=reduction)
     marg = bald(distributions)
 
     # Unlikely, but not 100% sure
