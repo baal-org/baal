@@ -11,8 +11,9 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.dataloader import default_collate
 from tqdm import tqdm
 
-from baal.utils.iterutils import map_on_tensor
+from baal.utils.array_utils import stack_in_memory
 from baal.utils.cuda_utils import to_cuda
+from baal.utils.iterutils import map_on_tensor
 from baal.utils.metrics import Loss
 
 log = structlog.get_logger("ModelWrapper")
@@ -360,16 +361,7 @@ class ModelWrapper:
             if cuda:
                 data = to_cuda(data)
             if self.replicate_in_memory:
-                input_shape = data.size()
-                batch_size = input_shape[0]
-                try:
-                    data = torch.stack([data] * iterations)
-                except RuntimeError as e:
-                    raise RuntimeError(
-                        '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
-                    Use `replicate_in_memory=False` in order to reduce the memory requirements.
-                    Note that there will be some speed trade-offs''') from e
-                data = data.view(batch_size * iterations, *input_shape[1:])
+                data = map_on_tensor(lambda d: stack_in_memory(d, iterations), data)
                 try:
                     out = self.model(data)
                 except RuntimeError as e:
@@ -377,7 +369,7 @@ class ModelWrapper:
                         '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
                     Use `replicate_in_memory=False` in order to reduce the memory requirements.
                     Note that there will be some speed trade-offs''') from e
-                out = map_on_tensor(lambda o: o.view([iterations, batch_size, *o.size()[1:]]), out)
+                out = map_on_tensor(lambda o: o.view([iterations, -1, *o.size()[1:]]), out)
                 out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
             else:
                 out = [self.model(data) for _ in range(iterations)]
@@ -414,6 +406,7 @@ class ModelWrapper:
 
     def reset_fcs(self):
         """Reset all torch.nn.Linear layers."""
+
         def reset(m):
             if isinstance(m, torch.nn.Linear):
                 m.reset_parameters()
@@ -422,6 +415,7 @@ class ModelWrapper:
 
     def reset_all(self):
         """Reset all *resetable* layers."""
+
         def reset(m):
             for m in self.model.modules():
                 getattr(m, 'reset_parameters', lambda: None)()
