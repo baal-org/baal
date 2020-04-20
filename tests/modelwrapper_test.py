@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 from torch import nn
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 from baal.modelwrapper import ModelWrapper
 from baal.utils.metrics import ClassificationReport
@@ -378,15 +378,18 @@ def test_multi_input_model():
             self.model = DummyModel()
 
         def forward(self, x):
-            return [self.model(xi) for xi in x]
+            # We get two inputs
+            x1, x2 = x
+            # We merge those inputs
+            return self.model(x1) + self.model(x2)
 
     model = MultiInModel()
     wrapper = ModelWrapper(model, None)
     dataset = DummyDataset(n_in=2)
     assert len(dataset[0]) == 2
-    l = wrapper.predict_on_dataset(dataset, 10, 20, use_cuda=False,
-                                   workers=0)
-    assert len(l) == 2
+    b = next(iter(DataLoader(dataset, 15, False)))[0]
+    l = wrapper.predict_on_batch(b, iterations=10, cuda=False)
+    assert l.shape[0] == 15 and l.shape[-1] == 10
 
 
 if __name__ == '__main__':
