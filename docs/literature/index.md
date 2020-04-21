@@ -8,10 +8,12 @@ If you've read a paper recently, write a little summary in markdown, put it in
 the folder `docs/literature` and make a pull request. You can even do all of
 that right in the github web UI!
 
+```eval_rst
 .. toctree::
     :caption: Literature and support
     :glob:
 
     *
+```
 
 ---

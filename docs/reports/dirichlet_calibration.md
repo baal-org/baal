@@ -6,12 +6,13 @@ To achieve that, they add a new linear layer at the end of the network and train
 
 Here is a figure from the authors' NeurIPS 2019 presentation. You can find the full presention on the website above.
 
+```eval_rst
 .. figure:: images/dirichlet_calib.png
    :width: 400px
    :height: 200px
    :alt: alternate text
    :align: center
-
+```
 
 Our hypothesis is as follows: by modelling the uncertainty on an held-out set, we want to create a better estimation of the overall uncertainty.
 
@@ -41,6 +42,7 @@ We test our hypothesis on CIFAR10 using a VGG-16. We initially label 1000 sample
 
 We first want to ensure that calibration works properly. In Fig. 2, we show that throughout the active learning procedure, the calibrated loss is better than the non-calibrated loss.
 
+```eval_rst
 .. figure:: images/CBALDvsBALD.png
    :width: 400px
    :height: 200px
@@ -48,10 +50,12 @@ We first want to ensure that calibration works properly. In Fig. 2, we show that
    :align: center
    
    Comparison between the calibrated loss and the uncalibrated loss.
+```
 
 
 Furthermore, we compute the ECE between both cases.
 
+```eval_rst
 .. figure:: images/CBALDvsBALDECE.png
    :width: 400px
    :height: 200px
@@ -59,6 +63,7 @@ Furthermore, we compute the ECE between both cases.
    :align: center
    
    Comparison between ECE for both Calibrated BALD and BALD.
+```
 
 
 ### Impact of calibration on active learning
@@ -69,6 +74,7 @@ Our reasoning is as follow. We want to see if the calibrated model would pick be
 To do so we make two experiments, one where we use :math:`M` to select the new samples and the other uses :math:`M_{calib}`.
 In both cases, we will get a calibrated model to compare the calibrated loss.
 
+```eval_rst
 .. figure:: images/BALDvsCBALD_active.png
    :width: 400px
    :height: 200px
@@ -95,6 +101,7 @@ In addition, we show that BALD is still better in all cases.
    :align: center
    
    Comparison between calibrated selectors.
+```
 
 ## Discussion
 
