@@ -367,7 +367,7 @@ class BatchBALD(BALD):
 
         step = 256
         for idx in range(0, exp_y.shape[0], step):
-            b_preds = exp_y[(idx * step): ((idx + 1) * step)]
+            b_preds = exp_y[idx:idx + step]
             yield np.sum(-xlogy(b_preds, b_preds) / mean_entropy, axis=(1, -1)) / M
 
     @requireprobs
