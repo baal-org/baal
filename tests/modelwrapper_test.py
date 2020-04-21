@@ -6,22 +6,24 @@ import numpy as np
 import pytest
 import torch
 from torch import nn
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 from baal.modelwrapper import ModelWrapper
 from baal.utils.metrics import ClassificationReport
 
 
 class DummyDataset(Dataset):
-    def __init__(self, mse=True):
-        self.mse = mse
+    def __init__(self, n_in=1):
+        self.n_in = n_in
 
     def __len__(self):
         return 20
 
     def __getitem__(self, item):
-        return torch.from_numpy(np.ones([3, 10, 10]) * item / 255.).float(), \
-               (torch.FloatTensor([item % 2]))
+        x = torch.from_numpy(np.ones([3, 10, 10]) * item / 255.).float()
+        if self.n_in > 1:
+            x = [x] * self.n_in
+        return x, (torch.FloatTensor([item % 2]))
 
 
 class DummyModel(nn.Module):
@@ -43,7 +45,7 @@ class DummyModel(nn.Module):
         return x
 
 
-class ModelWrapperMultiOutTest(unittest.TestCase):
+class ModelWrapperMultiOutMultiInTest(unittest.TestCase):
     def setUp(self):
         class MultiOutModel(nn.Module):
             def __init__(self):
@@ -188,7 +190,7 @@ class ModelWrapperTest(unittest.TestCase):
         self.criterion = nn.BCEWithLogitsLoss()
         self.wrapper = ModelWrapper(self.model, self.criterion)
         self.optim = torch.optim.SGD(self.wrapper.get_params(), 0.01)
-        self.dataset = DummyDataset(mse=False)
+        self.dataset = DummyDataset()
 
     def test_train_on_batch(self):
         self.wrapper.train()
@@ -367,6 +369,27 @@ class ModelWrapperTest(unittest.TestCase):
                                                       min_epoch_for_es=20)
         assert len(res) == 2
         assert len(res[0]) < 50 and len(res[0]) > 20
+
+
+def test_multi_input_model():
+    class MultiInModel(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.model = DummyModel()
+
+        def forward(self, x):
+            # We get two inputs
+            x1, x2 = x
+            # We merge those inputs
+            return self.model(x1) + self.model(x2)
+
+    model = MultiInModel()
+    wrapper = ModelWrapper(model, None)
+    dataset = DummyDataset(n_in=2)
+    assert len(dataset[0]) == 2
+    b = next(iter(DataLoader(dataset, 15, False)))[0]
+    l = wrapper.predict_on_batch(b, iterations=10, cuda=False)
+    assert l.shape[0] == 15 and l.shape[-1] == 10
 
 
 if __name__ == '__main__':
