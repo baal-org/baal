@@ -5,3 +5,4 @@ jupyter_sphinx
 nbsphinx
 sphinx_automodapi
 numpydoc
+recommonmark
