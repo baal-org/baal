@@ -79,7 +79,7 @@ class VGG16(LightningModule, ActiveLearningMixin):
     def forward(self, x):
         return self.model(x)
 
-    def log_hyperparams(self,*args):
+    def log_hyperparams(self, *args):
         print(args)
 
     def save(self):
@@ -143,6 +143,15 @@ class VGG16(LightningModule, ActiveLearningMixin):
     def pool_loader(self):
         return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False,
                           num_workers=4)
+
+    def validation_epoch_end(self, outputs):
+        return {'validation_loss': 1}
+
+    def test_epoch_end(self, outputs):
+        return {'test_loss': 1}
+
+    def training_epoch_end(self, outputs):
+        return {'training_loss': 1}
 
 
 class HParams(BaseModel):
