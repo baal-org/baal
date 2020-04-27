@@ -37,6 +37,7 @@ class DummyModel(nn.Module):
         x = self.linear(x)
         return x
 
+
 class CalibrationTest(unittest.TestCase):
     def setUp(self):
         self.model = DummyModel()
@@ -51,15 +52,19 @@ class CalibrationTest(unittest.TestCase):
             list(self.calibrator.calibrated_model.modules()))
 
     def test_calibration(self):
-        before_calib_param_init = list(map(lambda x: x.clone(), self.calibrator.init_model.parameters()))
-        before_calib_param = list(map(lambda x: x.clone(), self.calibrator.calibrated_model.parameters()))
+        before_calib_param_init = list(
+            map(lambda x: x.clone(), self.calibrator.init_model.parameters()))
+        before_calib_param = list(
+            map(lambda x: x.clone(), self.calibrator.calibrated_model.parameters()))
 
         self.calibrator.calibrate(self.dataset, self.dataset,
                                   batch_size=10, epoch=5,
                                   use_cuda=False,
                                   double_fit=False, workers=0)
-        after_calib_param_init = list(map(lambda x: x.clone(), self.calibrator.init_model.parameters()))
-        after_calib_param = list(map(lambda x: x.clone(), self.calibrator.calibrated_model.parameters()))
+        after_calib_param_init = list(
+            map(lambda x: x.clone(), self.calibrator.init_model.parameters()))
+        after_calib_param = list(
+            map(lambda x: x.clone(), self.calibrator.calibrated_model.parameters()))
 
         assert all([np.allclose(i.detach(), j.detach())
                     for i, j in zip(before_calib_param_init, after_calib_param_init)])
@@ -75,7 +80,16 @@ class CalibrationTest(unittest.TestCase):
                                   double_fit=False, workers=0)
         self.calibrator.l2_reg.assert_called()
 
+    def test_weight_assignment(self):
+        params = list(self.wrapper.model.parameters())
+        self.wrapper.train_on_dataset(self.dataset, self.optim, 32, 1, False)
+        assert all([k is v for k, v in zip(params, self.optim.param_groups[0]['params'])])
+
+        self.calibrator.calibrate(self.dataset, self.dataset, 32, 1, False, True)
+        assert all(
+            [k is v for k, v in
+             zip(self.wrapper.model.parameters(), self.optim.param_groups[0]['params'])])
+
 
 if __name__ == '__main__':
     pytest.main()
-
