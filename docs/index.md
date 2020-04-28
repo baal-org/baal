@@ -1,7 +1,9 @@
+```eval_rst
 .. baal documentation master file, created by
    sphinx-quickstart on Thu Apr  4 14:15:25 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
+```
 
 # Welcome to the documentation for baal (**ba**yesian **a**ctive **l**earning)
 
@@ -13,6 +15,7 @@ from approximations of bayesian posteriors in neural networks.
 
 Therefore, baal has several components:
 
+```eval_rst
 .. toctree::
     :caption: Components of baal
     :maxdepth: 2
@@ -39,9 +42,11 @@ Therefore, baal has several components:
     :maxdepth: 2
 
     Background literature <literature/index>
-
+```
    
 ## Indices and tables
 
+```eval_rst
 * :ref:`genindex`
 * :ref:`search`
+```
