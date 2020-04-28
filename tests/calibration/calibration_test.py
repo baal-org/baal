@@ -11,6 +11,10 @@ from baal.calibration import DirichletCalibrator
 from baal.modelwrapper import ModelWrapper
 
 
+def _get_first_module(seq):
+    return list(seq)[0]
+
+
 class DummyDataset(Dataset):
 
     def __len__(self):
@@ -48,12 +52,13 @@ class CalibrationTest(unittest.TestCase):
         self.calibrator = DirichletCalibrator(self.wrapper, 2, lr=0.001, reg_factor=0.001)
 
     def test_calibrated_model(self):
-        assert len(list(self.calibrator.init_model.modules())) < len(
+        # Check that a layer was added.
+        assert len(list(self.wrapper.model.modules())) < len(
             list(self.calibrator.calibrated_model.modules()))
 
     def test_calibration(self):
         before_calib_param_init = list(
-            map(lambda x: x.clone(), self.calibrator.init_model.parameters()))
+            map(lambda x: x.clone(), _get_first_module(self.calibrator.wrapper.model).parameters()))
         before_calib_param = list(
             map(lambda x: x.clone(), self.calibrator.calibrated_model.parameters()))
 
@@ -62,7 +67,7 @@ class CalibrationTest(unittest.TestCase):
                                   use_cuda=False,
                                   double_fit=False, workers=0)
         after_calib_param_init = list(
-            map(lambda x: x.clone(), self.calibrator.init_model.parameters()))
+            map(lambda x: x.clone(), _get_first_module(self.calibrator.wrapper.model).parameters()))
         after_calib_param = list(
             map(lambda x: x.clone(), self.calibrator.calibrated_model.parameters()))
 
@@ -89,6 +94,21 @@ class CalibrationTest(unittest.TestCase):
         assert all(
             [k is v for k, v in
              zip(self.wrapper.model.parameters(), self.optim.param_groups[0]['params'])])
+
+        # Check that we can train the original model
+        before_params = list(
+            map(lambda x: x.clone(), self.wrapper.model.parameters()))
+        self.wrapper.train_on_dataset(self.dataset, self.optim, 10, 2, False)
+        after_params = list(
+            map(lambda x: x.clone(), self.wrapper.model.parameters()))
+        assert not all([np.allclose(i.detach(), j.detach())
+                        for i, j in zip(before_params, after_params)])
+
+        # Check that the parameters are still tied.
+        calib_params = list(
+            map(lambda x: x.clone(), _get_first_module(self.calibrator.wrapper.model).parameters()))
+        assert all([np.allclose(i.detach(), j.detach())
+                    for i, j in zip(calib_params, after_params)])
 
 
 if __name__ == '__main__':

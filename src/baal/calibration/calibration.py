@@ -42,7 +42,6 @@ class DirichletCalibrator(object):
 
     def __init__(self, wrapper: ModelWrapper, num_classes: int, lr: float,
                  reg_factor: float, mu: float = None):
-        self.init_model = deepcopy(wrapper.model)
         self.num_classes = num_classes
         self.criterion = nn.CrossEntropyLoss()
         self.lr = lr
