@@ -34,8 +34,7 @@ class ActiveLearningMixin(ABC):
         """DataLoader for the pool."""
         pass
 
-    def predict_step(self, batch, batch_idx):
-        data, _ = batch
+    def predict_step(self, data, batch_idx):
         out = mc_inference(self, data, self.hparams.iterations, self.hparams.replicate_in_memory)
         return out
 
@@ -50,7 +49,8 @@ class BaalTrainer(Trainer):
         return [np.vstack(pr) for pr in zip(*preds)]
 
     def predict_on_dataset_generator(self, *args, **kwargs):
-        self.model.eval()
+        model = self.get_model()
+        model.eval()
         dataloader = self.model.pool_loader()
         if len(dataloader) == 0:
             return None
@@ -59,7 +59,7 @@ class BaalTrainer(Trainer):
         for idx, (data, _) in enumerate(tqdm(dataloader, total=len(dataloader), file=sys.stdout)):
             if self.single_gpu:
                 data = to_cuda(data)
-            pred = self.model.predict_on_batch(data, idx)
+            pred = self.model.predict_step(data, idx)
             yield map_on_tensor(lambda x: x.detach().cpu().numpy(), pred)
 
 
@@ -71,15 +71,19 @@ class VGG16(LightningModule, ActiveLearningMixin):
         self.active_dataset = active_dataset
         self.hparams = hparams
         self.criterion = CrossEntropyLoss()
-        self.model = vgg16(num_classes=hparams.num_classes)
+
         self.train_transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                                    transforms.ToTensor()])
         self.test_transform = transforms.Compose([transforms.ToTensor()])
+        self._build_model()
+
+    def _build_model(self):
+        self.vgg16 = vgg16(num_classes=self.hparams.num_classes)
 
     def forward(self, x):
-        return self.model(x)
+        return self.vgg16(x)
 
-    def log_hyperparams(self,*args):
+    def log_hyperparams(self, *args):
         print(args)
 
     def save(self):
@@ -127,8 +131,7 @@ class VGG16(LightningModule, ActiveLearningMixin):
         :return: list of optimizers
         """
         optimizer = optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10)
-        return [optimizer], [scheduler]
+        return [optimizer], []
 
     def train_dataloader(self):
         return DataLoader(self.active_dataset, self.hparams.batch_size, shuffle=True,
@@ -144,6 +147,27 @@ class VGG16(LightningModule, ActiveLearningMixin):
         return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False,
                           num_workers=4)
 
+    def log_metrics(self, metrics, step_num):
+        print('Epoch', step_num, metrics)
+
+    def agg_and_log_metrics(self, metrics, step):
+        self.log_metrics(metrics, step)
+
+    def validation_epoch_end(self, outputs):
+        return self.epoch_end(outputs)
+
+    def epoch_end(self, outputs):
+        out = {}
+        if len(outputs) > 0:
+            out = {key: torch.stack([x[key] for x in outputs]).mean() for key in outputs[0].keys()}
+        return out
+
+    def test_epoch_end(self, outputs):
+        return self.epoch_end(outputs)
+
+    def training_epoch_end(self, outputs):
+        return self.epoch_end(outputs)
+
 
 class HParams(BaseModel):
     batch_size: int = 10
@@ -154,7 +178,6 @@ class HParams(BaseModel):
     max_sample: int = -1
     iterations: int = 20
     replicate_in_memory: bool = True
-
 
 
 def main(hparams):
@@ -170,7 +193,7 @@ def main(hparams):
     active_set.label_randomly(10)
     heuristic = BALD()
     model = VGG16(active_set, hparams)
-    trainer = BaalTrainer(model, max_nb_epochs=60)
+    trainer = BaalTrainer(max_nb_epochs=3, default_save_path='/tmp')
     loop = ActiveLearningLoop(active_set, get_probabilities=trainer.predict_on_dataset_generator,
                               heuristic=heuristic,
                               ndata_to_label=hparams.query_size,
@@ -182,6 +205,7 @@ def main(hparams):
         should_continue = loop.step()
         if not should_continue:
             break
+
 
 if __name__ == '__main__':
     main(HParams())
