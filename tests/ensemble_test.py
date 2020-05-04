@@ -66,7 +66,7 @@ def test_prediction(use_cuda, n_ensemble):
     assert not all(torch.eq(out[..., 0], out[..., i]).all() for i in range(1, n_ensemble))
 
     out = ensemble_prediction(model=model, data=dataset[1][0].unsqueeze(0),
-                              weigths=ensemble._weights,
+                              weights=ensemble._weights,
                               cuda=use_cuda)
     assert not all(torch.eq(out[..., 0], out[..., i]).all() for i in range(1, n_ensemble))
 
