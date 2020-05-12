@@ -32,6 +32,9 @@ class EnsembleModelWrapper(ModelWrapper):
         """
         self._weights.append(deepcopy(self.model.state_dict()))
 
+    def clear_checkpoints(self):
+        self._weights.clear()
+
     def predict_on_batch(self, data, iterations=1, cuda=False):
         """
         Get the model's prediction on a batch.
@@ -46,8 +49,11 @@ class EnsembleModelWrapper(ModelWrapper):
                     shape = {batch_size, nclass, n_iteration}.
 
         Raises:
-            Raises RuntimeError if CUDA rans out of memory during data replication.
+            Raises ValueError when no checkpoint are logged.
         """
+        if len(self._weights) == 0:
+            raise ValueError('No checkpoint!')
+
         return ensemble_prediction(model=self.model, data=data, weights=self._weights, cuda=cuda)
 
 

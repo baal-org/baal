@@ -34,10 +34,12 @@ class AModel(nn.Module):
     def forward(self, x):
         return self.seq(x)
 
+
 def weight_init(m):
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
         nn.init.xavier_uniform_(m.weight, gain=nn.init.calculate_gain('relu'))
         nn.init.zeros_(m.bias)
+
 
 @pytest.mark.parametrize(
     ("use_cuda", "n_ensemble"),
@@ -69,6 +71,12 @@ def test_prediction(use_cuda, n_ensemble):
                               weights=ensemble._weights,
                               cuda=use_cuda)
     assert not all(torch.eq(out[..., 0], out[..., i]).all() for i in range(1, n_ensemble))
+
+    ensemble.clear_checkpoints()
+    assert len(ensemble._weights) == 0
+
+    with pytest.raises(ValueError):
+        ensemble.predict_on_batch(dataset[0][0].unsqueeze(0), cuda=use_cuda)
 
 
 if __name__ == '__main__':
