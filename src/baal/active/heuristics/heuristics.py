@@ -179,8 +179,8 @@ class AbstractHeuristic:
         """
         if isinstance(scores, Sequence):
             scores = np.concatenate(scores)
-        assert scores.ndim <= 2
-        ranks = np.argsort(scores, -1)
+        assert scores.ndim == 1  # We want the uncertainty value per sample. a
+        ranks = np.argsort(scores)
         if self.reversed:
             ranks = ranks[::-1]
         ranks = _shuffle_subset(ranks, self.shuffle_prop)
@@ -576,7 +576,7 @@ class Random(Precomputed):
 
     def get_ranks(self, predictions):
         if isinstance(predictions, types.GeneratorType):
-            predictions = np.array([1 for _ in predictions])
+            predictions = np.array([np.ones([t.shape[0]]) for t in predictions]).reshape([-1])
         return self.reorder_indices(predictions)
 
 
