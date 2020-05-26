@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from scipy.special import softmax
+from scipy.special import softmax, expit
 
 
 def to_prob(probabilities: np.ndarray):
@@ -13,9 +13,14 @@ def to_prob(probabilities: np.ndarray):
     Returns:
         Same as probabilities.
     """
-    bounded = np.min(probabilities) < 0 or np.max(probabilities) > 1.0
-    if bounded or not np.allclose(probabilities.sum(1), 1):
-        probabilities = softmax(probabilities, 1)
+    not_bounded = np.min(probabilities) < 0 or np.max(probabilities) > 1.0
+    multiclass = probabilities.shape[1] > 1
+    sum_to_one = np.allclose(probabilities.sum(1), 1)
+    if not_bounded or (multiclass and not sum_to_one):
+        if multiclass:
+            probabilities = softmax(probabilities, 1)
+        else:
+            probabilities = expit(probabilities)
     return probabilities
 
 
