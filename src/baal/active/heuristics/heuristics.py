@@ -179,7 +179,7 @@ class AbstractHeuristic:
         """
         if isinstance(scores, Sequence):
             scores = np.concatenate(scores)
-        assert scores.ndim == 1  # We want the uncertainty value per sample. a
+        assert scores.ndim == 1  # We want the uncertainty value per sample.
         ranks = np.argsort(scores)
         if self.reversed:
             ranks = ranks[::-1]
