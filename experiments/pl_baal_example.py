@@ -1,13 +1,17 @@
 import sys
+import copy
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+
 from collections.abc import Sequence
+
+from typing import Dict, Any
 
 import numpy as np
 import structlog
 import torch
 from pydantic import BaseModel
-from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning import LightningModule, Trainer, Callback
 from torch import optim
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
@@ -37,6 +41,21 @@ class ActiveLearningMixin(ABC):
     def predict_step(self, data, batch_idx):
         out = mc_inference(self, data, self.hparams.iterations, self.hparams.replicate_in_memory)
         return out
+
+    def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
+        state_dict = self.active_dataset.load_state_dict(checkpoint['active_dataset'])
+        super().on_load_checkpoint(checkpoint)
+
+    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
+        checkpoint['active_dataset'] = self.active_dataset.state_dict()
+
+
+class ResetCallback(Callback):
+    def __init__(self, weights):
+        self.weights = weights
+
+    def on_train_start(self, module):
+        module.load(self.weights)
 
 
 class BaalTrainer(Trainer):
@@ -193,7 +212,8 @@ def main(hparams):
     active_set.label_randomly(10)
     heuristic = BALD()
     model = VGG16(active_set, hparams)
-    trainer = BaalTrainer(max_nb_epochs=3, default_save_path='/tmp')
+    trainer = BaalTrainer(max_nb_epochs=3, default_save_path='/tmp',
+                          callbacks=[ResetCallback(copy.deepcopy(model.state_dict()))])
     loop = ActiveLearningLoop(active_set, get_probabilities=trainer.predict_on_dataset_generator,
                               heuristic=heuristic,
                               ndata_to_label=hparams.query_size,
