@@ -43,8 +43,7 @@ class ActiveLearningMixin(ABC):
         return out
 
     def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        state_dict = self.active_dataset.load_state_dict(checkpoint['active_dataset'])
-        super().on_load_checkpoint(checkpoint)
+        self.active_dataset.load_state_dict(checkpoint['active_dataset'])
 
     def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
         checkpoint['active_dataset'] = self.active_dataset.state_dict()
@@ -54,8 +53,8 @@ class ResetCallback(Callback):
     def __init__(self, weights):
         self.weights = weights
 
-    def on_train_start(self, module):
-        module.load(self.weights)
+    def on_train_start(self, trainer, module):
+        module.load_state_dict(self.weights)
 
 
 class BaalTrainer(Trainer):
@@ -104,9 +103,6 @@ class VGG16(LightningModule, ActiveLearningMixin):
 
     def log_hyperparams(self, *args):
         print(args)
-
-    def save(self):
-        print("SAVED")
 
     def training_step(self, batch, batch_idx):
         """
@@ -221,6 +217,7 @@ def main(hparams):
 
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
+        print(f'Step {al_step} DS size {len(active_set)}')
         trainer.fit(model)
         should_continue = loop.step()
         if not should_continue:
