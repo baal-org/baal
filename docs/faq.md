@@ -20,6 +20,23 @@ If your model is large:
 uncertainty = heuristic.get_uncertainties_generator(wrapper.predict_on_dataset_generator(dataset, batch_size=32, iterations=20, use_cuda=True)
 ```
 
+## Does BaaL works on semantic segmentation?
+
+Yes! See the example in `experiments/segmentation/unet_mcdropout_pascal.py`.
+
+The key idea is to provide the Heuristic with a way to aggregated the uncertainties. In the case of semantic
+segmentation, MC-Dropout will provide a distribution per pixel. To reduce this to a single uncertainty value,
+you can provide `reduction` to the Heuristic with one of the following arguments:
+
+* String (one of `'max'`, `'mean'`, `'sum'`)
+* Callable, a function that will receive the uncertainty per pixel.
+
+## Does BaaL work on NLP/TS/Tabular data?
+
+BaaL is not task-specific, it can be used on a variety of domains and tasks. We are working toward more examples.
+
+Bayesian active learning has been used for Text Classification and NER in [(Siddhant and Lipton, 2018)](http://zacklipton.com/media/papers/1808.05697.pdf).
+
 ## How to know if my model is calibrated
 
 Baal uses the ECE to compute the calibration of a model. It is available throught: `baal.utils.metrics.ECE` and `baal.utils.metrics.ECE_PerCLs`, the latter providing the metrics per class.

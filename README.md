@@ -14,7 +14,11 @@ Read the documentation at https://baal.readthedocs.io.
 
 Our paper can be read on [arXiv](https://arxiv.org/abs/2006.09916). It includes tips and tricks to make active learning usable in production.
 
-You can also read our [blog post](https://www.elementai.com/news/2019/element-ai-makes-its-bayesian-active-learning-library-open-source).
+In this [blog post](https://www.elementai.com/news/2019/element-ai-makes-its-bayesian-active-learning-library-open-source), we present our library.
+
+For a quick introduction to BaaL and Bayesian active learning, please see this [presentation](https://drive.google.com/file/d/1icbTSbhl-Cs1X4k5XKYOEWfhkx9wBPdw/view?usp=sharing).
+
+
 
 ## Installation and requirements
 
