@@ -64,8 +64,10 @@ class ActiveLearningDataset(torchdata.Dataset):
         self.random_state = check_random_state(random_state)
 
     def check_dataset_can_label(self):
-        """
-        Check if a dataset can be labelled.
+        """Check if a dataset can be labelled.
+
+        Returns:
+            Whether the dataset's label can me modified or not.
 
         Notes:
             To be labelled, a dataset needs a method `label`
