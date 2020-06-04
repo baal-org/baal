@@ -67,7 +67,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         """Check if a dataset can be labelled.
 
         Returns:
-            Whether the dataset's label can me modified or not.
+            Whether the dataset's label can be modified or not.
 
         Notes:
             To be labelled, a dataset needs a method `label`
