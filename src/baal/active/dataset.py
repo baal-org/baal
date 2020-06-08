@@ -59,9 +59,30 @@ class ActiveLearningDataset(torchdata.Dataset):
 
         self.make_unlabelled = make_unlabelled
         # For example, FileDataset has a method 'label'. This is useful when we're in prod.
-        self.can_label = hasattr(self._dataset, 'label')
+        self.can_label = self.check_dataset_can_label()
 
         self.random_state = check_random_state(random_state)
+
+    def check_dataset_can_label(self):
+        """Check if a dataset can be labelled.
+
+        Returns:
+            Whether the dataset's label can be modified or not.
+
+        Notes:
+            To be labelled, a dataset needs a method `label`
+            with definition: `label(self, idx, value)` where `value`
+            is the label for indice `idx`.
+        """
+        has_label_attr = hasattr(self._dataset, 'label')
+        if has_label_attr:
+            if callable(self._dataset.label):
+                return True
+            else:
+                warnings.warn('Dataset has an attribute `label`, but it is not callable.'
+                              'The Dataset will not be labelled with new labels.',
+                              UserWarning)
+        return False
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, ...]:
         """Return stuff from the original dataset."""

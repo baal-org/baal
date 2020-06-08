@@ -64,7 +64,7 @@ def assert_doc_style(name, member, doc, args):
         raise ValueError(
             "{} the documentation should start on the first line.".format(member),
             member.__module__)
-    if first_line.strip()[-1] != '.':
+    if first_line == '' or first_line.strip()[-1] != '.':
         raise ValueError("{} first line should end with a '.'".format(member),
                          member.__module__)
 
