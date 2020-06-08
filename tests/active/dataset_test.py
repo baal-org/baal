@@ -1,5 +1,6 @@
 import pickle
 import unittest
+import warnings
 
 import numpy as np
 import pytest
@@ -210,6 +211,25 @@ def test_pickable():
     dataset_2 = pickle.loads(pickle.dumps(dataset_1))
     l2 = len(dataset_2.pool)
     assert l == l2
+
+
+def test_warning_raised_on_label():
+    class DS(Dataset):
+        def __init__(self):
+            self.x = [1, 2, 3]
+            self.label = [1, 1, 1]
+
+        def __len__(self):
+            return len(self.x)
+
+        def __getitem__(self, item):
+            return self.x[item], self.y[item]
+
+    with warnings.catch_warnings(record=True) as w:
+        al = ActiveLearningDataset(DS())
+        assert not al.can_label
+        assert len(w) == 1
+        assert "label" in str(w[-1].message)
 
 
 if __name__ == '__main__':

@@ -117,7 +117,7 @@ def test_calibration_integration():
                             batch_size=10, epoch=5,
                             use_cuda=use_cuda, double_fit=False, workers=0)
 
-        after_calib_param = list(map(lambda x: x.clone(), calibrator.init_model.parameters()))
+        after_calib_param = list(map(lambda x: x.clone(), model.parameters()))
 
 
         assert all([np.allclose(i.detach(), j.detach())
