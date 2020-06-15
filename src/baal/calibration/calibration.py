@@ -42,21 +42,20 @@ class DirichletCalibrator(object):
 
     def __init__(self, wrapper: ModelWrapper, num_classes: int, lr: float,
                  reg_factor: float, mu: float = None):
-        self.wrapper = wrapper
-        self.init_model = deepcopy(wrapper.model)
         self.num_classes = num_classes
-        self.loss = nn.CrossEntropyLoss()
+        self.criterion = nn.CrossEntropyLoss()
         self.lr = lr
         self.reg_factor = reg_factor
         self.mu = mu or reg_factor
+        self.dirichlet_linear = nn.Linear(self.num_classes, self.num_classes)
+        self.model = nn.Sequential(
+            wrapper.model,
+            self.dirichlet_linear
+        )
+        self.wrapper = ModelWrapper(self.model, self.criterion)
 
         self.wrapper.add_metric("ece", lambda: ECE())
         self.wrapper.add_metric("ece", lambda: ECE_PerCLs(num_classes))
-        self.dirichlet_linear = nn.Linear(self.num_classes, self.num_classes)
-        self.model = nn.Sequential(
-            self.init_model,
-            self.dirichlet_linear
-        )
 
     def l2_reg(self):
         """ Using trainable layer's parameters for l2 regularization.
@@ -90,14 +89,6 @@ class DirichletCalibrator(object):
             model.state_dict (dict): Model weights.
 
         """
-        model_dict = self.init_model.state_dict()
-
-        # 1. filter out unnecessary keys
-        trained_dict = {k: v for k, v in self.wrapper.state_dict().items() if k in model_dict}
-        # 2. overwrite entries in the existing state dict
-        model_dict.update(trained_dict)
-        # 3. load the new state dict
-        self.init_model.load_state_dict(model_dict)
 
         # reinitialize the dirichlet calibration layer
         self.dirichlet_linear.weight.data.copy_(torch.eye(self.dirichlet_linear.weight.shape[0]))
@@ -106,9 +97,6 @@ class DirichletCalibrator(object):
             self.dirichlet_linear.cuda()
 
         optimizer = Adam(self.dirichlet_linear.parameters(), lr=self.lr)
-
-        # making sure that the training is done on linear layer
-        self.wrapper.model = self.model
 
         loss_history, weights = self.wrapper.train_and_test_on_datasets(train_set, test_set,
                                                                         optimizer, batch_size,
@@ -119,8 +107,8 @@ class DirichletCalibrator(object):
         self.model.load_state_dict(weights)
 
         if double_fit:
-            self.lr = self.lr / 10
-            optimizer = Adam(self.dirichlet_linear.parameters(), lr=self.lr)
+            lr = self.lr / 10
+            optimizer = Adam(self.dirichlet_linear.parameters(), lr=lr)
             loss_history, weights = self.wrapper.train_and_test_on_datasets(
                 train_set, test_set,
                 optimizer, batch_size,
@@ -129,10 +117,7 @@ class DirichletCalibrator(object):
                 return_best_weights=True,
                 patience=None,
                 **kwargs)
-            self.lr = self.lr * 10
             self.model.load_state_dict(weights)
-
-        self.wrapper.model = self.init_model
 
         return loss_history, self.model.state_dict()
 

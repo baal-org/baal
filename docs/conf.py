@@ -39,7 +39,7 @@ author = 'Parmida Atighehchian, Frédéric Branchaud-Charron, Jan Freyberg'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '1.1.3'
+release = '1.2.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -218,6 +218,8 @@ def setup(app):
     app.add_config_value('recommonmark_config', {
         'enable_auto_toc_tree': True,
         'enable_eval_rst': True,
+        'enable_math': True,
+        'enable_inline_math': True,
         'auto_toc_tree_section': 'Contents',
     }, True)
     app.add_transform(AutoStructify)
