@@ -8,7 +8,7 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset
 
-from baal.modelwrapper import ModelWrapper
+from baal.modelwrapper import ModelWrapper, mc_inference
 from baal.utils.metrics import ClassificationReport
 
 
@@ -41,6 +41,12 @@ class DummyModel(nn.Module):
         x = self.linear(x)
         x = self.sigmoid(x)
         return x
+
+
+def test_mc_inference():
+    dummy = DummyModel()
+    out = mc_inference(dummy, torch.randn(1, 3, 10, 10), 10, True)
+    assert(out.shape == (1, 1, 10))
 
 
 class ModelWrapperMultiOutTest(unittest.TestCase):
