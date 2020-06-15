@@ -53,7 +53,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         if eval_transform is not None:
             warnings.warn(f"""eval_transform is deprecated and will be removed shortly.
             Please update your constructor to use
-             `pool_specifics={{'transform': {eval_transform}}}`""", DeprecationWarning)
+             `pool_specifics=dict(transform={eval_transform})`""", DeprecationWarning)
             pool_specifics['transform'] = eval_transform
         self.pool_specifics = pool_specifics
 
