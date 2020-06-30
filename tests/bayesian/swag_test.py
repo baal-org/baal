@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 import torch
 from torch import nn
+from torch.nn.modules import Flatten
 from torch.optim import SGD
 from torch.utils.data import Dataset, DataLoader
-from torchvision.models import vgg16_bn
 
 from baal.bayesian.swag import StochasticWeightAveraging
 
@@ -20,14 +20,21 @@ def classification_dataset():
             return 100
 
         def __getitem__(self, item):
-            return torch.randn(3, 128, 128) * item % 3, item % 3
+            return torch.randn(3, 32, 32) * item % 3, item % 3
 
     return ClsDataset()
 
 
 @pytest.fixture
 def base_optimizer():
-    mod = vgg16_bn()
+    mod = nn.Sequential(nn.Conv2d(3, 8, 3, padding=1),
+                        nn.BatchNorm2d(8),
+                        nn.Conv2d(8, 8, 3, padding=1),
+                        nn.BatchNorm2d(8),
+                        nn.AdaptiveAvgPool2d(1),
+                        Flatten(),
+                        nn.Linear(8, 2)
+                        )
     mod.train()
     opt = SGD(mod.parameters(), lr=0.01)
     return opt, mod
@@ -35,7 +42,8 @@ def base_optimizer():
 
 def test_lr_is_cyclical(base_optimizer):
     base_optimizer, _ = base_optimizer
-    swa = StochasticWeightAveraging(base_optimizer, swa_start=10, swa_freq=100,
+    SWA_FREQ = 100
+    swa = StochasticWeightAveraging(base_optimizer, swa_start=10, swa_freq=SWA_FREQ,
                                     cycle_learning_rate=True,
                                     lr_max=0.01, lr_min=0.0001)
     acc = []
@@ -44,10 +52,10 @@ def test_lr_is_cyclical(base_optimizer):
         acc.append(get_lr(swa))
     assert all(lr == acc[0] for lr in acc)
     acc = []
-    for _ in range(100):
+    for _ in range(SWA_FREQ):
         swa.step()
         acc.append(get_lr(swa))
-    assert all([acc[i] < acc[i - 1] for i in range(1, 99)])
+    assert all([acc[i] < acc[i - 1] for i in range(1, SWA_FREQ - 1)])
     assert acc[-1] == 0.01
     assert np.allclose(acc[-2], 0.0001, atol=1e-4)
 
@@ -68,7 +76,7 @@ def test_bn_updates(base_optimizer, classification_dataset):
     swa = StochasticWeightAveraging(base_optimizer, swa_start=0, swa_freq=100,
                                     cycle_learning_rate=True,
                                     lr_max=0.01, lr_min=0.0001)
-    swa.bn_update(model, DataLoader(classification_dataset, batch_size=32))
+    swa.bn_update(model, DataLoader(classification_dataset, batch_size=16))
     new_means = get_means(all_bns)
 
     assert not all(np.allclose(ini, new) for ini, new in zip(initial_means, new_means))
