@@ -28,7 +28,7 @@ jobs:
           command: |
             python -m venv venv
             . venv/bin/activate
-            pip config --venv set global.progress_bar off
+            pip config set global.progress_bar off
             pip install --upgrade pip
             pip install -e .
             pip install -r test-requirements.txt
