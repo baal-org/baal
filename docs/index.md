@@ -45,7 +45,7 @@ Baal has several components:
 
 .. toctree::
     :caption: Literature and support
-    :maxdepth: 2
+    :maxdepth: 1
 
     Background literature <literature/index>
 ```
