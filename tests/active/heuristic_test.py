@@ -125,6 +125,16 @@ def test_batch_bald(distributions, reduction):
     # Unlikely, but not 100% sure
     assert np.any(marg != [1, 2, 0])
 
+@pytest.mark.parametrize('distributions, reduction',
+                         [(distributions_5d, 'none')])
+def test_batch_bald_fails_on_5d(distributions, reduction):
+    np.random.seed(1338)
+
+    bald = BatchBALD(100, reduction=reduction)
+    with pytest.raises(ValueError) as e:
+        marg = bald(distributions)
+    assert 'BatchBALD only works on classification' in str(e)
+
 
 @pytest.mark.parametrize('distributions, reduction',
                          [(distributions_5d, 'mean'),

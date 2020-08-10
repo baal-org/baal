@@ -344,11 +344,14 @@ class BatchBALD(BALD):
         """
         Compute the joint entropy between `preditions` and `selected`
         Args:
-            predictions (Tensor): First tensor with shape [B, C, ..., Iterations]
+            predictions (Tensor): First tensor with shape [B, C, Iterations]
             selected (Tensor): Second tensor with shape [M, Iterations].
 
         References:
             Code from https://github.com/BlackHC/BatchBALD/blob/master/src/joint_entropy/sampling.py
+
+        Notes:
+            Only Classification is supported, not semantic segmentation or other.
 
         Returns:
             Generator yield B entropies.
@@ -376,7 +379,10 @@ class BatchBALD(BALD):
         Compute the score according to the heuristic.
 
         Args:
-            predictions (ndarray): Array of predictions
+            predictions (ndarray): Array of predictions [batch_size, C, Iterations]
+
+        Notes:
+            Only Classification is supported, not semantic segmentation or other.
 
         Returns:
             Array of scores.
@@ -428,16 +434,23 @@ class BatchBALD(BALD):
         Rank the predictions according to their uncertainties.
 
         Args:
-            predictions (ndarray): [batch_size, C, ..., Iterations]
+            predictions (ndarray): [batch_size, C, Iterations]
 
         Returns:
             Ranked index according to the uncertainty (highest to lowest).
+
+        Notes:
+            Only Classification is supported, not semantic segmentation or other.
 
         Raises:
             ValueError if predictions is a generator.
         """
         if isinstance(predictions, types.GeneratorType):
             raise ValueError("BatchBALD doesn't support generators.")
+
+        if predictions.ndim != 3:
+            raise ValueError("BatchBALD only works on classification"
+                             "Expected shape= [batch_size, C, Iterations]")
 
         ranks = self.get_uncertainties(predictions)
 
