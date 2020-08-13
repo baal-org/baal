@@ -1,4 +1,6 @@
-# Bayesian Active Learning (Baal) [![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal)  [![Documentation Status](https://readthedocs.org/projects/baal/badge/?version=latest)](https://baal.readthedocs.io/en/latest/?badge=latest) [![Gitter](https://badges.gitter.im/eai-baal/community.svg)](https://gitter.im/eai-baal/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+# Bayesian Active Learning (Baal)
+[![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal)  [![Documentation Status](https://readthedocs.org/projects/baal/badge/?version=latest)](https://baal.readthedocs.io/en/latest/?badge=latest) [![Gitter](https://badges.gitter.im/eai-baal/community.svg)](https://gitter.im/eai-baal/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+---
 
 <p align="left">
   <img height=15% width=25% src="https://github.com/ElementAI/baal/blob/master/docs/literature/images/repo_logo_25_no_corner.svg">
@@ -9,6 +11,8 @@ BaaL is an active learning library developed at
 and reusable components to make active learning accessible for all.
 
 Read the documentation at https://baal.readthedocs.io.
+
+Our paper can be read on [arXiv](https://arxiv.org/abs/2006.09916). It includes tips and tricks to make active learning usable in production.
 
 You can also read our [blog post](https://www.elementai.com/news/2019/element-ai-makes-its-bayesian-active-learning-library-open-source).
 

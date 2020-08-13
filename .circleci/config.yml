@@ -17,6 +17,10 @@ jobs:
     working_directory: ~/baal
 
     steps:
+      - run:
+          name: Grab FOSSA client
+          command: |
+            curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
       - checkout
 
       - run:
@@ -24,7 +28,7 @@ jobs:
           command: |
             python -m venv venv
             . venv/bin/activate
-            pip config --site set global.progress_bar off
+            pip config set global.progress_bar off
             pip install --upgrade pip
             pip install -e .
             pip install -r test-requirements.txt
@@ -38,6 +42,11 @@ jobs:
             echo "export CI_BUILD_URL=${CIRCLE_BUILD_URL}" >> $BASH_ENV
             echo "export CI_BUILD_NUMBER=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
             echo "export CI_NAME=circle" >> $BASH_ENV
+
+      - run:
+          name: FOSSA scan
+          command: fossa
+          working_directory: ~/baal
 
       # run tests!
       - run:

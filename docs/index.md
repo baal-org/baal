@@ -13,16 +13,22 @@
 baal aims to implement active learning using metrics of uncertainty derived
 from approximations of bayesian posteriors in neural networks.
 
-Therefore, baal has several components:
+# Support
+
+For support, please see if your question is already answered in our FAQ.
+If it is not there, please file an issue or join our Gitter.
+
+Baal has several components:
 
 ```eval_rst
 .. toctree::
     :caption: Components of baal
-    :maxdepth: 2
+    :maxdepth: 3
 
     Active learning dataset and training loop classes <notebooks/active-learning.ipynb>
     Methods for approximating bayesian posteriors <notebooks/posteriors.ipynb>
     API Index <api/index>
+    FAQ <faq>
 
 .. toctree ::
     :caption: Tutorials
@@ -39,7 +45,7 @@ Therefore, baal has several components:
 
 .. toctree::
     :caption: Literature and support
-    :maxdepth: 2
+    :maxdepth: 1
 
     Background literature <literature/index>
 ```

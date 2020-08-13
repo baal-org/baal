@@ -19,6 +19,14 @@ from baal.utils.metrics import Loss
 log = structlog.get_logger("ModelWrapper")
 
 
+def _stack_preds(out):
+    if isinstance(out[0], Sequence):
+        out = [torch.stack(ts, dim=-1) for ts in zip(*out)]
+    else:
+        out = torch.stack(out, dim=-1)
+    return out
+
+
 class ModelWrapper:
     """
     Wrapper created to ease the training/testing/loading.
@@ -373,10 +381,7 @@ class ModelWrapper:
                 out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
             else:
                 out = [self.model(data) for _ in range(iterations)]
-                if isinstance(out[0], Sequence):
-                    out = [torch.stack(ts, dim=-1) for ts in zip(*out)]
-                else:
-                    out = torch.stack(out, dim=-1)
+                out = _stack_preds(out)
             return out
 
     def get_params(self):
