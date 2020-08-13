@@ -223,7 +223,7 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     def state_dict(self):
         """Return the state_dict, ie. the labelled map and random_state."""
-        return {'labelled': self._labelled.copy(),
+        return {'labelled': self._labelled,
                 'random_state': self.random_state}
 
     def load_state_dict(self, state_dict):
