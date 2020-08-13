@@ -51,9 +51,9 @@ class ActiveLearningDataset(torchdata.Dataset):
         if pool_specifics is None:
             pool_specifics = {}
         if eval_transform is not None:
-            warnings.warn(f"""eval_transform is deprecated and will be removed shortly.
+            warnings.warn("""eval_transform is deprecated and will be removed shortly.
             Please update your constructor to use
-             `pool_specifics={{'transform': {{eval_transform}}}}`""", DeprecationWarning)
+             `pool_specifics={{'transform': {}}}`""".format(eval_transform), DeprecationWarning)
             pool_specifics['transform'] = eval_transform
         self.pool_specifics = pool_specifics
 
@@ -172,7 +172,7 @@ class ActiveLearningDataset(torchdata.Dataset):
                 self._labelled[index] = 1
                 if val is not None:
                     warnings.warn(
-                        "We will consider the original label of this datasample : {}.".format(
+                        "We will consider the original label of this datasample : {}, {}.".format(
                             self._dataset[index][0], self._dataset[index][1]), UserWarning)
 
     def label_randomly(self, n: int = 1) -> None:
@@ -202,7 +202,7 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     def state_dict(self):
         """Return the state_dict, ie. the labelled map and random_state."""
-        return {'labelled': self._labelled,
+        return {'labelled': self._labelled.copy(),
                 'random_state': self.random_state}
 
     def load_state_dict(self, state_dict):
