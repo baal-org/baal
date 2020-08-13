@@ -38,10 +38,15 @@ class ActiveLearningLoop:
         self.kwargs = kwargs
 
     def step(self, pool=None) -> bool:
-        """Perform an active learning step.
+        """
+        Perform an active learning step.
+
+        Args:
+            pool (iterable): dataset pool indices.
 
         Returns:
             boolean, Flag indicating if we continue training.
+
         """
         # High to low
         if pool is None:
