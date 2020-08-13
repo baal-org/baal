@@ -1,27 +1,13 @@
 import sys
-import copy
 from abc import ABC, abstractmethod
-from collections import OrderedDict
-
 from collections.abc import Sequence
-
 from typing import Dict, Any
 
 import numpy as np
 import structlog
-import torch
-from pydantic import BaseModel
-from pytorch_lightning import LightningModule, Trainer, Callback
-from torch import optim
-from torch.nn import CrossEntropyLoss
-from torch.utils.data import DataLoader
-from torchvision.datasets import CIFAR10
-from torchvision.models import vgg16
-from torchvision.transforms import transforms
+from pytorch_lightning import Trainer, Callback
 from tqdm import tqdm
 
-from baal.active import ActiveLearningDataset, ActiveLearningLoop
-from baal.active.heuristics import BALD
 from baal.modelwrapper import mc_inference
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
@@ -47,6 +33,7 @@ class ActiveLearningMixin(ABC):
 
     def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
         checkpoint['active_dataset'] = self.active_dataset.state_dict()
+        return checkpoint
 
 
 class ResetCallback(Callback):
