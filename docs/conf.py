@@ -17,6 +17,10 @@ import pathlib
 import shutil
 import sys
 
+from recommonmark.transform import AutoStructify
+import sphinx_rtd_theme
+from recommonmark.parser import CommonMarkParser
+
 pjoin = os.path.join
 parent_dir = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, os.path.abspath('./../src'))
@@ -26,7 +30,7 @@ shutil.copytree(pjoin(parent_dir, 'notebooks'), 'notebooks')
 
 # -- Project information -----------------------------------------------------
 
-import sphinx_rtd_theme
+
 
 project = 'baal'
 copyright = '2019, Parmida Atighehchian, Frédéric Branchaud-Charron, Jan Freyberg'
@@ -55,7 +59,7 @@ extensions = [
     'sphinx.ext.viewcode',
     "sphinx_automodapi.automodapi",
     "nbsphinx",
-    "m2r",
+    "recommonmark",
     "numpydoc",
     "sphinx.ext.napoleon"
 ]
@@ -66,6 +70,12 @@ autodoc_mock_imports = ["PIL", "tqdm", "structlog", "torch", "torchvision", "num
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+
+
+source_parsers = {
+    '.md': CommonMarkParser,
+}
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -201,3 +211,13 @@ epub_exclude_files = ['search.html']
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+
+# At the bottom of conf.py
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+        'enable_auto_toc_tree': True,
+        'enable_eval_rst': True,
+        'auto_toc_tree_section': 'Contents',
+    }, True)
+    app.add_transform(AutoStructify)

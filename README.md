@@ -41,7 +41,7 @@ At the moment BaaL supports the following methods to perform active learning.
 
 The **Monte-Carlo Dropout** method is a known approximation for Bayesian neural
 networks. In this method, the dropout layer is used both in training and test
-time. By running the model multiple times whilst randomly dropping weights, we calculate the uncertainty of the prediction using one of the uncertainty measurements in [src/baal/active/heuristics.py](src/baal/active/heuristics.py).
+time. By running the model multiple times whilst randomly dropping weights, we calculate the uncertainty of the prediction using one of the uncertainty measurements in [heuristics.py](src/baal/active/heuristics/heuristics.py).
 
 The framework consists of four main parts, as demonstrated in the flowchart below:
 
@@ -139,10 +139,22 @@ The BaaL team is here to serve you!
 
 - [Parmida Atighehchian](mailto:parmida@elementai.com)
 - [Frédéric Branchaud-Charron](mailto:frederic.branchaud-charron@elementai.com)
-- [Jan Freyberg](mailto:jan.freyberg@elementai.com)
+- [Jan Freyberg](mailto:jan.freyberg@gmail.com)
 - [Rafael Pardinas](mailto:rafael.pardinas@elementai.com)
 - [Lorne Schell](mailto:lorne.schell@elementai.com)
 
+### How to cite
+
+If you used BaaL in one of your project, we would greatly appreciate if you cite this library using this Bibtex:
+
+```
+@misc{atighehchian2019baal,
+  title={BaaL, a bayesian active learning library},
+  author={Atighehchian, Parmida and Branchaud-Charron, Frederic and Freyberg, Jan and Pardinas, Rafael and Schell, Lorne},
+  year={2019},
+  howpublished={\url{https://github.com/ElementAI/baal/}},
+}
+```
 
 ### Licence
 To get information on licence of this API please read [LICENCE](./LICENSE)

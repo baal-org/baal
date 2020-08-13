@@ -45,12 +45,6 @@ class DummyModel(nn.Module):
         return x
 
 
-def test_mc_inference():
-    dummy = DummyModel()
-    out = mc_inference(dummy, torch.randn(1, 3, 10, 10), 10, True)
-    assert(out.shape == (1, 1, 10))
-
-
 class ModelWrapperMultiOutMultiInTest(unittest.TestCase):
     def setUp(self):
         class MultiOutModel(nn.Module):
