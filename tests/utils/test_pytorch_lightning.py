@@ -86,9 +86,10 @@ def test_predict():
     assert len(alt) == len(active_set.pool)
     assert 'active_dataset' in save_chkp
     n_labelled = len(active_set)
+    copy_save_chkp = copy.deepcopy(save_chkp)
     active_set.label_randomly(5)
 
-    model.on_load_checkpoint(save_chkp)
+    model.on_load_checkpoint(copy_save_chkp)
     assert len(active_set) == n_labelled
 
 
