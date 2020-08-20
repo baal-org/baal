@@ -47,6 +47,8 @@ class VGG16(ActiveLearningMixin, LightningModule):
         self._build_model()
 
     def _build_model(self):
+        # We use `patch_module` to swap Dropout modules in the model
+        # for our implementation which enables MC-Dropou
         self.vgg16 = patch_module(vgg16(num_classes=self.hparams.num_classes))
 
     def forward(self, x):
@@ -162,11 +164,13 @@ def main(hparams):
     model = VGG16(active_set, hparams)
     trainer = BaalTrainer(max_epochs=3, default_root_dir=hparams.data_root,
                           gpus=hparams.n_gpus, distributed_backend='dp' if hparams.n_gpus > 1 else None,
+                          # The weights of the model will change as it gets
+                          # trained; we need to keep a copy (deepcopy) so that
+                          # we can reset them.
                           callbacks=[ResetCallback(copy.deepcopy(model.state_dict()))])
     loop = ActiveLearningLoop(active_set, get_probabilities=trainer.predict_on_dataset_generator,
                               heuristic=heuristic,
-                              ndata_to_label=hparams.query_size,
-                              max_sample=hparams.max_sample)
+                              ndata_to_label=hparams.query_size)
 
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
