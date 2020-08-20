@@ -25,13 +25,14 @@ from baal.active.heuristics import BALD
 from baal.modelwrapper import mc_inference
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
+from baal.bayesian.dropout import patch_module
 
 from baal.utils.pytorch_lightning import ActiveLearningMixin, ResetCallback, BaalTrainer
 
 log = structlog.get_logger('PL testing')
 
 
-class VGG16(LightningModule, ActiveLearningMixin):
+class VGG16(ActiveLearningMixin, LightningModule):
     def __init__(self, active_dataset, hparams):
         super().__init__()
         self.name = "VGG16"
@@ -46,7 +47,7 @@ class VGG16(LightningModule, ActiveLearningMixin):
         self._build_model()
 
     def _build_model(self):
-        self.vgg16 = vgg16(num_classes=self.hparams.num_classes)
+        self.vgg16 = patch_module(vgg16(num_classes=self.hparams.num_classes))
 
     def forward(self, x):
         return self.vgg16(x)
@@ -143,13 +144,14 @@ class HParams(BaseModel):
     max_sample: int = -1
     iterations: int = 20
     replicate_in_memory: bool = True
+    n_gpus: int = torch.cuda.device_count()
 
 
 def main(hparams):
     train_transform = transforms.Compose([transforms.RandomHorizontalFlip(),
                                           transforms.ToTensor()])
-    test_transform = transforms.Compose([transforms.RandomHorizontalFlip(),
-                                         transforms.ToTensor()])
+    test_transform = transforms.Compose([transforms.ToTensor()])
+
     active_set = ActiveLearningDataset(
         CIFAR10(hparams.data_root, train=True, transform=train_transform, download=True),
         pool_specifics={
@@ -158,7 +160,8 @@ def main(hparams):
     active_set.label_randomly(10)
     heuristic = BALD()
     model = VGG16(active_set, hparams)
-    trainer = BaalTrainer(max_nb_epochs=3, default_save_path='/tmp',
+    trainer = BaalTrainer(max_epochs=3, default_root_dir=hparams.data_root,
+                          gpus=hparams.n_gpus, distributed_backend='dp' if hparams.n_gpus > 1 else None,
                           callbacks=[ResetCallback(copy.deepcopy(model.state_dict()))])
     loop = ActiveLearningLoop(active_set, get_probabilities=trainer.predict_on_dataset_generator,
                               heuristic=heuristic,
