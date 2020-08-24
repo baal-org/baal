@@ -1,13 +1,9 @@
 import sys
 import copy
-from abc import ABC, abstractmethod
 from collections import OrderedDict
-
-from collections.abc import Sequence
 
 from typing import Dict, Any
 
-import numpy as np
 import structlog
 import torch
 from pydantic import BaseModel
@@ -22,9 +18,6 @@ from tqdm import tqdm
 
 from baal.active import ActiveLearningDataset, ActiveLearningLoop
 from baal.active.heuristics import BALD
-from baal.modelwrapper import mc_inference
-from baal.utils.cuda_utils import to_cuda
-from baal.utils.iterutils import map_on_tensor
 from baal.bayesian.dropout import patch_module
 
 from baal.utils.pytorch_lightning import ActiveLearningMixin, ResetCallback, BaalTrainer
@@ -127,7 +120,9 @@ class VGG16(ActiveLearningMixin, LightningModule):
     def epoch_end(self, outputs):
         out = {}
         if len(outputs) > 0:
-            out = {key: torch.stack([x[key] for x in outputs]).mean() for key in outputs[0].keys()}
+            out = {key: torch.stack([x[key]
+                   for x in outputs]).mean()
+                   for key in outputs[0].keys() if isinstance(key, torch.Tensor)}
         return out
 
     def test_epoch_end(self, outputs):
@@ -163,7 +158,8 @@ def main(hparams):
     heuristic = BALD()
     model = VGG16(active_set, hparams)
     trainer = BaalTrainer(max_epochs=3, default_root_dir=hparams.data_root,
-                          gpus=hparams.n_gpus, distributed_backend='dp' if hparams.n_gpus > 1 else None,
+                          gpus=hparams.n_gpus, distributed_backend='dp'
+                          if hparams.n_gpus > 1 else None,
                           # The weights of the model will change as it gets
                           # trained; we need to keep a copy (deepcopy) so that
                           # we can reset them.
