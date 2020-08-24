@@ -37,27 +37,36 @@ class ActiveLearningLoop:
         self.max_sample = max_sample
         self.kwargs = kwargs
 
-    def step(self) -> bool:
-        """Perform an active learning step.
+    def step(self, pool=None) -> bool:
+        """
+        Perform an active learning step.
+
+        Args:
+            pool (iterable): dataset pool indices.
 
         Returns:
             boolean, Flag indicating if we continue training.
+
         """
         # High to low
-        pool = self.dataset.pool
+        if pool is None:
+            pool = self.dataset.pool
+            if len(pool) > 0:
+                # Limit number of samples
+                if self.max_sample != -1 and self.max_sample < len(pool):
+                    indices = np.random.choice(len(pool), self.max_sample, replace=False)
+                    pool = torchdata.Subset(pool, indices)
+                else:
+                    indices = np.arange(len(pool))
+        else:
+            indices = None
+
         if len(pool) > 0:
-
-            # Limit number of samples
-            if self.max_sample != -1 and self.max_sample < len(pool):
-                indices = np.random.choice(len(pool), self.max_sample, replace=False)
-                pool = torchdata.Subset(pool, indices)
-            else:
-                indices = np.arange(len(pool))
-
             probs = self.get_probabilities(pool, **self.kwargs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
-                to_label = indices[np.array(to_label)]
+                if indices is not None:
+                    to_label = indices[np.array(to_label)]
                 if len(to_label) > 0:
                     self.dataset.label(to_label[: self.ndata_to_label])
                     return True

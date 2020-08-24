@@ -426,3 +426,34 @@ class ModelWrapper:
                 getattr(m, 'reset_parameters', lambda: None)()
 
         self.model.apply(reset)
+
+
+def mc_inference(model, data, iterations, replicate_in_memory):
+    if replicate_in_memory:
+        input_shape = data.size()
+        batch_size = input_shape[0]
+        try:
+            data = torch.stack([data] * iterations)
+        except RuntimeError as e:
+            raise RuntimeError(
+                '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
+            Use `replicate_in_memory=False` in order to reduce the memory requirements.
+            Note that there will be some speed trade-offs''') from e
+        data = data.view(batch_size * iterations, *input_shape[1:])
+        try:
+            out = model(data)
+        except RuntimeError as e:
+            raise RuntimeError(
+                '''CUDA ran out of memory while BaaL tried to replicate data. See the exception above.
+            Use `replicate_in_memory=False` in order to reduce the memory requirements.
+            Note that there will be some speed trade-offs''') from e
+        out = map_on_tensor(
+            lambda o: o.view([iterations, batch_size, *o.size()[1:]]), out)
+        out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
+    else:
+        out = [model(data) for _ in range(iterations)]
+        if isinstance(out[0], Sequence):
+            out = [torch.stack(ts, dim=-1) for ts in zip(*out)]
+        else:
+            out = torch.stack(out, dim=-1)
+    return out

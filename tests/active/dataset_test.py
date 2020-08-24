@@ -1,6 +1,7 @@
 import pickle
 import unittest
 import warnings
+import unittest.mock
 
 import numpy as np
 import pytest
