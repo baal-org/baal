@@ -30,7 +30,8 @@ shutil.copytree(pjoin(parent_dir, 'notebooks'), 'notebooks')
 
 # -- Project information -----------------------------------------------------
 
-
+# Disable notebook execution
+nbsphinx_execute = 'never'
 
 project = 'baal'
 copyright = '2019, Parmida Atighehchian, Frédéric Branchaud-Charron, Jan Freyberg'
