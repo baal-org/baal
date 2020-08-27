@@ -35,7 +35,7 @@ Baal has several components:
     :maxdepth: 1
     
     Use BaaL in production (Classification) <notebooks/baal_prod_cls.ipynb>
-    Use BaaL with Pytorch Lightning <notebooks/pytorch_lightning.ipynb> 
+    Use BaaL with Pytorch Lightning <notebooks/pytorch_lightning.ipynb>
     Use BaaL with SkLearn (Classification) <notebooks/sklearn_tutorial.ipynb>
     
 .. toctree ::
