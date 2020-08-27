@@ -34,3 +34,8 @@ def test_to_cuda():
     t_ordered_dict = OrderedDict([("t", t), ("t2", t.clone())])
     assert type(t_ordered_dict) is type(to_cuda(t_ordered_dict))
     assert all(t_.device.type == "cuda" for t_ in to_cuda(t_ordered_dict).values())
+
+    # test strings
+    t_ordered_dict = OrderedDict([("t", "string2"), ("t2", "string1")])
+    assert type(t_ordered_dict) is type(to_cuda(t_ordered_dict))
+    assert to_cuda(t_ordered_dict)['t'] == "string2"

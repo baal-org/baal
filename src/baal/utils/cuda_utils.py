@@ -1,5 +1,6 @@
-from functools import singledispatch
 from collections.abc import Mapping, Sequence
+from functools import singledispatch
+
 import torch
 
 
@@ -43,5 +44,8 @@ def _(data: Sequence):
     # use the type of this object to instantiate a new one:
     if hasattr(data, "_fields"):  # in case it's a named tuple
         return type(data)(*(to_cuda(item) for item in data))
+    elif isinstance(data, str):
+        # Special case
+        return data
     else:
         return type(data)(to_cuda(item) for item in data)
