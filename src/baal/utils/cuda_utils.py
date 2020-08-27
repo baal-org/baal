@@ -41,6 +41,22 @@ def _(data: Mapping):
 
 @to_cuda.register
 def _(data: Sequence):
+    """
+        Move an object to CUDA.
+
+        This function works recursively on lists and dicts, moving the values
+        inside to cuda.
+
+        Args:
+            data (Sequence):
+                The data you'd like to move to the GPU. If there's a pytorch tensor or
+                model in data (e.g. in a list or as values in a dictionary) this
+                function will move them all to CUDA and return something that matches
+                the input in structure.
+
+        Returns:
+            Sequence, with the elements converted to cuda if possible
+    """
     # use the type of this object to instantiate a new one:
     if hasattr(data, "_fields"):  # in case it's a named tuple
         return type(data)(*(to_cuda(item) for item in data))
