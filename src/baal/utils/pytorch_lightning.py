@@ -56,6 +56,8 @@ class BaalTrainer(Trainer):
     def predict_on_dataset_generator(self, *args, **kwargs):
         model = self.get_model()
         model.eval()
+        if self.on_gpu:
+            model.cuda(self.root_gpu)
         dataloader = self.model.pool_loader()
         if len(dataloader) == 0:
             return None
@@ -66,3 +68,5 @@ class BaalTrainer(Trainer):
                 data = to_cuda(data)
             pred = self.model.predict_step(data, idx)
             yield map_on_tensor(lambda x: x.detach().cpu().numpy(), pred)
+        # teardown, TODO customize this later?
+        model.cpu()
