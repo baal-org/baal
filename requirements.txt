@@ -9,4 +9,5 @@ torchvision>=0.2.2
 tqdm
 h5py
 structlog
+pydantic
 pytorch-lightning==0.8.5
