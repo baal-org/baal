@@ -156,9 +156,9 @@ def main(hparams):
     active_set.label_randomly(10)
     heuristic = BALD()
     model = VGG16(active_set, hparams)
+    dp = 'dp' if hparams.n_gpus > 1 else None
     trainer = BaalTrainer(max_epochs=3, default_root_dir=hparams.data_root,
-                          gpus=hparams.n_gpus, distributed_backend='dp'
-        if hparams.n_gpus > 1 else None,
+                          gpus=hparams.n_gpus, distributed_backend=dp,
                           # The weights of the model will change as it gets
                           # trained; we need to keep a copy (deepcopy) so that
                           # we can reset them.
@@ -169,7 +169,7 @@ def main(hparams):
 
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
-        print(f'Step {al_step} DS size {len(active_set)}')
+        print(f'Step {al_step} Dataset size {len(active_set)}')
         trainer.fit(model)
         should_continue = loop.step()
         if not should_continue:
