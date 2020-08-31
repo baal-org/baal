@@ -1,28 +1,27 @@
-import sys
 import copy
 from collections import OrderedDict
 
-from typing import Dict, Any
-
 import structlog
 import torch
-from pydantic import BaseModel
-from pytorch_lightning import LightningModule, Trainer, Callback
+from pytorch_lightning import LightningModule
 from torch import optim
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg16
 from torchvision.transforms import transforms
-from tqdm import tqdm
 
 from baal.active import ActiveLearningDataset, ActiveLearningLoop
 from baal.active.heuristics import BALD
 from baal.bayesian.dropout import patch_module
-
 from baal.utils.pytorch_lightning import ActiveLearningMixin, ResetCallback, BaalTrainer
 
 log = structlog.get_logger('PL testing')
+
+try:
+    from pydantic import BaseModel
+except ImportError:
+    raise ValueError('pydantic is required for this example.\n pip install pydantic')
 
 
 class VGG16(ActiveLearningMixin, LightningModule):
@@ -121,7 +120,7 @@ class VGG16(ActiveLearningMixin, LightningModule):
         out = {}
         if len(outputs) > 0:
             out = {key: torch.stack([x[key]
-                   for x in outputs]).mean()
+                                     for x in outputs]).mean()
                    for key in outputs[0].keys() if isinstance(key, torch.Tensor)}
         return out
 
@@ -159,7 +158,7 @@ def main(hparams):
     model = VGG16(active_set, hparams)
     trainer = BaalTrainer(max_epochs=3, default_root_dir=hparams.data_root,
                           gpus=hparams.n_gpus, distributed_backend='dp'
-                          if hparams.n_gpus > 1 else None,
+        if hparams.n_gpus > 1 else None,
                           # The weights of the model will change as it gets
                           # trained; we need to keep a copy (deepcopy) so that
                           # we can reset them.
