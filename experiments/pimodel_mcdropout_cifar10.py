@@ -25,7 +25,7 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
 
     def epoch_end(self, outputs):
         out = super().epoch_end(outputs)
-        out['log']['active_set_len'] = len(self.active_dataset)
+        out['log']['active_set_len'] = len(self.actipoove_dataset)
 
         return out
 
@@ -73,14 +73,16 @@ if __name__ == '__main__':
     model = PIActiveLearningModel(network=net, active_dataset=active_set, hparams=params)
 
     dp = 'dp' if params.gpus > 1 else None
-    trainer = BaalTrainer(max_epochs=10, num_sanity_val_steps=0,
-                          gpus=params.gpus, distributed_backend=dp,
+    trainer = BaalTrainer(max_epochs=3, default_root_dir=params.data_root,
+                          gpus=params.n_gpus, distributed_backend=dp,
                           # The weights of the model will change as it gets
                           # trained; we need to keep a copy (deepcopy) so that
                           # we can reset them.
                           callbacks=[ResetCallback(copy.deepcopy(model.state_dict()))],
-                          check_val_every_n_epoch=1,
-                          logger=True, checkpoint_callback=True)
+                          dataset=active_set,
+                          heuristic=heuristic,
+                          ndata_to_label=params.query_size
+                          )
 
     loop = ActiveLearningLoop(active_set, get_probabilities=trainer.predict_on_dataset_generator,
                               heuristic=heuristic,
