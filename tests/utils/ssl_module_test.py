@@ -12,8 +12,8 @@ from tests.active.ssl_dataset_test import SSLTestDataset
 
 
 class TestSSLModule(SSLModule):
-    def __init__(self, train_set: ActiveLearningDataset, hparams: Namespace, **kwargs):
-        super().__init__(train_set, hparams, **kwargs)
+    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace, **kwargs):
+        super().__init__(active_dataset, hparams, **kwargs)
         self.linear = nn.Linear(784, 10)
 
         self.labeled_data = []

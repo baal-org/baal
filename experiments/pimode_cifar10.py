@@ -3,13 +3,13 @@ Semi-supervised model for classification.
 Pi-Model from TEMPORAL ENSEMBLING FOR SEMI-SUPERVISED LEARNING (Laine 2017).
 """
 
-
 import argparse
 from argparse import Namespace
-from typing import Dict, OrderedDict
+from typing import Dict
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from baal.active import ActiveLearningDataset
 from baal.utils.metrics import Accuracy
 from baal.utils.ssl_module import SSLModule
@@ -17,11 +17,33 @@ from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
-from torchvision.models import vgg16
+
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(3, 32, 3, 1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.dropout1 = nn.Dropout2d(0.25)
+        self.fc1 = nn.Linear(12544, 128)
+        self.dropout2 = nn.Dropout(0.5)
+        self.fc2 = nn.Linear(128, 10)
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.max_pool2d(x, 2)
+        x = self.dropout1(x)
+        x = torch.flatten(x, 1)
+        x = F.relu(self.fc1(x))
+        x = self.dropout2(x)
+        x = self.fc2(x)
+        return x
 
 
 class GaussianNoise(nn.Module):
-    """ Add random gaussian noise to images"""
+    """ Add random gaussian noise to images."""
+
     def __init__(self, std=0.05):
         super(GaussianNoise, self).__init__()
         self.std = std
@@ -31,12 +53,21 @@ class GaussianNoise(nn.Module):
 
 
 class RandomTranslation(nn.Module):
-    """Randomly translate images"""
+    """Randomly translate images."""
+
     def __init__(self, augment_translation=10):
         super(RandomTranslation, self).__init__()
         self.augment_translation = augment_translation
 
     def forward(self, x):
+        """
+            Randomly translate images.
+        Args:
+            x (Tensor) : (N, C, H, W) image tensor
+
+        Returns:
+            (N, C, H, W) translated image tensor
+        """
         batch_size = len(x)
 
         t_min = -self.augment_translation / x.shape[-1]
@@ -61,13 +92,14 @@ class PIModel(SSLModule):
                                           transforms.ToTensor()])
     test_transform = transforms.Compose([transforms.ToTensor()])
 
-    def __init__(self, train_set: ActiveLearningDataset, hparams: Namespace, network: nn.Module):
-        super().__init__(train_set, hparams)
+    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace, network: nn.Module):
+        super().__init__(active_dataset, hparams)
 
         self.network = network
 
-        M = len(self.train_set)
-        N = (len(self.train_set) + len(self.train_set.pool))
+        # Maximum unsupervised loss weight as defined in the paper.
+        M = len(self.active_dataset)
+        N = (len(self.active_dataset) + len(self.active_dataset.pool))
         self.max_unsupervised_weight = self.hparams.w_max * M / N
 
         self.criterion = nn.CrossEntropyLoss()
@@ -106,23 +138,19 @@ class PIModel(SSLModule):
 
         supervised_loss = self.criterion(z, y)
 
-        self.accuracy_metric.update(z, y)
-        accuracy = self.accuracy_metric.calculate_result()
+        accuracy = (y == z.argmax(-1)).float().sum() / len(x)
 
-        logs = {'cross_entropy_loss': supervised_loss,
-                'accuracy': accuracy}
+        logs = {'criterion_loss': supervised_loss, 'accuracy': accuracy}
 
         if not self.hparams.baseline:
             z_hat = self.forward(x)
+
             unsupervised_loss = self.consistency_criterion(z, z_hat)
-
             unsupervised_weight = self.max_unsupervised_weight * self.rampup_value()
-
             loss = supervised_loss + unsupervised_weight * unsupervised_loss
 
             logs.update({'supervised_consistency_loss': unsupervised_loss,
-                         'unsupervised_weight': unsupervised_weight,
-                         })
+                         'unsupervised_weight': unsupervised_weight})
 
         else:
             loss = supervised_loss
@@ -131,7 +159,7 @@ class PIModel(SSLModule):
                      'rampup_value': self.rampup_value(),
                      'learning_rate': self.rampup_value() * self.hparams.lr})
 
-        return {'loss': loss, "progress_bar": logs, 'log': logs}
+        return {'loss': loss, 'log': logs}
 
     def unsupervised_training_step(self, batch, *args) -> Dict:
         x = batch
@@ -140,15 +168,13 @@ class PIModel(SSLModule):
         z_hat = self.forward(x)
 
         unsupervised_loss = self.consistency_criterion(z, z_hat)
-
         unsupervised_weight = self.max_unsupervised_weight * self.rampup_value()
-
         loss = unsupervised_weight * unsupervised_loss
 
         logs = {'unsupervised_consistency_loss': unsupervised_loss,
                 'unsupervised_loss': loss}
 
-        return {'loss': loss, 'log': logs, "progress_bar": logs}
+        return {'loss': loss, 'log': logs}
 
     def rampup_value(self):
         if self.current_epoch <= self.hparams.rampup_stop - 1:
@@ -178,29 +204,22 @@ class PIModel(SSLModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.hparams.lr, betas=(0.9, 0.999), weight_decay=1e-4)
 
-    def test_val_step(self, batch, batch_idx):
+    def test_val_step(self, batch: int, prefix: str) -> Dict[str, Tensor]:
         x, y = batch
         y_hat = self(x)
 
-        # calculate loss
         loss_val = self.criterion(y_hat, y)
-        self.accuracy_metric.update(y_hat, y)
-        accuracy = self.accuracy_metric.calculate_result()
+        accuracy = (y == y_hat.argmax(-1)).float().sum() / len(x)
 
-        tqdm_dict = {'val_loss': loss_val, 'accuracy': accuracy}
-        output = OrderedDict[{
-            'loss': loss_val,
-            'progress_bar': tqdm_dict,
-            'log': tqdm_dict
-        }]
+        output = {'{}_loss'.format(prefix): loss_val, '{}_accuracy'.format(prefix): accuracy}
+
         return output
 
-    def validation_step(self, *args, **kwargs) -> Dict[str, Tensor]:
-        return self.test_val_step(*args, **kwargs)
+    def validation_step(self, batch, batch_idx) -> Dict[str, Tensor]:
+        return self.test_val_step(batch, prefix='val')
 
-    def test_step(self, *args, **kwargs) -> Dict[str, Tensor]:
-        return self.test_val_step(*args, **kwargs)
-
+    def test_step(self, batch, batch_idx) -> Dict[str, Tensor]:
+        return self.test_val_step(batch, prefix='test')
 
     def val_dataloader(self):
         ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform, download=True)
@@ -211,13 +230,17 @@ class PIModel(SSLModule):
         return DataLoader(ds, self.hparams.batch_size, shuffle=False)
 
     def epoch_end(self, outputs):
-        out = {}
-        if len(outputs) > 0:
-            out = {key: torch.stack([x[key] for x in outputs]).mean() for key in outputs[0].keys() if isinstance(key, torch.Tensor)}
-        return out
+        avg_metrics = {}
+        for key in outputs[0].keys():
+            if isinstance(outputs[0][key], torch.Tensor):
+                avg_metrics[key] = torch.stack([x[key] for x in outputs]).mean()
 
-    def training_epoch_end(self, outputs):
-        return self.epoch_end(outputs)
+        output = {}
+        output['progress_bar'] = avg_metrics
+        output['log'] = avg_metrics
+        output['log']['step'] = self.current_epoch
+
+        return output
 
     def validation_epoch_end(self, outputs):
         return self.epoch_end(outputs)
@@ -254,7 +277,7 @@ if __name__ == '__main__':
 
     args = ArgumentParser(add_help=False)
     args.add_argument('--data-root', default='/tmp', type=str, help='Where to download the data')
-    args.add_argument('--gpus', default=0, type=int)
+    args.add_argument('--gpus', default=torch.cuda.device_count(), type=int)
     args = PIModel.add_model_specific_args(args)
     params = args.parse_args()
 
@@ -262,14 +285,15 @@ if __name__ == '__main__':
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
         pool_specifics={'transform': PIModel.test_transform},
         make_unlabelled=lambda x: x[0])
-    active_set.label_randomly(5000)
+    active_set.label_randomly(100)
 
     print("Active set length: {}".format(len(active_set)))
     print("Pool set length: {}".format(len(active_set.pool)))
 
-    net = vgg16(pretrained=False, num_classes=10)
+    # net = vgg16(pretrained=False, num_classes=10)
+    net = Net()
 
-    system = PIModel(network=net, train_set=active_set, hparams=params)
+    system = PIModel(network=net, active_dataset=active_set, hparams=params)
 
     trainer = Trainer(num_sanity_val_steps=0, max_epochs=params.epochs, profiler=True, early_stop_callback=False,
                       gpus=params.gpus)

@@ -7,17 +7,18 @@ from torch.utils.data import DataLoader
 
 
 class AlternateIterator:
+    """
+    Create an iterator that will alternate between two dataloaders.
+
+    Args:
+        dl_1 (DataLoader): first DataLoader
+        dl_2 (DataLoader): second DataLoader
+        num_steps (Optional[int]): Number of steps, if None will be the sum of both length.
+        p (Optional[float]): Probability of choosing dl_1 over dl_2. If None, will be alternate between the two.
+    """
+
     def __init__(self, dl_1: DataLoader, dl_2: DataLoader, num_steps: Optional[int] = None,
                  p: Optional[float] = None):
-        """
-        Create an iterator that will alternate between two dataloaders.
-
-        Args:
-            dl_1 (DataLoader): first DataLoader
-            dl_2 (DataLoader): second DataLoader
-            num_steps (Optional[int]): Number of steps, if None will be the sum of both length.
-            p (Optional[float]): Probability of choosing dl_1 over dl_2. If None, will be alternate between the two.
-        """
         self.dl_1 = dl_1
         self.dl_1_iter = cycle(dl_1)
         self.len_dl1 = len(dl_1)

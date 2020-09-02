@@ -8,11 +8,20 @@ from baal.utils.ssl_dataset import SemiSupervisedIterator
 
 
 class SSLModule(pl.LightningModule):
-    def __init__(self, train_set: ActiveLearningDataset, hparams: Namespace, **kwargs):
+    """
+        Pytorch Lightning module for semi-supervised learning.
+
+    Args:
+        active_dataset (ActiveLearningDataset): active learning dataset
+        hparams (Namespace): hyper-parameters for the module
+        **kwargs (**dict): extra arguments
+    """
+
+    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace, **kwargs):
         super().__init__()
 
         self.hparams = hparams
-        self.train_set = train_set
+        self.active_dataset = active_dataset
 
     def supervised_training_step(self, batch, *args) -> Dict:
         raise NotImplementedError
@@ -27,7 +36,7 @@ class SSLModule(pl.LightningModule):
             return self.unsupervised_training_step(SemiSupervisedIterator.get_batch(batch), *args)
 
     def train_dataloader(self) -> SemiSupervisedIterator:
-        return SemiSupervisedIterator(self.train_set, self.hparams.batch_size, num_steps=self.hparams.num_steps,
+        return SemiSupervisedIterator(self.active_dataset, self.hparams.batch_size, num_steps=self.hparams.num_steps,
                                       p=self.hparams.p, num_workers=self.hparams.workers)
 
     @staticmethod
@@ -44,7 +53,7 @@ class SSLModule(pl.LightningModule):
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False, conflict_handler="resolve")
         parser.add_argument('--p', default=None, type=float, help='Probability of selecting labeled batch')
         parser.add_argument('--num_steps', default=None, type=int, help='Number of steps per epoch')
-        parser.add_argument("--batch_size", default=32, type=int)
+        parser.add_argument("--batch-size", default=32, type=int)
         parser.add_argument("--workers", default=0, type=int)
 
         return parser
