@@ -10,7 +10,7 @@ modules = ['baal', 'baal.active', 'baal.bayesian', 'baal.calibration',
            'baal.active.heuristics', 'baal.active.active_loop',
            'baal.active.dataset', 'baal.active.file_dataset',
            'baal.utils.metrics', 'baal.utils.cuda_utils',
-           'baal.utils.ssl_module', 'baal.utils.ssl_dataset']
+           'baal.utils.ssl_module', 'baal.utils.ssl_iterator']
 # We do not force these functions to be compliant.
 accepted_name = ['set_logger_config', 'Report']
 # We do not force these modules to be compliant.
