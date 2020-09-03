@@ -3,15 +3,16 @@ import copy
 from argparse import Namespace
 
 import torch
-from baal.active import ActiveLearningDataset, ActiveLearningLoop
+from baal.active import ActiveLearningDataset
 from baal.active.heuristics import BALD
 from baal.bayesian.dropout import patch_module
 from baal.utils.pytorch_lightning import ActiveLearningMixin, BaalTrainer, ResetCallback
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
+from torchvision.models import vgg16
 
-from experiments.pimodel_cifar10 import PIModel, Net
+from experiments.pimodel_cifar10 import PIModel
 
 
 class PIActiveLearningModel(ActiveLearningMixin, PIModel):
@@ -69,11 +70,11 @@ if __name__ == '__main__':
     print("Pool set length: {}".format(len(active_set.pool)))
 
     heuristic = BALD()
-    net = Net()
+    net = vgg16(pretrained=False, num_classes=10)
     model = PIActiveLearningModel(network=net, active_dataset=active_set, hparams=params)
 
     dp = 'dp' if params.gpus > 1 else None
-    trainer = BaalTrainer(max_epochs=3, default_root_dir=params.data_root,
+    trainer = BaalTrainer(max_epochs=params.epochs, default_root_dir=params.data_root,
                           gpus=params.n_gpus, distributed_backend=dp,
                           # The weights of the model will change as it gets
                           # trained; we need to keep a copy (deepcopy) so that
@@ -84,14 +85,10 @@ if __name__ == '__main__':
                           ndata_to_label=params.query_size
                           )
 
-    loop = ActiveLearningLoop(active_set, get_probabilities=trainer.predict_on_dataset_generator,
-                              heuristic=heuristic,
-                              ndata_to_label=params.query_size)
-
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
         print(f'Step {al_step} Dataset size {len(active_set)}')
         trainer.fit(model)
-        should_continue = loop.step()
+        should_continue = trainer.step()
         if not should_continue:
             break

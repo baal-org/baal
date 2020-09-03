@@ -48,7 +48,7 @@ class ResetCallback(Callback):
 
 
 class BaalTrainer(Trainer):
-    """Object that perform the trainig and active learning iteration.
+    """Object that perform the training and active learning iteration.
 
     Args:
         dataset (ActiveLearningDataset): Dataset with some sample already labelled.
@@ -61,7 +61,9 @@ class BaalTrainer(Trainer):
     """
 
     def __init__(self, dataset: ActiveLearningDataset,
-                 heuristic: heuristics.AbstractHeuristic = heuristics.Random(), ndata_to_label: int = 1, max_sample=-1,
+                 heuristic: heuristics.AbstractHeuristic = heuristics.Random(),
+                 ndata_to_label: int = 1,
+                 max_sample=-1,
                  **kwargs) -> None:
 
         super().__init__(**kwargs)

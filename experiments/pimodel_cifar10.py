@@ -1,6 +1,7 @@
 """
 Semi-supervised model for classification.
 Pi-Model from TEMPORAL ENSEMBLING FOR SEMI-SUPERVISED LEARNING (Laine 2017).
+https://arxiv.org/abs/1610.02242
 """
 
 import argparse
@@ -9,36 +10,13 @@ from typing import Dict
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from baal.active import ActiveLearningDataset
-from baal.utils.metrics import Accuracy
 from baal.utils.ssl_module import SSLModule
 from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
-
-
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, 3, 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        self.dropout1 = nn.Dropout2d(0.25)
-        self.fc1 = nn.Linear(12544, 128)
-        self.dropout2 = nn.Dropout(0.5)
-        self.fc2 = nn.Linear(128, 10)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2)
-        x = self.dropout1(x)
-        x = torch.flatten(x, 1)
-        x = F.relu(self.fc1(x))
-        x = self.dropout2(x)
-        x = self.fc2(x)
-        return x
+from torchvision.models import vgg16
 
 
 class GaussianNoise(nn.Module):
@@ -112,22 +90,10 @@ class PIModel(SSLModule):
         self.gaussian_noise = GaussianNoise()
         self.random_crop = RandomTranslation()
 
-        self.accuracy_metric = Accuracy()
-
     def forward(self, x):
-
-        # plt.figure()
-        # plt.title("Before")
-        # plt.imshow(x[0].squeeze().permute(1, 2, 0))
-
-        if self.training:  # and not self.hparams.baseline:
+        if self.training and not self.hparams.no_augmentations:
             x = self.random_crop(x)
             x = self.gaussian_noise(x)
-
-        # plt.figure()
-        # plt.title("After")
-        # plt.imshow(x[0].squeeze().permute(1, 2, 0))
-        # plt.show()
 
         return self.network(x)
 
@@ -268,6 +234,7 @@ class PIModel(SSLModule):
         parser.add_argument('--lr', default=0.003, type=float, help='Max learning rate', dest='lr')
         parser.add_argument('--w_max', default=100, type=float, help='Maximum unsupervised weight, default=100 for '
                                                                      'CIFAR10 as described in paper')
+        parser.add_argument('--no_augmentations', action='store_true')
         return parser
 
 
@@ -285,13 +252,12 @@ if __name__ == '__main__':
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
         pool_specifics={'transform': PIModel.test_transform},
         make_unlabelled=lambda x: x[0])
-    active_set.label_randomly(100)
+    active_set.label_randomly(5000)
 
     print("Active set length: {}".format(len(active_set)))
     print("Pool set length: {}".format(len(active_set.pool)))
 
-    # net = vgg16(pretrained=False, num_classes=10)
-    net = Net()
+    net = vgg16(pretrained=False, num_classes=10)
 
     system = PIModel(network=net, active_dataset=active_set, hparams=params)
 
