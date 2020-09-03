@@ -11,7 +11,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 
-from experiments.pimode_cifar10 import PIModel, Net
+from experiments.pimodel_cifar10 import PIModel, Net
 
 
 class PIActiveLearningModel(ActiveLearningMixin, PIModel):
