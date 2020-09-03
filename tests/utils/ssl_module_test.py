@@ -8,7 +8,7 @@ from src.baal.utils.ssl_module import SSLModule
 from torch import nn
 from torch.utils.data import ConcatDataset
 
-from tests.active.ssl_dataset_test import SSLTestDataset
+from tests.utils.ssl_iterator_test import SSLTestDataset
 
 
 class TestSSLModule(SSLModule):

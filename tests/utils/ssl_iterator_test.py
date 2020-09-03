@@ -3,7 +3,7 @@ import unittest
 import pytest
 import torch
 from baal.active import ActiveLearningDataset
-from baal.utils.ssl_dataset import SemiSupervisedIterator
+from baal.utils.ssl_iterator import SemiSupervisedIterator
 from torch.utils.data import Dataset, ConcatDataset
 
 

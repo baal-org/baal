@@ -4,7 +4,7 @@ from typing import Dict
 
 import pytorch_lightning as pl
 from baal.active import ActiveLearningDataset
-from baal.utils.ssl_dataset import SemiSupervisedIterator
+from baal.utils.ssl_iterator import SemiSupervisedIterator
 
 
 class SSLModule(pl.LightningModule):
