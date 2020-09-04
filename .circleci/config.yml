@@ -67,9 +67,6 @@ jobs:
       # - image: circleci/postgres:9.4
 
     working_directory: ~/baal
-    branches:
-      only:
-        - master
 
     steps:
       - run:
