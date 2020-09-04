@@ -31,23 +31,24 @@ jobs:
             echo "export CI_BUILD_NUMBER=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
             echo "export CI_NAME=circle" >> $BASH_ENV
   tests_running:
-      # run tests!
-      - checkout
-      - run:
-          name: run flake8
-          command: |
-            . venv/bin/activate
-            flake8 src/
+      steps:
+        # run tests!
+        - checkout
+        - run:
+            name: run flake8
+            command: |
+              . venv/bin/activate
+              flake8 src/
 
-      - run:
-          name: run coverage
-          command: |
-            . venv/bin/activate
-            pytest tests --cov=src
+        - run:
+            name: run coverage
+            command: |
+              . venv/bin/activate
+              pytest tests --cov=src
 
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
+        - store_artifacts:
+            path: test-reports
+            destination: test-reports
   fossa:
     steps:
       - checkout
