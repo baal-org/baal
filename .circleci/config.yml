@@ -4,13 +4,21 @@
 #
 version: 2
 jobs:
-  build:
+  tests_running:
     docker:
       # specify the version you desire here
       - image: circleci/python:3.7-stretch
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
     working_directory: ~/baal
+
     steps:
       - checkout
+
       - run:
           name: install dependencies
           command: |
@@ -30,28 +38,36 @@ jobs:
             echo "export CI_BUILD_URL=${CIRCLE_BUILD_URL}" >> $BASH_ENV
             echo "export CI_BUILD_NUMBER=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
             echo "export CI_NAME=circle" >> $BASH_ENV
-  tests_running:
-      steps:
-        # run tests!
-        - checkout
-        - run:
-            name: run flake8
-            command: |
-              . venv/bin/activate
-              flake8 src/
 
-        - run:
-            name: run coverage
-            command: |
-              . venv/bin/activate
-              pytest tests --cov=src
+      # run tests!
+      - run:
+          name: run flake8
+          command: |
+            . venv/bin/activate
+            flake8 src/
 
-        - store_artifacts:
-            path: test-reports
-            destination: test-reports
+      - run:
+          name: run coverage
+          command: |
+            . venv/bin/activate
+            pytest tests --cov=src
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
   fossa:
+    docker:
+      # specify the version you desire here
+      - image: circleci/python:3.7-stretch
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/baal
+
     steps:
-      - checkout
       - run:
           name: Grab FOSSA client
           command: |
@@ -75,13 +91,8 @@ workflows:
   version: 2
   run_test:
     jobs:
-      - build
-      - tests_running:
-           requires:
-             - build
+      - tests_running
       - fossa:
-          requires:
-            - build
           filters:
             branches:
               only:
