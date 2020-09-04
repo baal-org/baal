@@ -4,7 +4,7 @@
 #
 version: 2
 jobs:
-  build:
+  tests_running:
     docker:
       # specify the version you desire here
       - image: circleci/python:3.7-stretch
@@ -17,10 +17,6 @@ jobs:
     working_directory: ~/baal
 
     steps:
-      - run:
-          name: Grab FOSSA client
-          command: |
-            curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
       - checkout
 
       - run:
@@ -43,18 +39,12 @@ jobs:
             echo "export CI_BUILD_NUMBER=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
             echo "export CI_NAME=circle" >> $BASH_ENV
 
+      # pep8
       - run:
-          name: FOSSA scan
-          command: fossa
-          working_directory: ~/baal
-
-      # run tests!
-      - run:
-          name: run tests
+          name: run flake8
           command: |
             . venv/bin/activate
             flake8 src/
-            pytest tests/
 
       - run:
           name: run coverage
@@ -65,3 +55,45 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
+  fossa:
+    docker:
+      # specify the version you desire here
+      - image: circleci/python:3.7-stretch
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/baal
+
+    steps:
+      - run:
+          name: Grab FOSSA client
+          command: |
+            curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
+      - checkout
+
+      - run:
+          name: Setup Environment Variables
+          command: |
+            echo "export CI_BRANCH=${CIRCLE_BRANCH}" >> $BASH_ENV
+            echo "export CI_BUILD_URL=${CIRCLE_BUILD_URL}" >> $BASH_ENV
+            echo "export CI_BUILD_NUMBER=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
+            echo "export CI_NAME=circle" >> $BASH_ENV
+
+      - run:
+          name: FOSSA scan
+          command: fossa
+          working_directory: ~/baal
+
+workflows:
+  version: 2
+  run_test:
+    jobs:
+      - tests_running
+      - fossa:
+          filters:
+            branches:
+              only:
+                - master
