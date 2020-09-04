@@ -79,18 +79,6 @@ jobs:
       - checkout
 
       - run:
-          name: install dependencies
-          command: |
-            python -m venv venv
-            . venv/bin/activate
-            pip config set global.progress_bar off
-            pip install --upgrade pip
-            pip install -e .
-            pip install -r test-requirements.txt
-            pip uninstall -y torch torchvision
-            pip install torch==1.4.0+cpu torchvision==0.5.0+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html --trusted-host download.pytorch.org
-
-      - run:
           name: Setup Environment Variables
           command: |
             echo "export CI_BRANCH=${CIRCLE_BRANCH}" >> $BASH_ENV
@@ -102,3 +90,18 @@ jobs:
           name: FOSSA scan
           command: fossa
           working_directory: ~/baal
+
+workflows:
+  version: 2
+  run_test:
+    jobs:
+      - tests_running
+        - requires:
+            - build
+      - fossa:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - master
