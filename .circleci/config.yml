@@ -96,7 +96,7 @@ workflows:
   run_test:
     jobs:
       - tests_running
-        - requires:
+          requires:
             - build
       - fossa:
           requires:
