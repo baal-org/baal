@@ -39,7 +39,7 @@ jobs:
             echo "export CI_BUILD_NUMBER=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
             echo "export CI_NAME=circle" >> $BASH_ENV
 
-      # run tests!
+      # pep8
       - run:
           name: run flake8
           command: |
