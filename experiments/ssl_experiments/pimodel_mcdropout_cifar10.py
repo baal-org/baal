@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg16
 
-from experiments.pimodel_cifar10 import PIModel
+from experiments.ssl_experiments.pimodel_cifar10 import PIModel
 
 
 class PIActiveLearningModel(ActiveLearningMixin, PIModel):

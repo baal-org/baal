@@ -57,7 +57,8 @@ class BaalTrainer(Trainer):
         heuristic (Heuristic): Heuristic from baal.active.heuristics.
         ndata_to_label (int): Number of sample to label per step.
         max_sample (int): Limit the number of sample used (-1 is no limit).
-        **kwargs: Parameters forwarded to `get_probabilities` and to pytorch_ligthning Trainer.__init__
+        **kwargs: Parameters forwarded to `get_probabilities`
+            and to pytorch_ligthning Trainer.__init__
     """
 
     def __init__(self, dataset: ActiveLearningDataset,
@@ -99,32 +100,19 @@ class BaalTrainer(Trainer):
         # teardown, TODO customize this later?
         model.cpu()
 
-    def step(self, pool=None) -> bool:
+    def step(self) -> bool:
         """
         Perform an active learning step.
-
-        Args:
-            pool (iterable): dataset pool indices.
 
         Returns:
             boolean, Flag indicating if we continue training.
 
         """
-        # High to low
-        if pool is None:
-            pool = self.dataset.pool
-            if len(pool) > 0:
-                # Limit number of samples
-                if self.max_sample != -1 and self.max_sample < len(pool):
-                    indices = np.random.choice(len(pool), self.max_sample, replace=False)
-                    pool = torchdata.Subset(pool, indices)
-                else:
-                    indices = np.arange(len(pool))
-        else:
-            indices = None
 
-        if len(pool) > 0:
-            probs = self.predict_on_dataset_generator(pool, **self.kwargs)
+        indices = None  # TODO Add support for max_samples in pool_loader
+
+        if len(self.get_model().active_dataset.pool) > 0:
+            probs = self.predict_on_dataset_generator(**self.kwargs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
                 if indices is not None:

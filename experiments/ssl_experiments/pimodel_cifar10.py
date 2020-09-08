@@ -16,7 +16,7 @@ from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
-from torchvision.models import vgg16
+from torchvision.models import vgg11
 
 
 class GaussianNoise(nn.Module):
@@ -67,10 +67,14 @@ class RandomTranslation(nn.Module):
 
 class PIModel(SSLModule):
     train_transform = transforms.Compose([transforms.RandomHorizontalFlip(),
-                                          transforms.ToTensor()])
-    test_transform = transforms.Compose([transforms.ToTensor()])
+                                          transforms.RandomRotation(30),
+                                          transforms.ToTensor(),
+                                          transforms.Normalize(3 * [0.5], 3 * [0.5])])
+    test_transform = transforms.Compose([transforms.ToTensor(),
+                                         transforms.Normalize(3 * [0.5], 3 * [0.5])])
 
-    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace, network: nn.Module):
+    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace,
+                 network: nn.Module):
         super().__init__(active_dataset, hparams)
 
         self.network = network
@@ -123,7 +127,8 @@ class PIModel(SSLModule):
 
         logs.update({'supervised_loss': loss,
                      'rampup_value': self.rampup_value(),
-                     'learning_rate': self.rampup_value() * self.hparams.lr})
+                     'learning_rate': self.rampup_value() * self.hparams.lr
+                    })
 
         return {'loss': loss, 'log': logs}
 
@@ -157,18 +162,18 @@ class PIModel(SSLModule):
             return 0
 
     def optimizer_step(self, epoch_nb, batch_nb, optimizer, optimizer_i, opt_closure, **kwargs):
-        if self.current_epoch < self.hparams.rampup_stop:
+        if self.current_epoch < self.hparams.rampup_stop and not self.hparams.no_lr_rampup:
             lr_scale = self.rampup_value()
             for pg in optimizer.param_groups:
                 pg['lr'] = lr_scale * self.hparams.lr
         elif self.current_epoch > self.hparams.epochs - self.hparams.rampdown_start:
             pass
-
         optimizer.step()
         optimizer.zero_grad()
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.lr, betas=(0.9, 0.999), weight_decay=1e-4)
+        return torch.optim.Adam(self.parameters(), lr=self.hparams.lr, betas=(0.9, 0.999),
+                                weight_decay=1e-4)
 
     def test_val_step(self, batch: int, prefix: str) -> Dict[str, Tensor]:
         x, y = batch
@@ -228,13 +233,16 @@ class PIModel(SSLModule):
         parser = super(PIModel, PIModel).add_model_specific_args(parent_parser)
         parser.add_argument('--baseline', action='store_true')
         parser.add_argument('--rampup_stop', default=80)
-        parser.add_argument('--rampdown_start', default=50, help='Number of epochs before the end to start rampdown')
+        parser.add_argument('--rampdown_start', default=50,
+                            help='Number of epochs before the end to start rampdown')
         parser.add_argument('--epochs', default=300, type=int)
-        parser.add_argument('--batch-size', default=100, type=int, help='batch size', dest='batch_size')
+        parser.add_argument('--batch-size', default=100, type=int, help='batch size')
         parser.add_argument('--lr', default=0.003, type=float, help='Max learning rate', dest='lr')
-        parser.add_argument('--w_max', default=100, type=float, help='Maximum unsupervised weight, default=100 for '
-                                                                     'CIFAR10 as described in paper')
+        parser.add_argument('--w_max', default=100, type=float,
+                            help='Maximum unsupervised weight, default=100 for CIFAR10 as '
+                                 'described in paper')
         parser.add_argument('--no_augmentations', action='store_true')
+        parser.add_argument('--no_lr_rampup', action='store_true')
         return parser
 
 
@@ -243,8 +251,9 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
 
     args = ArgumentParser(add_help=False)
-    args.add_argument('--data-root', default='/tmp', type=str, help='Where to download the data')
+    args.add_argument('--data-root', default='./', type=str, help='Where to download the data')
     args.add_argument('--gpus', default=torch.cuda.device_count(), type=int)
+    args.add_argument('--num_labaled', default=5000, type=int)
     args = PIModel.add_model_specific_args(args)
     params = args.parse_args()
 
@@ -252,17 +261,17 @@ if __name__ == '__main__':
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
         pool_specifics={'transform': PIModel.test_transform},
         make_unlabelled=lambda x: x[0])
-    active_set.label_randomly(5000)
+    active_set.label_randomly(params.num_labaled)
 
     print("Active set length: {}".format(len(active_set)))
     print("Pool set length: {}".format(len(active_set.pool)))
 
-    net = vgg16(pretrained=False, num_classes=10)
+    net = vgg11(pretrained=False, num_classes=10)
 
     system = PIModel(network=net, active_dataset=active_set, hparams=params)
 
-    trainer = Trainer(num_sanity_val_steps=0, max_epochs=params.epochs, profiler=True, early_stop_callback=False,
-                      gpus=params.gpus)
+    trainer = Trainer(num_sanity_val_steps=0, max_epochs=params.epochs, profiler=True,
+                      early_stop_callback=False, gpus=params.gpus)
 
     trainer.fit(system)
 

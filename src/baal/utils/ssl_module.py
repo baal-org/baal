@@ -36,8 +36,9 @@ class SSLModule(pl.LightningModule):
             return self.unsupervised_training_step(SemiSupervisedIterator.get_batch(batch), *args)
 
     def train_dataloader(self) -> SemiSupervisedIterator:
-        return SemiSupervisedIterator(self.active_dataset, self.hparams.batch_size, num_steps=self.hparams.num_steps,
-                                      p=self.hparams.p, num_workers=self.hparams.workers)
+        return SemiSupervisedIterator(self.active_dataset, self.hparams.batch_size,
+                                      num_steps=self.hparams.num_steps, p=self.hparams.p,
+                                      num_workers=self.hparams.workers)
 
     @staticmethod
     def add_model_specific_args(parent_parser):
@@ -50,8 +51,10 @@ class SSLModule(pl.LightningModule):
         Returns:
             argparser with added arguments
         """
-        parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False, conflict_handler="resolve")
-        parser.add_argument('--p', default=None, type=float, help='Probability of selecting labeled batch')
+        parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False,
+                                         conflict_handler="resolve")
+        parser.add_argument('--p', default=None, type=float,
+                            help='Probability of selecting labeled batch')
         parser.add_argument('--num_steps', default=None, type=int, help='Number of steps per epoch')
         parser.add_argument("--batch-size", default=32, type=int)
         parser.add_argument("--workers", default=0, type=int)

@@ -14,7 +14,8 @@ class AlternateIterator:
         dl_1 (DataLoader): first DataLoader
         dl_2 (DataLoader): second DataLoader
         num_steps (Optional[int]): Number of steps, if None will be the sum of both length.
-        p (Optional[float]): Probability of choosing dl_1 over dl_2. If None, will be alternate between the two.
+        p (Optional[float]): Probability of choosing dl_1 over dl_2.
+            If None, will be alternate between the two.
     """
 
     def __init__(self, dl_1: DataLoader, dl_2: DataLoader, num_steps: Optional[int] = None,
@@ -47,7 +48,7 @@ class AlternateIterator:
         return self.num_steps
 
     def __iter__(self):
-        # hack to prevent multiple __iter__ calls in _with_is_last(...) pytorch_lightning/trainer/training_loop.py
+        # prevent multiple __iter__ calls in _with_is_last(...) pytorch_lightning training_loop.py
         if self._iter_idx is None or len(self._iter_idx) <= 0:
             self._iter_idx = self._make_index()
         return self
@@ -67,13 +68,15 @@ class AlternateIterator:
 
 class SemiSupervisedIterator(AlternateIterator):
     """
-        Iterator for alternating between labeled and un-labled dataloaders for semi-supervised learning.
+        Iterator for alternating between labeled and un-labled dataloaders
+        for semi-supervised learning.
 
         Args:
             al_dataset (ActiveLearningDataset): dataset and pool from which to load data.
             batch_size (int):  how many samples per batch to load.
             num_steps (int): number of steps before the end of the iterator.
-            p (Optional[float]): probability of selecting a labeled batch. If None, the batches alternate.
+            p (Optional[float]): probability of selecting a labeled batch.
+                If None, the batches alternate.
             shuffle (Optional[bool]): set to ``True`` to have the data reshuffled at every epoch.
             num_workers (Optional[int]): how many subprocesses to use for data loading.
             drop_last (Optional[bool]): set to ``True`` to drop the last incomplete batch.
@@ -81,20 +84,21 @@ class SemiSupervisedIterator(AlternateIterator):
 
     IS_LABELED_TAG = 'is_labelled'
 
-    def __init__(self, al_dataset: ActiveLearningDataset, batch_size: int, num_steps: Optional[int] = None,
-                 p: Optional[float] = None, shuffle: Optional[bool] = False,
-                 num_workers: Optional[int] = 0, drop_last: Optional[bool] = False):
+    def __init__(self, al_dataset: ActiveLearningDataset, batch_size: int,
+                 num_steps: Optional[int] = None, p: Optional[float] = None,
+                 shuffle: Optional[bool] = False, num_workers: Optional[int] = 0,
+                 drop_last: Optional[bool] = False):
         self.al_dataset = al_dataset
-        active_dl = DataLoader(al_dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers,
-                               drop_last=drop_last)
+        active_dl = DataLoader(al_dataset, batch_size=batch_size, shuffle=shuffle,
+                               num_workers=num_workers, drop_last=drop_last)
 
         if len(al_dataset.pool) > 0:
-            pool_dl = DataLoader(al_dataset.pool, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers,
-                                 drop_last=drop_last)
+            pool_dl = DataLoader(al_dataset.pool, batch_size=batch_size, shuffle=shuffle,
+                                 num_workers=num_workers, drop_last=drop_last)
 
             if num_steps is None:
                 if p is None:
-                    # By default num_steps if 2 times the length of active set or less if pool is too small.
+                    # By default num_steps if 2 times the length of active set or less
                     # This allows all the labeled data to be seen during one epoch.
                     num_steps = len(active_dl) + min(len(active_dl), len(pool_dl))
                 else:
