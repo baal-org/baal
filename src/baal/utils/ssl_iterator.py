@@ -33,7 +33,6 @@ class AlternateIterator:
 
         self.num_steps = num_steps or (self.len_dl1 + self.len_dl2)
         self.p = None if p is None else [p, 1 - p]
-        self._pool = None
         self._iter_idx = None
 
     def _make_index(self):

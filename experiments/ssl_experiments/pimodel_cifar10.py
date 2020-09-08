@@ -94,6 +94,9 @@ class PIModel(SSLModule):
         self.gaussian_noise = GaussianNoise()
         self.random_crop = RandomTranslation()
 
+        # Keep track of current lr for logging
+        self.current_lr = self.hparams.lr
+
     def forward(self, x):
         if self.training and not self.hparams.no_augmentations:
             x = self.random_crop(x)
@@ -127,7 +130,7 @@ class PIModel(SSLModule):
 
         logs.update({'supervised_loss': loss,
                      'rampup_value': self.rampup_value(),
-                     'learning_rate': self.rampup_value() * self.hparams.lr
+                     'learning_rate': self.current_lr
                     })
 
         return {'loss': loss, 'log': logs}
@@ -166,8 +169,12 @@ class PIModel(SSLModule):
             lr_scale = self.rampup_value()
             for pg in optimizer.param_groups:
                 pg['lr'] = lr_scale * self.hparams.lr
+            self.current_lr = lr_scale * self.hparams.lr
         elif self.current_epoch > self.hparams.epochs - self.hparams.rampdown_start:
+            self.current_lr = self.hparams.lr
             pass
+        else:
+            self.current_lr = self.hparams.lr
         optimizer.step()
         optimizer.zero_grad()
 

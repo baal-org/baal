@@ -6,7 +6,6 @@ from typing import Dict, Any
 
 import numpy as np
 import structlog
-import torch.utils.data as torchdata
 from baal.active import ActiveLearningDataset
 from baal.active.heuristics import heuristics
 from baal.modelwrapper import mc_inference
@@ -52,8 +51,6 @@ class BaalTrainer(Trainer):
 
     Args:
         dataset (ActiveLearningDataset): Dataset with some sample already labelled.
-        get_probabilities (Function): Dataset -> **kwargs ->
-                                        ndarray [n_samples, n_outputs, n_iterations].
         heuristic (Heuristic): Heuristic from baal.active.heuristics.
         ndata_to_label (int): Number of sample to label per step.
         max_sample (int): Limit the number of sample used (-1 is no limit).
@@ -64,14 +61,12 @@ class BaalTrainer(Trainer):
     def __init__(self, dataset: ActiveLearningDataset,
                  heuristic: heuristics.AbstractHeuristic = heuristics.Random(),
                  ndata_to_label: int = 1,
-                 max_sample=-1,
                  **kwargs) -> None:
 
         super().__init__(**kwargs)
         self.ndata_to_label = ndata_to_label
         self.heuristic = heuristic
         self.dataset = dataset
-        self.max_sample = max_sample
         self.kwargs = kwargs
 
     def predict_on_dataset(self, *args, **kwargs):

@@ -3,8 +3,7 @@ import copy
 from argparse import Namespace
 
 import torch
-from baal.active import ActiveLearningDataset
-from baal.active.heuristics import BALD
+from baal.active import ActiveLearningDataset, get_heuristic
 from baal.bayesian.dropout import patch_module
 from baal.utils.pytorch_lightning import ActiveLearningMixin, BaalTrainer, ResetCallback
 from torch import nn
@@ -26,7 +25,7 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
 
     def epoch_end(self, outputs):
         out = super().epoch_end(outputs)
-        out['log']['active_set_len'] = len(self.actipoove_dataset)
+        out['log']['active_set_len'] = len(self.active_dataset)
 
         return out
 
@@ -46,6 +45,8 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
         parser.add_argument('--max_sample', type=int, default=-1)
         parser.add_argument('--iterations', type=int, default=20)
         parser.add_argument('--replicate_in_memory', action='store_true')
+        args.add_argument("--heuristic", default="bald", type=str)
+        args.add_argument("--shuffle_prop", default=0.05, type=float)
         return parser
 
 
@@ -58,8 +59,6 @@ if __name__ == '__main__':
     args = PIActiveLearningModel.add_model_specific_args(args)
     params = args.parse_args()
 
-    print(params)
-
     active_set = ActiveLearningDataset(
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
         pool_specifics={'transform': PIModel.test_transform},
@@ -69,13 +68,13 @@ if __name__ == '__main__':
     print("Active set length: {}".format(len(active_set)))
     print("Pool set length: {}".format(len(active_set.pool)))
 
-    heuristic = BALD()
+    heuristic = get_heuristic(params.heuristic, params.shuffle_prop)
     net = vgg16(pretrained=False, num_classes=10)
     model = PIActiveLearningModel(network=net, active_dataset=active_set, hparams=params)
 
     dp = 'dp' if params.gpus > 1 else None
     trainer = BaalTrainer(max_epochs=params.epochs, default_root_dir=params.data_root,
-                          gpus=params.n_gpus, distributed_backend=dp,
+                          gpus=params.gpus, distributed_backend=dp,
                           # The weights of the model will change as it gets
                           # trained; we need to keep a copy (deepcopy) so that
                           # we can reset them.
