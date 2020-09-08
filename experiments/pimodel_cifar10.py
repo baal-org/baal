@@ -128,7 +128,7 @@ class PIModel(SSLModule):
         return {'loss': loss, 'log': logs}
 
     def unsupervised_training_step(self, batch, *args) -> Dict:
-        x = batch
+        x, _ = batch
 
         z = self.forward(x)
         z_hat = self.forward(x)
@@ -227,8 +227,8 @@ class PIModel(SSLModule):
         """
         parser = super(PIModel, PIModel).add_model_specific_args(parent_parser)
         parser.add_argument('--baseline', action='store_true')
-        parser.add_argument('--rampup_stop', default=80)
-        parser.add_argument('--rampdown_start', default=50, help='Number of epochs before the end to start rampdown')
+        parser.add_argument('--rampup_stop', default=80, type=int)
+        parser.add_argument('--rampdown_start', default=50, help='Number of epochs before the end to start rampdown', type=int)
         parser.add_argument('--epochs', default=300, type=int)
         parser.add_argument('--batch-size', default=100, type=int, help='batch size', dest='batch_size')
         parser.add_argument('--lr', default=0.003, type=float, help='Max learning rate', dest='lr')

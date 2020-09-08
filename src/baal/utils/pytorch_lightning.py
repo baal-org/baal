@@ -91,10 +91,10 @@ class BaalTrainer(Trainer):
             return None
 
         log.info("Start Predict", dataset=len(dataloader))
-        for idx, (data, _) in enumerate(tqdm(dataloader, total=len(dataloader), file=sys.stdout)):
+        for idx, batch in enumerate(tqdm(dataloader, total=len(dataloader), file=sys.stdout)):
             if self.on_gpu:
-                data = to_cuda(data)
-            pred = self.model.predict_step(data, idx)
+                batch = to_cuda(batch)
+            pred = self.model.predict_step(batch, idx)
             yield map_on_tensor(lambda x: x.detach().cpu().numpy(), pred)
         # teardown, TODO customize this later?
         model.cpu()

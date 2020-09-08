@@ -6,13 +6,14 @@ import torch
 from baal.active import ActiveLearningDataset
 from baal.active.heuristics import BALD
 from baal.bayesian.dropout import patch_module
+from baal.modelwrapper import mc_inference
 from baal.utils.pytorch_lightning import ActiveLearningMixin, BaalTrainer, ResetCallback
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg16
 
-from experiments.pimodel_cifar10 import PIModel
+from pimodel_cifar10 import PIModel
 
 
 class PIActiveLearningModel(ActiveLearningMixin, PIModel):
@@ -24,9 +25,14 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
     def pool_loader(self):
         return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False)
 
+    def predict_step(self, batch, batch_idx):
+        data = batch[0]
+        out = mc_inference(self, data, self.hparams.iterations, self.hparams.replicate_in_memory)
+        return out
+
     def epoch_end(self, outputs):
         out = super().epoch_end(outputs)
-        out['log']['active_set_len'] = len(self.actipoove_dataset)
+        out['log']['active_set_len'] = len(self.active_dataset)
 
         return out
 
@@ -63,7 +69,7 @@ if __name__ == '__main__':
     active_set = ActiveLearningDataset(
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
         pool_specifics={'transform': PIModel.test_transform},
-        make_unlabelled=lambda x: x[0])
+        make_unlabelled=lambda x: x)
     active_set.label_randomly(100)
 
     print("Active set length: {}".format(len(active_set)))
@@ -75,7 +81,7 @@ if __name__ == '__main__':
 
     dp = 'dp' if params.gpus > 1 else None
     trainer = BaalTrainer(max_epochs=params.epochs, default_root_dir=params.data_root,
-                          gpus=params.n_gpus, distributed_backend=dp,
+                          gpus=params.gpus, distributed_backend=dp,
                           # The weights of the model will change as it gets
                           # trained; we need to keep a copy (deepcopy) so that
                           # we can reset them.
@@ -87,6 +93,7 @@ if __name__ == '__main__':
 
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
+        trainer.current_epoch = 0
         print(f'Step {al_step} Dataset size {len(active_set)}')
         trainer.fit(model)
         should_continue = trainer.step()
