@@ -79,7 +79,8 @@ def test_predict():
     active_set.label_randomly(10)
     model = DummyPytorchLightning(active_set, hparams)
     save_chkp = model.on_save_checkpoint(ckpt)
-    trainer = BaalTrainer(max_epochs=3, default_root_dir='/tmp',
+    trainer = BaalTrainer(dataset=active_set,
+                          max_epochs=3, default_root_dir='/tmp',
                           callbacks=[ResetCallback(copy.deepcopy(save_chkp))])
     trainer.model = model
     alt = trainer.predict_on_dataset()
