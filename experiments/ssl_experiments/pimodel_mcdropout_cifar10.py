@@ -12,7 +12,6 @@ from torchvision.models import vgg16
 
 from baal.active import ActiveLearningDataset, get_heuristic
 from baal.bayesian.dropout import patch_module
-from baal.modelwrapper import mc_inference
 from baal.utils.pytorch_lightning import ActiveLearningMixin, BaalTrainer, ResetCallback
 
 
@@ -29,11 +28,6 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
 
     def configure_optimizers(self):
         return torch.optim.SGD(self.parameters(), lr=self.hparams.lr, weight_decay=1e-4)
-
-    def predict_step(self, batch, batch_idx):
-        data = batch[0]
-        out = mc_inference(self, data, self.hparams.iterations, self.hparams.replicate_in_memory)
-        return out
 
     def optimizer_step(self, epoch_nb, batch_nb, optimizer, optimizer_i, opt_closure, **kwargs):
         optimizer.step()
@@ -77,8 +71,7 @@ if __name__ == '__main__':
 
     active_set = ActiveLearningDataset(
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
-        pool_specifics={'transform': PIModel.test_transform},
-        make_unlabelled=lambda x: x)
+        pool_specifics={'transform': PIModel.test_transform})
     active_set.label_randomly(500)
 
     print("Active set length: {}".format(len(active_set)))
@@ -105,6 +98,7 @@ if __name__ == '__main__':
 
     AL_STEPS = 2000
     for al_step in range(AL_STEPS):
+        # TODO fix this
         trainer.current_epoch = 0
         print(f'Step {al_step} Dataset size {len(active_set)}')
         trainer.fit(model)

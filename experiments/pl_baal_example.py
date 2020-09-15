@@ -169,6 +169,8 @@ def main(hparams):
 
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
+        # TODO fix this
+        trainer.current_epoch = 0
         print(f'Step {al_step} Dataset size {len(active_set)}')
         trainer.fit(model)
         should_continue = trainer.step()
