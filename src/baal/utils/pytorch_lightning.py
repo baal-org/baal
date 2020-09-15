@@ -19,6 +19,9 @@ log = structlog.get_logger('PL testing')
 
 
 class ActiveLearningMixin(ABC):
+    """Pytorch Lightning Mixin which adds methods to perform
+    active learning.
+    """
     active_dataset = ...
     hparams = ...
 
@@ -28,7 +31,18 @@ class ActiveLearningMixin(ABC):
         pass
 
     def predict_step(self, data, batch_idx):
-        out = mc_inference(self, data, self.hparams.iterations, self.hparams.replicate_in_memory)
+        """Predict on batch using MC inference `I` times.
+        `I` is defined in the hparams property.
+        Args:
+            data (Tensor): Data to feed to the model.
+            batch_idx (int): Batch index.
+
+        Returns:
+            Models predictions stacked `I` times on the last axis.
+        """
+        # Get the input only.
+        x, _ = data
+        out = mc_inference(self, x, self.hparams.iterations, self.hparams.replicate_in_memory)
         return out
 
     def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
@@ -40,10 +54,21 @@ class ActiveLearningMixin(ABC):
 
 
 class ResetCallback(Callback):
+    """Callback to reset the weights between active learning steps.
+
+    Args:
+        weights (dict): State dict of the model.
+
+    Notes:
+        The weight should be deep copied beforehand.
+
+    """
+
     def __init__(self, weights):
         self.weights = weights
 
     def on_train_start(self, trainer, module):
+        """Will reset the module to its initial weights."""
         module.load_state_dict(self.weights)
 
 
@@ -79,6 +104,15 @@ class BaalTrainer(Trainer):
         return [np.vstack(pr) for pr in zip(*preds)]
 
     def predict_on_dataset_generator(self, dataloader=None, *args, **kwargs):
+        """Predict on the pool loader.
+
+        Args:
+            dataloader (Optional[DataLoader]): If provided, will predict on this dataloader.
+                                                Otherwise, uses model.pool_loader().
+
+        Returns:
+            Numpy arrays with all the predictions.
+        """
         model = self.get_model()
         model.eval()
         if self.on_gpu:
