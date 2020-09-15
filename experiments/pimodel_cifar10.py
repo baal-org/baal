@@ -156,19 +156,8 @@ class PIModel(SSLModule):
         else:
             return 0
 
-    def optimizer_step(self, epoch_nb, batch_nb, optimizer, optimizer_i, opt_closure, **kwargs):
-        if self.current_epoch < self.hparams.rampup_stop:
-            lr_scale = self.rampup_value()
-            for pg in optimizer.param_groups:
-                pg['lr'] = lr_scale * self.hparams.lr
-        elif self.current_epoch > self.hparams.epochs - self.hparams.rampdown_start:
-            pass
-
-        optimizer.step()
-        optimizer.zero_grad()
-
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.lr, betas=(0.9, 0.999), weight_decay=1e-4)
+        return torch.optim.SGD(self.parameters(), lr=self.hparams.lr, weight_decay=1e-4)
 
     def test_val_step(self, batch: int, prefix: str) -> Dict[str, Tensor]:
         x, y = batch
@@ -231,7 +220,7 @@ class PIModel(SSLModule):
         parser.add_argument('--rampdown_start', default=50, help='Number of epochs before the end to start rampdown', type=int)
         parser.add_argument('--epochs', default=300, type=int)
         parser.add_argument('--batch-size', default=100, type=int, help='batch size', dest='batch_size')
-        parser.add_argument('--lr', default=0.003, type=float, help='Max learning rate', dest='lr')
+        parser.add_argument('--lr', default=0.001, type=float, help='Max learning rate', dest='lr')
         parser.add_argument('--w_max', default=100, type=float, help='Maximum unsupervised weight, default=100 for '
                                                                      'CIFAR10 as described in paper')
         parser.add_argument('--no_augmentations', action='store_true')

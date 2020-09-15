@@ -73,20 +73,20 @@ class BaalTrainer(Trainer):
         self.max_sample = max_sample
         self.kwargs = kwargs
 
-    def predict_on_dataset(self, *args, **kwargs):
-        preds = list(self.predict_on_dataset_generator())
+    def predict_on_dataset(self, dataloader=None, *args, **kwargs):
+        preds = list(self.predict_on_dataset_generator(dataloader))
 
         if len(preds) > 0 and not isinstance(preds[0], Sequence):
             # Is an Array or a Tensor
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
 
-    def predict_on_dataset_generator(self, *args, **kwargs):
+    def predict_on_dataset_generator(self, dataloader=None, *args, **kwargs):
         model = self.get_model()
         model.eval()
         if self.on_gpu:
             model.cuda(self.root_gpu)
-        dataloader = self.model.pool_loader()
+        dataloader = dataloader or self.model.pool_loader()
         if len(dataloader) == 0:
             return None
 
@@ -99,36 +99,37 @@ class BaalTrainer(Trainer):
         # teardown, TODO customize this later?
         model.cpu()
 
-    def step(self, pool=None) -> bool:
+    def _get_indices(self, pool_loader):
+        pool = pool_loader.dataset
+        if self.max_sample != -1 and self.max_sample < len(pool):
+            indices = np.random.choice(len(pool), self.max_sample, replace=False)
+        else:
+            indices = np.arange(len(pool))
+        return indices
+
+    def step(self) -> bool:
         """
         Perform an active learning step.
 
-        Args:
-            pool (iterable): dataset pool indices.
+        Notes:
+            This will get the pool from the model pool_loader and if max_sample is set, it will
+            modify the data_loader sampler to select `max_pool` samples.
 
         Returns:
             boolean, Flag indicating if we continue training.
 
         """
         # High to low
-        if pool is None:
-            pool = self.dataset.pool
-            if len(pool) > 0:
-                # Limit number of samples
-                if self.max_sample != -1 and self.max_sample < len(pool):
-                    indices = np.random.choice(len(pool), self.max_sample, replace=False)
-                    pool = torchdata.Subset(pool, indices)
-                else:
-                    indices = np.arange(len(pool))
-        else:
-            indices = None
+        pool_loader = self.get_model().pool_loader()
+        indices = self._get_indices(pool_loader)
+        # Swap the sampler.
+        pool_loader.sampler = indices
 
-        if len(pool) > 0:
-            probs = self.predict_on_dataset_generator(pool, **self.kwargs)
+        if len(pool_loader) > 0:
+            probs = self.predict_on_dataset_generator(pool_loader, **self.kwargs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
-                if indices is not None:
-                    to_label = indices[np.array(to_label)]
+                to_label = indices[np.array(to_label)]
                 if len(to_label) > 0:
                     self.dataset.label(to_label[: self.ndata_to_label])
                     return True

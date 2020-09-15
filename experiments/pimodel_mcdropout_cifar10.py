@@ -3,7 +3,9 @@ import copy
 from argparse import Namespace
 
 import torch
-from baal.active import ActiveLearningDataset
+from torch.hub import load_state_dict_from_url
+
+from baal.active import ActiveLearningDataset, get_heuristic
 from baal.active.heuristics import BALD
 from baal.bayesian.dropout import patch_module
 from baal.modelwrapper import mc_inference
@@ -23,7 +25,8 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
         self.network = patch_module(self.network)
 
     def pool_loader(self):
-        return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False)
+        return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False,
+                          num_workers=4)
 
     def predict_step(self, batch, batch_idx):
         data = batch[0]
@@ -51,6 +54,7 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
         parser.add_argument('--query_size', type=int, default=100)
         parser.add_argument('--max_sample', type=int, default=-1)
         parser.add_argument('--iterations', type=int, default=20)
+        parser.add_argument('--heuristic', type=str, default='bald')
         parser.add_argument('--replicate_in_memory', action='store_true')
         return parser
 
@@ -70,14 +74,17 @@ if __name__ == '__main__':
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
         pool_specifics={'transform': PIModel.test_transform},
         make_unlabelled=lambda x: x)
-    active_set.label_randomly(100)
+    active_set.label_randomly(500)
 
     print("Active set length: {}".format(len(active_set)))
     print("Pool set length: {}".format(len(active_set.pool)))
 
-    heuristic = BALD()
-    net = vgg16(pretrained=False, num_classes=10)
-    model = PIActiveLearningModel(network=net, active_dataset=active_set, hparams=params)
+    heuristic = get_heuristic(params.heuristic)
+    model = vgg16(pretrained=False, num_classes=10)
+    weights = load_state_dict_from_url('https://download.pytorch.org/models/vgg16-397923af.pth')
+    weights = {k: v for k, v in weights.items() if 'classifier.6' not in k}
+    model.load_state_dict(weights, strict=False)
+    model = PIActiveLearningModel(network=model, active_dataset=active_set, hparams=params)
 
     dp = 'dp' if params.gpus > 1 else None
     trainer = BaalTrainer(max_epochs=params.epochs, default_root_dir=params.data_root,
@@ -91,7 +98,7 @@ if __name__ == '__main__':
                           ndata_to_label=params.query_size
                           )
 
-    AL_STEPS = 100
+    AL_STEPS = 2000
     for al_step in range(AL_STEPS):
         trainer.current_epoch = 0
         print(f'Step {al_step} Dataset size {len(active_set)}')
