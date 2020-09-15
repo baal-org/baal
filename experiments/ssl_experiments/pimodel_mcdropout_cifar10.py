@@ -3,23 +3,22 @@ import copy
 from argparse import Namespace
 
 import torch
-from torch.hub import load_state_dict_from_url
-
-from baal.active import ActiveLearningDataset, get_heuristic
-from baal.active.heuristics import BALD
-from baal.bayesian.dropout import patch_module
-from baal.modelwrapper import mc_inference
-from baal.utils.pytorch_lightning import ActiveLearningMixin, BaalTrainer, ResetCallback
+from pimodel_cifar10 import PIModel
 from torch import nn
+from torch.hub import load_state_dict_from_url
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg16
 
-from pimodel_cifar10 import PIModel
+from baal.active import ActiveLearningDataset, get_heuristic
+from baal.bayesian.dropout import patch_module
+from baal.modelwrapper import mc_inference
+from baal.utils.pytorch_lightning import ActiveLearningMixin, BaalTrainer, ResetCallback
 
 
 class PIActiveLearningModel(ActiveLearningMixin, PIModel):
-    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace, network: nn.Module):
+    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace,
+                 network: nn.Module):
         super().__init__(active_dataset, hparams, network)
 
         self.network = patch_module(self.network)
@@ -28,10 +27,17 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
         return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False,
                           num_workers=4)
 
+    def configure_optimizers(self):
+        return torch.optim.SGD(self.parameters(), lr=self.hparams.lr, weight_decay=1e-4)
+
     def predict_step(self, batch, batch_idx):
         data = batch[0]
         out = mc_inference(self, data, self.hparams.iterations, self.hparams.replicate_in_memory)
         return out
+
+    def optimizer_step(self, epoch_nb, batch_nb, optimizer, optimizer_i, opt_closure, **kwargs):
+        optimizer.step()
+        optimizer.zero_grad()
 
     def epoch_end(self, outputs):
         out = super().epoch_end(outputs)
@@ -50,7 +56,8 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
         Returns:
             argparser with added arguments
         """
-        parser = super(PIActiveLearningModel, PIActiveLearningModel).add_model_specific_args(parent_parser)
+        parser = super(PIActiveLearningModel, PIActiveLearningModel).add_model_specific_args(
+            parent_parser)
         parser.add_argument('--query_size', type=int, default=100)
         parser.add_argument('--max_sample', type=int, default=-1)
         parser.add_argument('--iterations', type=int, default=20)
@@ -67,8 +74,6 @@ if __name__ == '__main__':
     args.add_argument('--gpus', default=torch.cuda.device_count(), type=int)
     args = PIActiveLearningModel.add_model_specific_args(args)
     params = args.parse_args()
-
-    print(params)
 
     active_set = ActiveLearningDataset(
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),

@@ -3,6 +3,10 @@ from collections import OrderedDict
 
 import structlog
 import torch
+from baal.active import ActiveLearningDataset
+from baal.active.heuristics import BALD
+from baal.bayesian.dropout import patch_module
+from baal.utils.pytorch_lightning import ActiveLearningMixin, ResetCallback, BaalTrainer
 from pytorch_lightning import LightningModule
 from torch import optim
 from torch.nn import CrossEntropyLoss
@@ -10,11 +14,6 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg16
 from torchvision.transforms import transforms
-
-from baal.active import ActiveLearningDataset, ActiveLearningLoop
-from baal.active.heuristics import BALD
-from baal.bayesian.dropout import patch_module
-from baal.utils.pytorch_lightning import ActiveLearningMixin, ResetCallback, BaalTrainer
 
 log = structlog.get_logger('PL testing')
 
