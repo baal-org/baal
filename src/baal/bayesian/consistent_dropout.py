@@ -1,4 +1,5 @@
 import copy
+import warnings
 
 import torch
 from torch.nn import functional as F
@@ -112,16 +113,18 @@ def patch_module(module: torch.nn.Module, inplace: bool = True) -> torch.nn.Modu
     """
     if not inplace:
         module = copy.deepcopy(module)
-    _patch_dropout_layers(module)
+    changed = _patch_dropout_layers(module)
+    if not changed:
+        warnings.warn('No layer was modified by patch_module!', UserWarning)
     return module
 
 
-def _patch_dropout_layers(module: torch.nn.Module) -> None:
+def _patch_dropout_layers(module: torch.nn.Module) -> bool:
     """
     Recursively iterate over the children of a module and replace them if
     they are a dropout layer. This function operates in-place.
     """
-
+    changed = False
     for name, child in module.named_children():
         if isinstance(child, torch.nn.Dropout):
             new_module = ConsistentDropout(p=child.p)
@@ -131,10 +134,12 @@ def _patch_dropout_layers(module: torch.nn.Module) -> None:
             new_module = None
 
         if new_module is not None:
+            changed = True
             module.add_module(name, new_module)
 
         # recursively apply to child
-        _patch_dropout_layers(child)
+        changed = changed or _patch_dropout_layers(child)
+    return changed
 
 
 class MCConsistentDropoutModule(torch.nn.Module):

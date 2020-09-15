@@ -1,9 +1,11 @@
-import pytest
+import warnings
+
 import numpy as np
+import pytest
 import torch
 from torch.utils.data import Dataset
 
-from baal.bayesian.weight_drop import WeightDropLinear, WeightDropConv2d,\
+from baal.bayesian.weight_drop import WeightDropLinear, WeightDropConv2d, \
     patch_module, MCDropoutConnectModule
 
 
@@ -12,7 +14,8 @@ class DummyDataset(Dataset):
         return 20
 
     def __getitem__(self, item):
-        return torch.from_numpy(np.ones([3, 10, 10]) * item / 255.).float(), torch.FloatTensor([item % 2])
+        return torch.from_numpy(np.ones([3, 10, 10]) * item / 255.).float(),\
+               torch.FloatTensor([item % 2])
 
 
 class DummyModel(torch.nn.Module):
@@ -35,7 +38,6 @@ class DummyModel(torch.nn.Module):
 @pytest.mark.parametrize("inplace", (True, False))
 @pytest.mark.parametrize("layers", (['Linear'], ['Linear', 'Conv2d']))
 def test_patch_module_changes_weights(inplace, layers):
-
     test_module = torch.nn.Sequential(
         torch.nn.Conv2d(3, 8, kernel_size=10),
         torch.nn.ReLU(),
@@ -66,6 +68,23 @@ def test_patch_module_changes_weights(inplace, layers):
         assert not np.allclose(new_linear_w, linear_w)
 
     assert list(mc_test_module.modules())[3].p == 0
+
+
+@pytest.mark.parametrize("inplace", (True, False))
+@pytest.mark.parametrize("layers", (['Conv2d'],))
+def test_patch_module_raise_warnings(inplace, layers):
+    test_module = torch.nn.Sequential(
+        torch.nn.Linear(10, 5),
+        torch.nn.ReLU(),
+        torch.nn.Linear(5, 2),
+    )
+
+    with warnings.catch_warnings(record=True) as w:
+        mc_test_module = patch_module(test_module, layers=layers,
+                                      weight_dropout=0.2, inplace=inplace)
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert "No layer was modified by patch_module" in str(w[-1].message)
 
 
 def test_weight_change_after_forward_pass():
