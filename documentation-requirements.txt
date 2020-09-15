@@ -2,7 +2,7 @@ sphinx>2
 m2r
 sphinx_rtd_theme
 jupyter_sphinx
-Pygments==2.6.1
+Pygments>=2.6.1
 nbsphinx
 sphinx_automodapi
 numpydoc
