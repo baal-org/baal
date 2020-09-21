@@ -1,3 +1,4 @@
+import warnings
 from typing import List
 import copy
 
@@ -100,16 +101,18 @@ def patch_module(module: torch.nn.Module,
     """
     if not inplace:
         module = copy.deepcopy(module)
-    _patch_layers(module, layers, weight_dropout)
+    changed = _patch_layers(module, layers, weight_dropout)
+    if not changed:
+        warnings.warn('No layer was modified by patch_module!', UserWarning)
     return module
 
 
-def _patch_layers(module: torch.nn.Module, layers: Sequence, weight_dropout: float) -> None:
+def _patch_layers(module: torch.nn.Module, layers: Sequence, weight_dropout: float) -> bool:
     """
     Recursively iterate over the children of a module and replace them if
     they are in the layers list. This function operates in-place.
     """
-
+    changed = False
     for name, child in module.named_children():
         new_module = None
         for layer in layers:
@@ -118,6 +121,7 @@ def _patch_layers(module: torch.nn.Module, layers: Sequence, weight_dropout: flo
                 break
 
         if new_module is not None:
+            changed = True
             module.add_module(name, new_module)
 
         # The dropout layer should be deactivated to use DropConnect.
@@ -125,7 +129,8 @@ def _patch_layers(module: torch.nn.Module, layers: Sequence, weight_dropout: flo
             child.p = 0
 
         # Recursively apply to child.
-        _patch_layers(child, layers, weight_dropout)
+        changed = changed or _patch_layers(child, layers, weight_dropout)
+    return changed
 
 
 class MCDropoutConnectModule(torch.nn.Module):

@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 import torch
 import baal.bayesian.dropout
@@ -61,6 +63,20 @@ def test_patch_module_replaces_all_dropout_layers(inplace):
         for module in mc_test_module.modules()
     )
 
+@pytest.mark.parametrize("inplace", (True, False))
+def test_patch_module_raise_warnings(inplace):
+
+    test_module = torch.nn.Sequential(
+        torch.nn.Linear(10, 5),
+        torch.nn.ReLU(),
+        torch.nn.Linear(5, 2),
+    )
+
+    with warnings.catch_warnings(record=True) as w:
+        mc_test_module = baal.bayesian.dropout.patch_module(test_module, inplace=inplace)
+        assert len(w) == 1
+        assert issubclass(w[-1].category, UserWarning)
+        assert "No layer was modified by patch_module" in str(w[-1].message)
 
 def test_module_class_replaces_dropout_layers():
     dummy_input = torch.randn(8, 10)
