@@ -117,7 +117,7 @@ class BaalTrainer(Trainer):
         model.eval()
         if self.on_gpu:
             model.cuda(self.root_gpu)
-        dataloader = dataloader or self.model.pool_loader()
+        dataloader = dataloader or model.pool_loader()
         if len(dataloader) == 0:
             return None
 
