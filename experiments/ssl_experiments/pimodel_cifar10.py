@@ -165,16 +165,18 @@ class PIModel(SSLModule):
             return 0
 
     def optimizer_step(self, epoch_nb, batch_nb, optimizer, optimizer_i, opt_closure, **kwargs):
-        if self.current_epoch < self.hparams.rampup_stop and not self.hparams.no_lr_rampup:
-            lr_scale = self.rampup_value()
-            for pg in optimizer.param_groups:
-                pg['lr'] = lr_scale * self.hparams.lr
-            self.current_lr = lr_scale * self.hparams.lr
-        elif self.current_epoch > self.hparams.epochs - self.hparams.rampdown_start:
+        if self.hparams.no_lr_rampup:
             self.current_lr = self.hparams.lr
-            pass
         else:
-            self.current_lr = self.hparams.lr
+            if self.current_epoch < self.hparams.rampup_stop:
+                lr_scale = self.rampup_value()
+                for pg in optimizer.param_groups:
+                    pg['lr'] = lr_scale * self.hparams.lr
+                self.current_lr = lr_scale * self.hparams.lr
+            elif self.current_epoch > self.hparams.epochs - self.hparams.rampdown_start:
+                self.current_lr = self.hparams.lr
+                pass
+
         optimizer.step()
         optimizer.zero_grad()
 
@@ -200,11 +202,13 @@ class PIModel(SSLModule):
         return self.test_val_step(batch, prefix='test')
 
     def val_dataloader(self):
-        ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform, download=True)
+        ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform,
+                     download=True)
         return DataLoader(ds, self.hparams.batch_size, shuffle=False)
 
     def test_dataloader(self):
-        ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform, download=True)
+        ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform,
+                     download=True)
         return DataLoader(ds, self.hparams.batch_size, shuffle=False)
 
     def epoch_end(self, outputs):

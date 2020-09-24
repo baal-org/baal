@@ -15,7 +15,8 @@ from experiments.ssl_experiments.pimodel_cifar10 import PIModel
 
 
 class PIActiveLearningModel(ActiveLearningMixin, PIModel):
-    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace, network: nn.Module):
+    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace,
+                 network: nn.Module):
         super().__init__(active_dataset, hparams, network)
 
         self.network = patch_module(self.network)
@@ -23,8 +24,8 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
     def pool_loader(self):
         return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False)
 
-    def epoch_end(self, outputs):
-        out = super().epoch_end(outputs)
+    def test_epoch_end(self, outputs):
+        out = super().test_epoch_end(outputs)
         out['log']['active_set_len'] = len(self.active_dataset)
 
         return out
@@ -40,13 +41,14 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
         Returns:
             argparser with added arguments
         """
-        parser = super(PIActiveLearningModel, PIActiveLearningModel).add_model_specific_args(parent_parser)
+        parser = super(PIActiveLearningModel,
+                       PIActiveLearningModel).add_model_specific_args(parent_parser)
         parser.add_argument('--query_size', type=int, default=100)
         parser.add_argument('--max_sample', type=int, default=-1)
         parser.add_argument('--iterations', type=int, default=20)
         parser.add_argument('--replicate_in_memory', action='store_true')
-        args.add_argument("--heuristic", default="bald", type=str)
-        args.add_argument("--shuffle_prop", default=0.05, type=float)
+        parser.add_argument("--heuristic", default="bald", type=str)
+        parser.add_argument("--shuffle_prop", default=0.05, type=float)
         return parser
 
 
@@ -87,7 +89,12 @@ if __name__ == '__main__':
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
         print(f'Step {al_step} Dataset size {len(active_set)}')
+
+        trainer.current_epoch = al_step * params.epochs
+        trainer.max_epochs = (al_step + 1) * params.epochs
         trainer.fit(model)
+        trainer.test()
+
         should_continue = trainer.step()
         if not should_continue:
             break
