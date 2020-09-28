@@ -3,7 +3,7 @@ import copy
 from argparse import Namespace
 
 import torch
-from pimodel_cifar10 import PIModel
+from experiments.ssl_experiments.pimodel_cifar10 import PIModel
 from torch import nn
 from torch.hub import load_state_dict_from_url
 from torch.utils.data import DataLoader
