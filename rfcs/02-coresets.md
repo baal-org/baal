@@ -15,16 +15,10 @@ Array = np.ndarray
 Indices = List[int]
 
 class BaseCoreset:
-    def get_ranks(features: Array, logits: Array) -> Indices:
+    def get_ranks(features: Array, logits: Array, top_k:int =None) -> Indices:
         # K-Means or something
         pass
-        
-    def filter(logits, heuristic, proportion=1.)-> Indices:
-        # Use `heuristic` to rank features and return the top `proportion` indices.
-        pass
 ```
-
-We can also mix coresets with heuristics! So that all selected samples have a minimum uncertainty. (top x%)
 
 
 ### Concerns
