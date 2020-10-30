@@ -177,6 +177,9 @@ class AbstractHeuristic:
 
         Returns:
             ordered index according to the uncertainty (highest to lowes).
+
+        Raises:
+            ValueError if `scores` is not uni-dimensional.
         """
         if isinstance(scores, Sequence):
             scores = np.concatenate(scores)
