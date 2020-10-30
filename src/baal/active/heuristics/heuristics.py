@@ -111,6 +111,7 @@ class AbstractHeuristic:
         self.shuffle_prop = shuffle_prop
         self.reversed = reverse
         assert reduction in available_reductions or callable(reduction)
+        self._reduction_name = reduction
         self.reduction = reduction if callable(reduction) else available_reductions[reduction]
 
     def compute_score(self, predictions):
@@ -179,6 +180,11 @@ class AbstractHeuristic:
         """
         if isinstance(scores, Sequence):
             scores = np.concatenate(scores)
+
+        if scores.ndim > 1:
+            raise ValueError((f"Can't order sequence with more than 1 dimension."
+                              f"Currently {scores.ndim} dimensions."
+                              f"Is the heuristic reduction method set: {self._reduction_name}"))
         assert scores.ndim == 1  # We want the uncertainty value per sample.
         ranks = np.argsort(scores)
         if self.reversed:
