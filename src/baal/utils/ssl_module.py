@@ -57,6 +57,6 @@ class SSLModule(pl.LightningModule):
                             help='Probability of selecting labeled batch')
         parser.add_argument('--num_steps', default=None, type=int, help='Number of steps per epoch')
         parser.add_argument("--batch-size", default=32, type=int)
-        parser.add_argument("--workers", default=0, type=int)
+        parser.add_argument("--workers", default=4, type=int)
 
         return parser

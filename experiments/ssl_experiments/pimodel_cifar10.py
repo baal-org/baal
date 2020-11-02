@@ -10,13 +10,14 @@ from typing import Dict
 
 import numpy as np
 import torch
-from baal.active import ActiveLearningDataset
-from baal.utils.ssl_module import SSLModule
 from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg11
+
+from baal.active import ActiveLearningDataset
+from baal.utils.ssl_module import SSLModule
 
 
 class GaussianNoise(nn.Module):
@@ -131,12 +132,12 @@ class PIModel(SSLModule):
         logs.update({'supervised_loss': loss,
                      'rampup_value': self.rampup_value(),
                      'learning_rate': self.current_lr
-                    })
+                     })
 
         return {'loss': loss, 'log': logs}
 
     def unsupervised_training_step(self, batch, *args) -> Dict:
-        x = batch
+        x, _ = batch
 
         z = self.forward(x)
         z_hat = self.forward(x)

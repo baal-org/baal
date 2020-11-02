@@ -3,15 +3,16 @@ import copy
 from argparse import Namespace
 
 import torch
-from baal.active import ActiveLearningDataset, get_heuristic
-from baal.bayesian.dropout import patch_module
-from baal.utils.pytorch_lightning import ActiveLearningMixin, BaalTrainer, ResetCallback
+from experiments.ssl_experiments.pimodel_cifar10 import PIModel
 from torch import nn
+from torch.hub import load_state_dict_from_url
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg16
 
-from experiments.ssl_experiments.pimodel_cifar10 import PIModel
+from baal.active import ActiveLearningDataset, get_heuristic
+from baal.bayesian.dropout import patch_module
+from baal.utils.pytorch_lightning import ActiveLearningMixin, BaalTrainer, ResetCallback
 
 
 class PIActiveLearningModel(ActiveLearningMixin, PIModel):
@@ -22,7 +23,15 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
         self.network = patch_module(self.network)
 
     def pool_loader(self):
-        return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False)
+        return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False,
+                          num_workers=4)
+
+    def configure_optimizers(self):
+        return torch.optim.SGD(self.parameters(), lr=self.hparams.lr, weight_decay=1e-4)
+
+    def optimizer_step(self, epoch_nb, batch_nb, optimizer, optimizer_i, opt_closure, **kwargs):
+        optimizer.step()
+        optimizer.zero_grad()
 
     def test_epoch_end(self, outputs):
         out = super().test_epoch_end(outputs)
@@ -41,14 +50,13 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
         Returns:
             argparser with added arguments
         """
-        parser = super(PIActiveLearningModel,
-                       PIActiveLearningModel).add_model_specific_args(parent_parser)
+        parser = super(PIActiveLearningModel, PIActiveLearningModel).add_model_specific_args(
+            parent_parser)
         parser.add_argument('--query_size', type=int, default=100)
         parser.add_argument('--max_sample', type=int, default=-1)
         parser.add_argument('--iterations', type=int, default=20)
+        parser.add_argument('--heuristic', type=str, default='bald')
         parser.add_argument('--replicate_in_memory', action='store_true')
-        parser.add_argument("--heuristic", default="bald", type=str)
-        parser.add_argument("--shuffle_prop", default=0.05, type=float)
         return parser
 
 
@@ -63,16 +71,18 @@ if __name__ == '__main__':
 
     active_set = ActiveLearningDataset(
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
-        pool_specifics={'transform': PIModel.test_transform},
-        make_unlabelled=lambda x: x[0])
-    active_set.label_randomly(100)
+        pool_specifics={'transform': PIModel.test_transform})
+    active_set.label_randomly(500)
 
     print("Active set length: {}".format(len(active_set)))
     print("Pool set length: {}".format(len(active_set.pool)))
 
-    heuristic = get_heuristic(params.heuristic, params.shuffle_prop)
-    net = vgg16(pretrained=False, num_classes=10)
-    model = PIActiveLearningModel(network=net, active_dataset=active_set, hparams=params)
+    heuristic = get_heuristic(params.heuristic)
+    model = vgg16(pretrained=False, num_classes=10)
+    weights = load_state_dict_from_url('https://download.pytorch.org/models/vgg16-397923af.pth')
+    weights = {k: v for k, v in weights.items() if 'classifier.6' not in k}
+    model.load_state_dict(weights, strict=False)
+    model = PIActiveLearningModel(network=model, active_dataset=active_set, hparams=params)
 
     dp = 'dp' if params.gpus > 1 else None
     trainer = BaalTrainer(max_epochs=params.epochs, default_root_dir=params.data_root,
@@ -86,15 +96,12 @@ if __name__ == '__main__':
                           ndata_to_label=params.query_size
                           )
 
-    AL_STEPS = 100
+    AL_STEPS = 2000
     for al_step in range(AL_STEPS):
+        # TODO fix this
+        trainer.current_epoch = 0
         print(f'Step {al_step} Dataset size {len(active_set)}')
-
-        trainer.current_epoch = al_step * params.epochs
-        trainer.max_epochs = (al_step + 1) * params.epochs
         trainer.fit(model)
-        trainer.test()
-
         should_continue = trainer.step()
         if not should_continue:
             break
