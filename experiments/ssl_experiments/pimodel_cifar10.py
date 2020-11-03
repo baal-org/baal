@@ -10,6 +10,9 @@ from typing import Dict
 
 import numpy as np
 import torch
+from pytorch_lightning.callbacks import ModelCheckpoint
+from torch.hub import load_state_dict_from_url
+
 from torch import nn, Tensor
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -18,6 +21,10 @@ from torchvision.models import vgg11
 
 from baal.active import ActiveLearningDataset
 from baal.utils.ssl_module import SSLModule
+
+import torch.multiprocessing
+
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 class GaussianNoise(nn.Module):
@@ -117,7 +124,8 @@ class PIModel(SSLModule):
         logs = {'criterion_loss': supervised_loss, 'accuracy': accuracy}
 
         if not self.hparams.baseline:
-            z_hat = self.forward(x)
+            with torch.no_grad():
+                z_hat = self.forward(x)
 
             unsupervised_loss = self.consistency_criterion(z, z_hat)
             unsupervised_weight = self.max_unsupervised_weight * self.rampup_value()
@@ -139,7 +147,8 @@ class PIModel(SSLModule):
     def unsupervised_training_step(self, batch, *args) -> Dict:
         x, _ = batch
 
-        z = self.forward(x)
+        with torch.no_grad():
+            z = self.forward(x)
         z_hat = self.forward(x)
 
         unsupervised_loss = self.consistency_criterion(z, z_hat)
@@ -165,25 +174,9 @@ class PIModel(SSLModule):
         else:
             return 0
 
-    def optimizer_step(self, epoch_nb, batch_nb, optimizer, optimizer_i, opt_closure, **kwargs):
-        if self.hparams.no_lr_rampup:
-            self.current_lr = self.hparams.lr
-        else:
-            if self.current_epoch < self.hparams.rampup_stop:
-                lr_scale = self.rampup_value()
-                for pg in optimizer.param_groups:
-                    pg['lr'] = lr_scale * self.hparams.lr
-                self.current_lr = lr_scale * self.hparams.lr
-            elif self.current_epoch > self.hparams.epochs - self.hparams.rampdown_start:
-                self.current_lr = self.hparams.lr
-                pass
-
-        optimizer.step()
-        optimizer.zero_grad()
-
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.lr, betas=(0.9, 0.999),
-                                weight_decay=1e-4)
+        return torch.optim.SGD(self.parameters(), lr=self.hparams.lr, momentum=0.9,
+                               weight_decay=1e-4)
 
     def test_val_step(self, batch: int, prefix: str) -> Dict[str, Tensor]:
         x, y = batch
@@ -205,12 +198,12 @@ class PIModel(SSLModule):
     def val_dataloader(self):
         ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform,
                      download=True)
-        return DataLoader(ds, self.hparams.batch_size, shuffle=False)
+        return DataLoader(ds, self.hparams.batch_size, shuffle=False, num_workers=self.hparams.workers)
 
     def test_dataloader(self):
         ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform,
                      download=True)
-        return DataLoader(ds, self.hparams.batch_size, shuffle=False)
+        return DataLoader(ds, self.hparams.batch_size, shuffle=False, num_workers=self.hparams.workers)
 
     def epoch_end(self, outputs):
         avg_metrics = {}
@@ -245,8 +238,6 @@ class PIModel(SSLModule):
         parser = super(PIModel, PIModel).add_model_specific_args(parent_parser)
         parser.add_argument('--baseline', action='store_true')
         parser.add_argument('--rampup_stop', default=80)
-        parser.add_argument('--rampdown_start', default=50,
-                            help='Number of epochs before the end to start rampdown')
         parser.add_argument('--epochs', default=300, type=int)
         parser.add_argument('--batch-size', default=100, type=int, help='batch size')
         parser.add_argument('--lr', default=0.003, type=float, help='Max learning rate', dest='lr')
@@ -254,35 +245,40 @@ class PIModel(SSLModule):
                             help='Maximum unsupervised weight, default=100 for CIFAR10 as '
                                  'described in paper')
         parser.add_argument('--no_augmentations', action='store_true')
-        parser.add_argument('--no_lr_rampup', action='store_true')
         return parser
 
 
 if __name__ == '__main__':
-    from pytorch_lightning import Trainer
+    from pytorch_lightning import Trainer, seed_everything
     from argparse import ArgumentParser
 
     args = ArgumentParser(add_help=False)
     args.add_argument('--data-root', default='./', type=str, help='Where to download the data')
     args.add_argument('--gpus', default=torch.cuda.device_count(), type=int)
-    args.add_argument('--num_labaled', default=5000, type=int)
+    args.add_argument('--num_labeled', default=5000, type=int)
+    args.add_argument('--seed', default=None, type=int)
     args = PIModel.add_model_specific_args(args)
     params = args.parse_args()
 
+    seed = seed_everything(params.seed)
+
     active_set = ActiveLearningDataset(
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
-        pool_specifics={'transform': PIModel.test_transform},
-        make_unlabelled=lambda x: x[0])
-    active_set.label_randomly(params.num_labaled)
+        pool_specifics={'transform': PIModel.test_transform})
+    active_set.label_randomly(params.num_labeled)
 
     print("Active set length: {}".format(len(active_set)))
     print("Pool set length: {}".format(len(active_set.pool)))
 
     net = vgg11(pretrained=False, num_classes=10)
 
+    weights = load_state_dict_from_url('https://download.pytorch.org/models/vgg11-bbd30ac9.pth')
+    weights = {k: v for k, v in weights.items() if 'classifier.6' not in k}
+    net.load_state_dict(weights, strict=False)
+
     system = PIModel(network=net, active_dataset=active_set, hparams=params)
 
-    trainer = Trainer(num_sanity_val_steps=0, max_epochs=params.epochs, profiler=True,
+    trainer = Trainer(num_sanity_val_steps=0, max_epochs=params.epochs,
                       early_stop_callback=False, gpus=params.gpus)
 
     trainer.fit(system)

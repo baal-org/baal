@@ -38,7 +38,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         labelled: Union[np.ndarray, torch.Tensor] = None,
         make_unlabelled: Callable = _identity,
         random_state=None,
-        pool_specifics=None
+        pool_specifics: Optional[dict] = None
     ) -> None:
         self._dataset = dataset
         if labelled is not None:
