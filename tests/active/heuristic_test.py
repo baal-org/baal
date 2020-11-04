@@ -1,5 +1,3 @@
-from itertools import cycle
-
 import numpy as np
 import pytest
 from hypothesis import given
@@ -124,6 +122,7 @@ def test_batch_bald(distributions, reduction):
 
     # Unlikely, but not 100% sure
     assert np.any(marg != [1, 2, 0])
+
 
 @pytest.mark.parametrize('distributions, reduction',
                          [(distributions_5d, 'none')])
@@ -346,18 +345,30 @@ def test_combine_heuristics_reorder_list():
     ranks = heuristics.reorder_indices(streaming_prediction)
     assert np.all(ranks == [0, 1, 2]), "Combine Heuristics is not right {}".format(ranks)
 
+
 @pytest.mark.parametrize("heur", [Random(), BALD(reduction='sum'),
                                   Entropy(reduction='sum'),
                                   Variance(reduction='sum')])
 @pytest.mark.parametrize("n_batch", [1, 10, 20])
 def test_heuristics_works_with_generator(heur, n_batch):
     BATCH_SIZE = 32
+
     def predictions(n_batch):
         for _ in range(n_batch):
             yield np.random.randn(BATCH_SIZE, 3, 32, 32, 10)
+
     preds = predictions(n_batch)
     out = heur(preds)
     assert out.shape[0] == n_batch * BATCH_SIZE
+
+
+@pytest.mark.parametrize('distributions', [distributions_5d])
+def test_heuristic_reductio_check(distributions):
+    np.random.seed(1337)
+    heuristic = BALD(reduction='none')
+    with pytest.raises(ValueError) as e_info:
+        heuristic(distributions)
+        assert "Can't order sequence with more than 1 dimension." in str(e_info.value)
 
 
 if __name__ == '__main__':
