@@ -2,9 +2,10 @@ import unittest
 
 import pytest
 import torch
+from torch.utils.data import Dataset, ConcatDataset
+
 from baal.active import ActiveLearningDataset
 from baal.utils.ssl_iterator import SemiSupervisedIterator
-from torch.utils.data import Dataset, ConcatDataset
 
 
 class SSLTestDataset(Dataset):
@@ -34,10 +35,11 @@ class SSLDatasetTest(unittest.TestCase):
 
         print(len(dataset))
 
-        al_dataset = ActiveLearningDataset(dataset)
-        al_dataset.label(list(range(d1_len)))  # Label data from d1 (even numbers)
+        self.al_dataset = ActiveLearningDataset(dataset)
+        self.al_dataset.label(list(range(d1_len)))  # Label data from d1 (even numbers)
 
-        self.ss_iterator = SemiSupervisedIterator(al_dataset, p=None, num_steps=None, batch_size=10)
+        self.ss_iterator = SemiSupervisedIterator(self.al_dataset, p=None, num_steps=None,
+                                                  batch_size=10)
 
     def test_epoch(self):
         labeled_data = []
@@ -57,6 +59,47 @@ class SSLDatasetTest(unittest.TestCase):
         assert len(labeled_data) == len(unlabeled_data)
         assert torch.all(labeled_data % 2 == 0)
         assert torch.all(unlabeled_data % 2 != 0)
+
+    def test_p(self):
+        ss_iterator = SemiSupervisedIterator(self.al_dataset, p=0.1, num_steps=None, batch_size=10)
+
+        labeled_data = []
+        unlabeled_data = []
+        for batch_idx, batch in enumerate(ss_iterator):
+            if SemiSupervisedIterator.is_labeled(batch):
+                batch = SemiSupervisedIterator.get_batch(batch)
+                labeled_data.extend(batch)
+            else:
+                batch = SemiSupervisedIterator.get_batch(batch)
+                unlabeled_data.extend(batch)
+
+        total = len(labeled_data) + len(unlabeled_data)
+        l_ratio = len(labeled_data) / total
+        u_ratio = len(unlabeled_data) / total
+        assert l_ratio < .15
+        assert u_ratio > 0.88
+
+    def test_no_pool(self):
+        d1 = SSLTestDataset(labeled=True, length=100)
+        al_dataset = ActiveLearningDataset(d1)
+        al_dataset.label_randomly(100)
+        ss_iterator = SemiSupervisedIterator(al_dataset, p=0.1, num_steps=None, batch_size=10)
+
+        labeled_data = []
+        unlabeled_data = []
+        for batch_idx, batch in enumerate(ss_iterator):
+            if SemiSupervisedIterator.is_labeled(batch):
+                batch = SemiSupervisedIterator.get_batch(batch)
+                labeled_data.extend(batch)
+            else:
+                batch = SemiSupervisedIterator.get_batch(batch)
+                unlabeled_data.extend(batch)
+
+        total = len(labeled_data) + len(unlabeled_data)
+        l_ratio = len(labeled_data) / total
+        u_ratio = len(unlabeled_data) / total
+        assert l_ratio == 1
+        assert u_ratio == 0
 
 
 if __name__ == '__main__':
