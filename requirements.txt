@@ -4,8 +4,8 @@ pandas
 Pillow>=6.2.0
 scikit-learn
 scipy
-torch>=1.2.0
-torchvision>=0.2.2
+torch>=1.6.0
+torchvision>=0.7.0
 tqdm
 h5py
 structlog

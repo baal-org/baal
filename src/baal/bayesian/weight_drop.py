@@ -1,8 +1,7 @@
+import copy
 import warnings
 from typing import List
-import copy
 
-from torch.nn import Parameter
 import torch
 
 Sequence = List[str]
@@ -13,32 +12,6 @@ def get_weight_drop_module(name: str, weight_dropout, **kwargs):
         'Conv2d': WeightDropConv2d,
         'Linear': WeightDropLinear
     }[name](weight_dropout, **kwargs)
-
-
-# Code from https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/nn/weight_drop.html
-def _weight_drop(module, weights, dropout):
-    """
-    Helper for `WeightDrop`.
-    """
-
-    for name_w in weights:
-        w = getattr(module, name_w)
-        del module._parameters[name_w]
-        module.register_parameter(name_w + '_raw', Parameter(w))
-
-    original_module_forward = module.forward
-
-    def forward(*args, **kwargs):
-        for name_w in weights:
-            raw_w = getattr(module, name_w + '_raw')
-
-            # dropout should work in inference time as well
-            w = torch.nn.functional.dropout(raw_w, p=dropout, training=True)
-            setattr(module, name_w, w)
-
-        return original_module_forward(*args, **kwargs)
-
-    setattr(module, 'forward', forward)
 
 
 class WeightDropLinear(torch.nn.Linear):
@@ -57,8 +30,11 @@ class WeightDropLinear(torch.nn.Linear):
         wanted = ['in_features', 'out_features']
         kwargs = {k: v for k, v in kwargs.items() if k in wanted}
         super().__init__(**kwargs)
-        weights = ['weight']
-        _weight_drop(self, weights, weight_dropout)
+        self._weight_dropout = weight_dropout
+
+    def forward(self, input):
+        w = torch.nn.functional.dropout(self.weight, p=self._weight_dropout, training=True)
+        return torch.nn.functional.linear(input, w, self.bias)
 
 
 class WeightDropConv2d(torch.nn.Conv2d):
@@ -71,12 +47,17 @@ class WeightDropConv2d(torch.nn.Conv2d):
     Args:
         weight_dropout (float): The probability a weight will be dropped.
     """
+
     def __init__(self, weight_dropout=0.0, **kwargs):
         wanted = ['in_channels', 'out_channels', 'kernel_size', 'dilation', 'padding']
         kwargs = {k: v for k, v in kwargs.items() if k in wanted}
         super().__init__(**kwargs)
-        weights = ['weight']
-        _weight_drop(self, weights, weight_dropout)
+        self._weight_dropout = weight_dropout
+
+    def forward(self, input):
+        return self._conv_forward(input, torch.nn.functional.dropout(self.weight,
+                                                                     p=self._weight_dropout,
+                                                                     training=True))
 
 
 def patch_module(module: torch.nn.Module,
@@ -145,8 +126,11 @@ class MCDropoutConnectModule(torch.nn.Module):
             Name of layers to be replaced from ['Conv', 'Linear', 'LSTM', 'GRU'].
         weight_dropout (float): The probability a weight will be dropped.
     """
+
     def __init__(self, module: torch.nn.Module, layers: Sequence, weight_dropout=0.0):
         super().__init__()
         self.parent_module = module
         _patch_layers(self.parent_module, layers, weight_dropout)
-        self.forward = self.parent_module.forward
+
+    def forward(self, x):
+        return self.parent_module(x)
