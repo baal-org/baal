@@ -77,7 +77,7 @@ class SSLDatasetTest(unittest.TestCase):
         l_ratio = len(labeled_data) / total
         u_ratio = len(unlabeled_data) / total
         assert l_ratio < .15
-        assert u_ratio > 0.88
+        assert u_ratio > 0.85
 
     def test_no_pool(self):
         d1 = SSLTestDataset(labeled=True, length=100)
