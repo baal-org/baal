@@ -169,7 +169,7 @@ def main(hparams):
 
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
-        # TODO fix this
+        # TODO Issue 95 Make PL trainer epoch self-aware
         trainer.current_epoch = 0
         print(f'Step {al_step} Dataset size {len(active_set)}')
         trainer.fit(model)
