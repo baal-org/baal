@@ -27,7 +27,7 @@ class HParams():
     data_root: str = '/tmp'
     num_classes: int = 10
     learning_rate: float = 0.001
-    query_size: int = 100
+    query_size: int = 10
     max_sample: int = -1
     iterations: int = 20
     replicate_in_memory: bool = True
@@ -79,7 +79,8 @@ def test_predict():
     active_set.label_randomly(10)
     model = DummyPytorchLightning(active_set, hparams)
     save_chkp = model.on_save_checkpoint(ckpt)
-    trainer = BaalTrainer(max_epochs=3, default_root_dir='/tmp',
+    trainer = BaalTrainer(dataset=active_set,
+                          max_epochs=3, default_root_dir='/tmp',
                           callbacks=[ResetCallback(copy.deepcopy(save_chkp))])
     trainer.model = model
     alt = trainer.predict_on_dataset()
@@ -114,3 +115,24 @@ def test_reset_callback_resets_weights():
     callback.on_train_start(None, model)
     new_params = model.parameters()
     assert all(torch.eq(p1, p2).all() for p1, p2 in zip(initial_params, new_params))
+
+
+def test_pl_step():
+    hparams = HParams()
+    dataset = DummyDataset()
+    active_set = ActiveLearningDataset(dataset)
+    active_set.label_randomly(10)
+    model = DummyPytorchLightning(active_set, hparams)
+    ckpt = {}
+    save_chkp = model.on_save_checkpoint(ckpt)
+    trainer = BaalTrainer(dataset=active_set,
+                          max_epochs=3, default_root_dir='/tmp',
+                          ndata_to_label=hparams.query_size,
+                          callbacks=[ResetCallback(copy.deepcopy(save_chkp))])
+    trainer.model = model
+
+    before = len(active_set)
+    trainer.step()
+    after = len(active_set)
+
+    assert after - before == hparams.query_size
