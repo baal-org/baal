@@ -3,6 +3,10 @@ from collections import OrderedDict
 
 import structlog
 import torch
+from baal.active import ActiveLearningDataset
+from baal.active.heuristics import BALD
+from baal.bayesian.dropout import patch_module
+from baal.utils.pytorch_lightning import ActiveLearningMixin, ResetCallback, BaalTrainer
 from pytorch_lightning import LightningModule
 from torch import optim
 from torch.nn import CrossEntropyLoss
@@ -10,11 +14,6 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg16
 from torchvision.transforms import transforms
-
-from baal.active import ActiveLearningDataset, ActiveLearningLoop
-from baal.active.heuristics import BALD
-from baal.bayesian.dropout import patch_module
-from baal.utils.pytorch_lightning import ActiveLearningMixin, ResetCallback, BaalTrainer
 
 log = structlog.get_logger('PL testing')
 
@@ -162,16 +161,19 @@ def main(hparams):
                           # The weights of the model will change as it gets
                           # trained; we need to keep a copy (deepcopy) so that
                           # we can reset them.
-                          callbacks=[ResetCallback(copy.deepcopy(model.state_dict()))])
-    loop = ActiveLearningLoop(active_set, get_probabilities=trainer.predict_on_dataset_generator,
-                              heuristic=heuristic,
-                              ndata_to_label=hparams.query_size)
+                          callbacks=[ResetCallback(copy.deepcopy(model.state_dict()))],
+                          dataset=active_set,
+                          heuristic=heuristic,
+                          ndata_to_label=hparams.query_size
+                          )
 
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
+        # TODO Issue 95 Make PL trainer epoch self-aware
+        trainer.current_epoch = 0
         print(f'Step {al_step} Dataset size {len(active_set)}')
         trainer.fit(model)
-        should_continue = loop.step()
+        should_continue = trainer.step()
         if not should_continue:
             break
 
