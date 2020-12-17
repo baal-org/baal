@@ -11,6 +11,14 @@ from sklearn.metrics import confusion_matrix, auc
 from baal.utils.array_utils import to_prob
 
 
+def transpose_and_flatten(input):
+    if input.dim() > 2:
+        input = input.view(input.size(0), input.size(1), -1)  # N,C,H,W => N,C,H*W
+        input = input.transpose(1, 2)  # N,C,H*W => N,H*W,C
+        input = input.contiguous().view(-1, input.size(2))  # N,H*W,C => N*H*W,C
+    return input
+
+
 class Metrics(object):
     """
     metric is an abstract class.
@@ -109,8 +117,9 @@ class ECE(Metrics):
             output (tensor): logits or predictions of model
             target (tensor): labels
         """
-        output = output.detach().cpu().numpy()
-        target = target.detach().cpu().numpy()
+
+        output = transpose_and_flatten(output).detach().cpu().numpy()
+        target = target.view([-1]).detach().cpu().numpy()
         output = to_prob(output)
 
         # this is to make sure handling 1.0 value confidence to be assigned to a bin
@@ -221,7 +230,7 @@ class ECE_PerCLs(Metrics):
         ece = np.zeros([self.n_cls])
         for cls in range(self.n_cls):
             n = self.samples[cls, :].sum()
-            if n == 0 :
+            if n == 0:
                 ece[cls] = 0
             else:
                 ece[cls] = ((self.samples[cls, :] / n) * np.abs(accuracy[cls, :] - bin_confs)).sum()
