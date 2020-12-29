@@ -8,15 +8,23 @@
 # Welcome to the documentation for baal (**ba**yesian **a**ctive **l**earning)
 
 <a href="https://github.com/ElementAI/baal">
-<img src="http://www.pngall.com/wp-content/uploads/2016/04/Github-Free-PNG-Image.png" width=64 /></a>
+<img src="_static/images/GitHub-Mark-64px.png" style="width:30px;height:30px;" /></a>
 
-baal aims to implement active learning using metrics of uncertainty derived
-from approximations of bayesian posteriors in neural networks.
+BaaL is a Bayesian active learning library. We provide methods to estimate sampling from the posterior distribution
+in order to maximize the effiency of labelling during active learning.
+
+To know more on what is Bayesian active learning, see our [User guide](user_guide/index.md).
+
+We are member of Pytorch's ecosystem and we welcome contributions from the community.
+If you have any question, we are reachable on [Gitter](https://gitter.im/eai-baal/community#).
 
 # Support
 
-For support, please see if your question is already answered in our FAQ.
-If it is not there, please file an issue or join our Gitter.
+For support, we have several ways to help you:
+
+* Our [FAQ](faq.md)
+* Submit an issue on Github [here](https://github.com/ElementAI/baal/issues/new/choose)
+* Join our [Gitter](https://gitter.im/eai-baal/community#)!
 
 Baal has several components:
 
