@@ -1,5 +1,6 @@
 import argparse
 import random
+from copy import deepcopy
 
 import torch
 import torch.backends
@@ -105,19 +106,22 @@ def main():
                                      batch_size=10,
                                      iterations=hyperparams['iterations'],
                                      use_cuda=use_cuda)
+    # We will reset the weights at each active learning step.
+    init_weights = deepcopy(model.state_dict())
 
     for epoch in tqdm(range(args.epoch)):
-        model.train_on_dataset(active_set, optimizer, hyperparams["batch_size"], 1, use_cuda)
+        # Load the initial weights.
+        model.load_state_dict(init_weights)
+        model.train_on_dataset(active_set, optimizer, hyperparams["batch_size"], hyperparams['learning_epoch'],
+                               use_cuda)
 
         # Validation!
         model.test_on_dataset(test_set, hyperparams["batch_size"], use_cuda)
         metrics = model.metrics
+        should_continue = active_loop.step()
+        if not should_continue:
+            break
 
-        if epoch % hyperparams['learning_epoch'] == 0:
-            should_continue = active_loop.step()
-            model.reset_fcs()
-            if not should_continue:
-                break
         val_loss = metrics['test_loss'].value
         logs = {
             "val": val_loss,
