@@ -24,11 +24,11 @@ def make_animation_from_data(features: np.ndarray, labels: np.ndarray,
     """
     assert features.ndim == 2 and features.shape[-1] == 2, 'Can only plot 2d points!'
     frames = []
-    for frame_id in range(np.max(labelled_at)):
+    for frame_id in reversed(range(np.max(labelled_at))):
         # New frame
         fig, ax = plt.subplots(figsize=(10, 10))
         # Filter stuff
-        currently_labelled = labelled_at < frame_id
+        currently_labelled = labelled_at > frame_id
         unlabelled_features = features[~currently_labelled]
         labelled_features = features[currently_labelled]
         labelled_labels = labels[currently_labelled]

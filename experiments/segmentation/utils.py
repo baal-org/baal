@@ -54,12 +54,9 @@ def active_pascal(
     """
 
     return (
-        ActiveLearningDataset(
-            datasets.VOCSegmentation(
-                path, image_set='train', transform=transform, download=False, *args, **kwargs
-            ),
-            eval_transform=test_transform,
-        ),
+        ActiveLearningDataset(datasets.VOCSegmentation(
+            path, image_set='train', transform=transform, download=False, *args, **kwargs
+        )),
         datasets.VOCSegmentation(path, image_set='val', transform=test_transform, download=False,
                                  *args, **kwargs),
     )

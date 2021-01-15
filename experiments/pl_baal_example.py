@@ -147,11 +147,10 @@ def main(hparams):
                                           transforms.ToTensor()])
     test_transform = transforms.Compose([transforms.ToTensor()])
 
-    active_set = ActiveLearningDataset(
-        CIFAR10(hparams.data_root, train=True, transform=train_transform, download=True),
-        pool_specifics={
-            'transform': test_transform
-        })
+    active_set = ActiveLearningDataset(CIFAR10(hparams.data_root, train=True, transform=train_transform, download=True),
+                                       pool_specifics={
+                                           'transform': test_transform
+                                       })
     active_set.label_randomly(10)
     heuristic = BALD()
     model = VGG16(active_set, hparams)
