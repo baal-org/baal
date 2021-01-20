@@ -33,6 +33,8 @@ RUN pip install -r /app/baal/requirements.txt
 COPY . /app/baal
 WORKDIR /app/baal
 RUN pip install -e . --no-use-pep517
+RUN pip install jupyter cmake
+RUN pip install MulticoreTSNE
 
 # ---- test -----
 # we need to install test dependencies before, so we cannot use 'base_baal' as base image

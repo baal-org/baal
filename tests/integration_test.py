@@ -36,8 +36,7 @@ def test_integration():
     cifar10_train = DummyDataset(transform_pipeline)
     cifar10_test = DummyDataset(transform_pipeline)
 
-    al_dataset = ActiveLearningDataset(cifar10_train,
-                                       pool_specifics={'transform': transform_pipeline})
+    al_dataset = ActiveLearningDataset(cifar10_train, pool_specifics={'transform': transform_pipeline})
     al_dataset.label_randomly(10)
 
     use_cuda = False
@@ -87,8 +86,7 @@ def test_calibration_integration():
 
     # we don't create different trainset for calibration since the goal is not
     # to calibrate
-    al_dataset = ActiveLearningDataset(cifar10_train,
-                                       pool_specifics={'transform': transform_pipeline})
+    al_dataset = ActiveLearningDataset(cifar10_train, pool_specifics={'transform': transform_pipeline})
     al_dataset.label_randomly(10)
     use_cuda = False
     model = vgg.vgg16(pretrained=False,

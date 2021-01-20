@@ -6,18 +6,23 @@ If you have more questions, please submit an issue and we will include it here!
 
 ```python
 model = YourModel()
+# If not done already, you can wrap your model with our MCDropoutModule
+model = MCDropoutModule(model)
 dataset = YourDataset()
 wrapper = ModelWrapper(model, criterion=None)
 
 heuristic = BALD()
 
-uncertainty = heuristic.get_uncertainties(wrapper.predict_on_dataset(dataset, batch_size=32, iterations=20, use_cuda=True))
+# This has a shape [iterations, len(dataset), num_classes, ...]
+predictions = wrapper.predict_on_dataset(dataset, batch_size=32, iterations=20, use_cuda=True)
+uncertainty = heuristic.get_uncertainties(predictions)
 ```
 
-If your model is large:
+If your model or dataset is too large:
 
 ```python
-uncertainty = heuristic.get_uncertainties_generator(wrapper.predict_on_dataset_generator(dataset, batch_size=32, iterations=20, use_cuda=True)
+pred_generator = wrapper.predict_on_dataset_generator(dataset, batch_size=32, iterations=20, use_cuda=True)
+uncertainty = heuristic.get_uncertainties_generator(pred_generator)
 ```
 
 ## Does BaaL works on semantic segmentation?

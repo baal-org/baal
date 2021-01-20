@@ -142,7 +142,7 @@ def main():
             "val": val_loss,
             "epoch": epoch,
             "train": metrics['train_loss'].value,
-            "labeled_data": active_set._labelled,
+            "labeled_data": active_set.labelled,
             "Next Training set size": len(active_set),
             'cls_report': metrics['test_cls_report'].value,
         }
