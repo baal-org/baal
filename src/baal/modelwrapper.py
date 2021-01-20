@@ -337,15 +337,12 @@ class ModelWrapper:
         with torch.no_grad():
             if cuda:
                 data, target = to_cuda(data), to_cuda(target)
-            if average_predictions == 1:
-                preds = self.model(data)
-                loss = self.criterion(preds, target)
-            elif average_predictions > 1:
-                preds = map_on_tensor(lambda p: p.mean(-1),
-                                      self.predict_on_batch(data,
-                                                            iterations=average_predictions,
-                                                            cuda=cuda))
-                loss = self.criterion(preds, target)
+
+            preds = map_on_tensor(lambda p: p.mean(-1),
+                                  self.predict_on_batch(data,
+                                                        iterations=average_predictions,
+                                                        cuda=cuda))
+            loss = self.criterion(preds, target)
             self._update_metrics(preds, target, loss, 'test')
             return loss
 
