@@ -2,3 +2,4 @@ recursive-include src *.py
 include requirements.txt
 include README.md
 include documentation-requirements.txt
+include LICENSE
