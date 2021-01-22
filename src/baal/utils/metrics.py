@@ -183,6 +183,9 @@ class ECE_PerCLs(Metrics):
 
     References:
         https://arxiv.org/pdf/1706.04599.pdf
+
+    Notes:
+        We approximate the right-hand side of Eq. 3.
     """
 
     def __init__(self, n_cls, n_bins=10, **kwargs):
@@ -207,11 +210,11 @@ class ECE_PerCLs(Metrics):
         # this is to make sure handling 1.0 value confidence to be assigned to a bin
         output = np.clip(output, 0, 0.9999)
 
-        for cls in range(self.n_cls):
-            for pred, t in zip(output[:, cls], target):
-                bin_id = int(math.floor(pred * self.n_bins))
-                self.samples[cls, bin_id] += 1
-                self.tp[cls, bin_id] += int(cls == t)
+        for pred, t in zip(output, target):
+            conf, p_cls = pred.max(), pred.argmax()
+            bin_id = int(math.floor(conf * self.n_bins))
+            self.samples[t, bin_id] += 1
+            self.tp[t, bin_id] += int(p_cls == t)
 
     def _acc(self):
         accuracy_per_class = np.zeros([self.n_cls, self.n_bins], dtype=float)

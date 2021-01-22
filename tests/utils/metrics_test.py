@@ -227,9 +227,9 @@ def test_ece_percls():
     for i in range(2):
         ece_calculator.update(output=pred[i, :].unsqueeze(0), target=target[i, :].unsqueeze(0))
 
-    assert np.allclose(ece_calculator.samples, np.array([[1, 1, 0], [0, 1, 1], [2, 0, 0]]))
-    assert np.allclose(ece_calculator.tp, np.array([[0, 0, 0], [0, 0, 1], [1, 0, 0]]))
-    assert np.allclose(ece_calculator.value, np.array([0.25, 0.25, 0.5]))
+    assert np.allclose(ece_calculator.samples, np.array([[0, 0, 0], [0, 0, 1], [0, 1, 0]]))
+    assert np.allclose(ece_calculator.tp, np.array([[0, 0, 0], [0, 0, 1], [0, 0, 0]]))
+    assert np.allclose(ece_calculator.value, np.array([0.0, 0.0, 0.5]))
 
     pth = 'tmp'
     Path(pth).mkdir(exist_ok=True)
