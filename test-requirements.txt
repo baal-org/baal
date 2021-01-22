@@ -2,6 +2,7 @@ pytest
 pytest-pep8
 pytest-cov
 coverage
+hypothesis==4.24
 torch-hypothesis==0.1.1
 pytest-mock
 flake8
