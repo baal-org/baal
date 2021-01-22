@@ -211,6 +211,7 @@ class ECE_PerCLs(Metrics):
         output = np.clip(output, 0, 0.9999)
 
         for pred, t in zip(output, target):
+            t = int(t) # Force the conversion
             conf, p_cls = pred.max(), pred.argmax()
             bin_id = int(math.floor(conf * self.n_bins))
             self.samples[t, bin_id] += 1
