@@ -10,7 +10,8 @@ that right in the github web UI!
 
 ```eval_rst
 .. toctree::
-    :caption: Literature and support
+    :caption: Literature review
+    :maxdepth: 1
     :glob:
 
     *

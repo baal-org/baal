@@ -26,13 +26,12 @@ For support, we have several ways to help you:
 * Submit an issue on Github [here](https://github.com/ElementAI/baal/issues/new/choose)
 * Join our [Gitter](https://gitter.im/eai-baal/community#)!
 
-Baal has several components:
-
 ```eval_rst
 .. toctree::
-    :caption: Components of baal
-    :maxdepth: 3
+    :caption: Learn more about BaaL
+    :maxdepth: 1
 
+    User guide <user_guide/index>
     Active learning dataset and training loop classes <notebooks/active-learning.ipynb>
     Methods for approximating bayesian posteriors <notebooks/posteriors.ipynb>
     API Index <api/index>
@@ -42,9 +41,11 @@ Baal has several components:
     :caption: Tutorials
     :maxdepth: 1
     
-    Use BaaL in production (Classification) <notebooks/baal_prod_cls.ipynb>
-    Use BaaL with Pytorch Lightning <notebooks/pytorch_lightning.ipynb>
-    Use BaaL with SkLearn (Classification) <notebooks/sklearn_tutorial.ipynb>
+    How to do research and show progress <notebooks/active_learning_process.ipynb>
+    How to use in production <notebooks/baal_prod_cls.ipynb>
+    How to use with Pytorch Lightning <notebooks/pytorch_lightning.ipynb>
+    How to use with SkLearn <notebooks/sklearn_tutorial.ipynb>
+    How to use deep ensembles <notebooks/deep_ensemble.ipynb>
     
 .. toctree ::
     :caption: Reports
