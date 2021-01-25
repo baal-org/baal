@@ -24,8 +24,8 @@ jobs:
           command: |
             pip config set global.progress_bar off
             pip install --upgrade pip
-            pip install -e .
             pip install -r test-requirements.txt
+            pip install -e .
 
       - run:
           name: Setup Environment Variables
