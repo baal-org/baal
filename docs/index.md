@@ -8,7 +8,8 @@
 # Welcome to the documentation for baal (**ba**yesian **a**ctive **l**earning)
 
 <a href="https://github.com/ElementAI/baal">
-<img src="_static/images/GitHub-Mark-64px.png" style="width:30px;height:30px;" /></a>
+<img src="_static/images/GitHub-Mark-64px.png" style="width:30px;height:30px;" /></a> <!-- Place this tag where you want the button to render. -->
+<a class="github-button" href="https://github.com/ElementAI/baal" data-size="large" data-show-count="true" aria-label="Star ElementAI/baal on GitHub">Star</a>
 
 BaaL is a Bayesian active learning library. We provide methods to estimate sampling from the posterior distribution
 in order to maximize the effiency of labelling during active learning.
