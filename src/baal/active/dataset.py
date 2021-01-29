@@ -54,7 +54,8 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     @property
     def _labelled(self):
-        warnings.warn("_labelled as been renamed labelled. Please update your script.", DeprecationWarning)
+        warnings.warn("_labelled as been renamed labelled. Please update your script.",
+                      DeprecationWarning)
         return self.labelled
 
     def check_dataset_can_label(self):

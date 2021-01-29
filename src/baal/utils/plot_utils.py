@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 BG_COLOR = 'lavender'
-FG_COLORS = ['b', 'g', 'r', 'c', 'm', 'y', 'tab:orange', 'tab:purple', 'limegreen', 'yellow', 'tab:brown']
+FG_COLORS = ['b', 'g', 'r', 'c', 'm', 'y', 'tab:orange', 'tab:purple',
+             'limegreen', 'yellow', 'tab:brown']
 
 
 def make_animation_from_data(features: np.ndarray, labels: np.ndarray,
@@ -40,7 +41,8 @@ def make_animation_from_data(features: np.ndarray, labels: np.ndarray,
             label_mask = labelled_labels == label_id
             pts = labelled_features[label_mask]
             ax.scatter(pts[:, 0], pts[:, 1], c=color, label=label_name, marker='x', zorder=2)
-        ax.set_title("{} : {}/{}".format("Labelling progress", currently_labelled.sum(), len(currently_labelled)))
+        ax.set_title("{} : {}/{}".format("Labelling progress", currently_labelled.sum(),
+                                         len(currently_labelled)))
         ax.legend(loc='best', ncol=1, prop={'size': 15}, markerscale=3, fancybox=True, shadow=True)
         fig.set_size_inches(15, 10.)
         fig.canvas.draw()
