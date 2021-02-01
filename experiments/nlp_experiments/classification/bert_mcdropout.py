@@ -2,6 +2,7 @@ import sys
 sys.path.append("/app/baal")
 import argparse
 import random
+from copy import deepcopy
 
 import torch
 import torch.backends
@@ -10,13 +11,9 @@ from transformers import BertTokenizer
 from transformers import BertForSequenceClassification
 from tqdm import tqdm
 
-from baal.utils.cuda_utils import to_cuda
-from baal.utils.iterutils import map_on_tensor
-from baal.utils.array_utils import stack_in_memory
 from baal.active import get_heuristic, ActiveLearningDataset
 from baal.active.active_loop import ActiveLearningLoop
-from baal.bayesian.dropout import patch_module
-from baal.modelwrapper import ModelWrapper
+from baal import BaalHuggingFaceTrainer
 from experiments.nlp_experiments.classification import CSVClassificationDataset
 
 """
@@ -53,65 +50,65 @@ def get_datasets(initial_pool):
     return active_set, test_set
 
 
-class BertWrapper(ModelWrapper):
-    def __init__(self, model):
-        super(BertWrapper, self).__init__(model=model, criterion=None, replicate_in_memory=True)
-        self.model = patch_module(model)
-
-    def train_on_batch(self, data, target, optimizer, cuda=False, regularizer=None):
-
-        input_ids, attention_mask = data['input_ids'], data['attention_mask']
-        if cuda:
-            input_ids, attention_mask, target = to_cuda(input_ids), to_cuda(attention_mask),\
-                                                to_cuda(target)
-        optimizer.zero_grad()
-        loss, text_fea = self.model(input_ids=input_ids, attention_mask=attention_mask,
-                                    labels=target)[:2]
-
-        loss.backward()
-        optimizer.step()
-        self._update_metrics(text_fea, target, loss, filter='train')
-        return loss
-
-    def test_on_batch(
-            self,
-            data: dict(),
-            target: torch.Tensor,
-            cuda: bool = False,
-            average_predictions: int = 1
-    ):
-        with torch.no_grad():
-            input_ids, attention_mask = data['input_ids'], data['attention_mask']
-            if cuda:
-                input_ids, attention_mask, target = to_cuda(input_ids), to_cuda(attention_mask),\
-                                                    to_cuda(target)
-            loss, text_fea = self.model(input_ids=input_ids, attention_mask=attention_mask,
-                                        labels=target)[:2]
-            self._update_metrics(text_fea, target, loss, 'test')
-            return loss
-
-    def predict_on_batch(self, data, iterations=1, cuda=False):
-
-        # TODO: do we need replicate in memory = False for NLP?
-        with torch.no_grad():
-            input_ids, attention_mask = data['input_ids'], data['attention_mask']
-            if cuda:
-                input_ids, attention_mask = to_cuda(input_ids), to_cuda(attention_mask)
-            if self.replicate_in_memory:
-                input_ids = map_on_tensor(lambda d: stack_in_memory(d, iterations), input_ids)
-                attention_mask = map_on_tensor(lambda d: stack_in_memory(d, iterations),
-                                               attention_mask)
-                try:
-                    out = self.model(input_ids=input_ids, attention_mask=attention_mask)[0]
-                except RuntimeError as e:
-                    raise RuntimeError(
-                        '''CUDA ran out of memory while BaaL tried to replicate data.
-                        See the exception above. Use `replicate_in_memory=False` in order
-                        to reduce the memory requirements.
-                        Note that there will be some speed trade-offs''') from e
-                out = map_on_tensor(lambda o: o.view([iterations, -1, *o.size()[1:]]), out)
-                out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
-            return out
+# class BertWrapper(ModelWrapper):
+#     def __init__(self, model):
+#         super(BertWrapper, self).__init__(model=model, criterion=None, replicate_in_memory=True)
+#         self.model = patch_module(model)
+#
+#     def train_on_batch(self, data, target, optimizer, cuda=False, regularizer=None):
+#
+#         input_ids, attention_mask = data['input_ids'], data['attention_mask']
+#         if cuda:
+#             input_ids, attention_mask, target = to_cuda(input_ids), to_cuda(attention_mask),\
+#                                                 to_cuda(target)
+#         optimizer.zero_grad()
+#         loss, text_fea = self.model(input_ids=input_ids, attention_mask=attention_mask,
+#                                     labels=target)[:2]
+#
+#         loss.backward()
+#         optimizer.step()
+#         self._update_metrics(text_fea, target, loss, filter='train')
+#         return loss
+#
+#     def test_on_batch(
+#             self,
+#             data: dict(),
+#             target: torch.Tensor,
+#             cuda: bool = False,
+#             average_predictions: int = 1
+#     ):
+#         with torch.no_grad():
+#             input_ids, attention_mask = data['input_ids'], data['attention_mask']
+#             if cuda:
+#                 input_ids, attention_mask, target = to_cuda(input_ids), to_cuda(attention_mask),\
+#                                                     to_cuda(target)
+#             loss, text_fea = self.model(input_ids=input_ids, attention_mask=attention_mask,
+#                                         labels=target)[:2]
+#             self._update_metrics(text_fea, target, loss, 'test')
+#             return loss
+#
+#     def predict_on_batch(self, data, iterations=1, cuda=False):
+#
+#         # TODO: do we need replicate in memory = False for NLP?
+#         with torch.no_grad():
+#             input_ids, attention_mask = data['input_ids'], data['attention_mask']
+#             if cuda:
+#                 input_ids, attention_mask = to_cuda(input_ids), to_cuda(attention_mask)
+#             if self.replicate_in_memory:
+#                 input_ids = map_on_tensor(lambda d: stack_in_memory(d, iterations), input_ids)
+#                 attention_mask = map_on_tensor(lambda d: stack_in_memory(d, iterations),
+#                                                attention_mask)
+#                 try:
+#                     out = self.model(input_ids=input_ids, attention_mask=attention_mask)[0]
+#                 except RuntimeError as e:
+#                     raise RuntimeError(
+#                         '''CUDA ran out of memory while BaaL tried to replicate data.
+#                         See the exception above. Use `replicate_in_memory=False` in order
+#                         to reduce the memory requirements.
+#                         Note that there will be some speed trade-offs''') from e
+#                 out = map_on_tensor(lambda o: o.view([iterations, -1, *o.size()[1:]]), out)
+#                 out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
+#             return out
 
 
 def main():
@@ -137,8 +134,15 @@ def main():
         model.cuda()
     optimizer = optim.Adam(model.parameters(), lr=2e-5)
 
+    init_weights = deepcopy(model.state_dict())
+
     # Wraps the model into a usable API.
-    model = BertWrapper(model)
+    model = BaalHuggingFaceTrainer(model=model,
+                                   train_dataset=active_set,
+                                   eval_dataset=test_set,
+                                   test_dataset=test_set,
+                                   tokenizer=None,
+                                   optimizers=optimizer)
 
     logs = {}
     logs['epoch'] = 0
@@ -154,26 +158,21 @@ def main():
                                      use_cuda=use_cuda)
 
     for epoch in tqdm(range(args.epoch)):
-        model.train_on_dataset(active_set, optimizer, hyperparams["batch_size"],
-                               epoch=1, use_cuda=use_cuda)
+        model.train()
 
         # Validation!
-        model.test_on_dataset(test_set, hyperparams["batch_size"], use_cuda=use_cuda)
-        metrics = model.metrics
+        eval_metrics = model.evaluate()
 
         if epoch % hyperparams['learning_epoch'] == 0:
             should_continue = active_loop.step()
-            model.reset_fcs()
+            model.model.load_state_dict(init_weights)
             if not should_continue:
                 break
-        val_loss = metrics['test_loss'].value
-        logs = {
-            "val": val_loss,
-            "epoch": epoch,
-            "train": metrics['train_loss'].value,
-            "labeled_data": active_set._labelled,
-            "Next Training set size": len(active_set)
-        }
+        active_logs = {"epoch": epoch,
+                       "labeled_data": active_set._labelled,
+                       "Next Training set size": len(active_set)}
+
+        logs = {**eval_metrics, **active_logs}
         print(logs)
 
 
