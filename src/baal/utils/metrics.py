@@ -106,7 +106,7 @@ class ECE(Metrics):
 
     def __init__(self, n_bins=10, **kwargs):
         self.n_bins = n_bins
-        self.tp, self.samples = None, None
+        self.tp, self.samples, self.conf_agg = None, None, None
         super().__init__(average=False)
 
     def update(self, output=None, target=None):
@@ -131,14 +131,15 @@ class ECE(Metrics):
             bin_id = int(math.floor(conf * self.n_bins))
             self.samples[bin_id] += 1
             self.tp[bin_id] += int(p_cls == t)
+            self.conf_agg[bin_id] += conf
 
     def _acc(self):
         return self.tp / np.maximum(1, self.samples)
 
     def calculate_result(self):
         n = self.samples.sum()
-        bin_confs = np.linspace(0, 1, self.n_bins)
-        return ((self.samples / n) * np.abs(self._acc() - bin_confs)).sum()
+        average_confidence = (self.conf_agg / np.maximum(self.samples, 1))
+        return ((self.samples / n) * np.abs(self._acc() - average_confidence)).sum()
 
     @property
     def value(self):
@@ -171,6 +172,7 @@ class ECE(Metrics):
     def reset(self):
         self.tp = np.zeros([self.n_bins])
         self.samples = np.zeros([self.n_bins])
+        self.conf_agg = np.zeros([self.n_bins])
 
 
 class ECE_PerCLs(Metrics):
@@ -183,9 +185,6 @@ class ECE_PerCLs(Metrics):
 
     References:
         https://arxiv.org/pdf/1706.04599.pdf
-
-    Notes:
-        We approximate the right-hand side of Eq. 3.
     """
 
     def __init__(self, n_cls, n_bins=10, **kwargs):
@@ -193,6 +192,7 @@ class ECE_PerCLs(Metrics):
         self.n_cls = n_cls
         self.samples = np.zeros([self.n_cls, self.n_bins], dtype=int)
         self.tp = np.zeros([self.n_cls, self.n_bins], dtype=int)
+        self.conf_agg = np.zeros([self.n_cls, self.n_bins])
         super().__init__(average=False)
 
     def update(self, output=None, target=None):
@@ -216,6 +216,7 @@ class ECE_PerCLs(Metrics):
             bin_id = int(math.floor(conf * self.n_bins))
             self.samples[t, bin_id] += 1
             self.tp[t, bin_id] += int(p_cls == t)
+            self.conf_agg[t, bin_id] += conf
 
     def _acc(self):
         accuracy_per_class = np.zeros([self.n_cls, self.n_bins], dtype=float)
@@ -229,7 +230,6 @@ class ECE_PerCLs(Metrics):
         Returns:
             ece (nd.array): ece value per class
         """
-        bin_confs = np.linspace(0, 1, self.n_bins)
         accuracy = self._acc()
         ece = np.zeros([self.n_cls])
         for cls in range(self.n_cls):
@@ -237,7 +237,9 @@ class ECE_PerCLs(Metrics):
             if n == 0:
                 ece[cls] = 0
             else:
-                ece[cls] = ((self.samples[cls, :] / n) * np.abs(accuracy[cls, :] - bin_confs)).sum()
+                bin_confidence = self.conf_agg[cls] / np.maximum(1, self.samples[cls])
+                diff_accuracy = np.abs(accuracy[cls, :] - bin_confidence)
+                ece[cls] = ((self.samples[cls, :] / n) * diff_accuracy).sum()
         return ece
 
     @property
@@ -272,6 +274,7 @@ class ECE_PerCLs(Metrics):
     def reset(self):
         self.tp = np.zeros([self.n_cls, self.n_bins])
         self.samples = np.zeros([self.n_cls, self.n_bins])
+        self.conf_agg = np.zeros([self.n_cls, self.n_bins])
 
 
 class Loss(Metrics):
