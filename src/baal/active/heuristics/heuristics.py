@@ -69,6 +69,36 @@ def requireprobs(fn):
     return wrapper
 
 
+def require_single_item(fn):
+    """
+    Will check that the input is a single item.
+    Useful when heuristics do not work on multi-output.
+
+    Args:
+        fn (Fn): Function that takes logits as input to wraps.
+
+    Returns:
+        Wrapper function
+
+    """
+
+    @_wraps(fn)
+    def wrapper(self, probabilities):
+        # Expected single shape : [n_sample, n_classes, ..., n_iterations]
+        if isinstance(probabilities, (list, tuple)):
+            if len(probabilities) == 1:
+                probabilities = probabilities[0]
+            else:
+                raise ValueError("This heuristic accepts a single array with shape "
+                                 "[n_sample, n_classes, ..., n_iterations]. If you want"
+                                 " to compute uncertainty on a multi-model outputs,"
+                                 " we suggest using baal.active.heuristics.CombineHeuristics")
+
+        return fn(self, probabilities)
+
+    return wrapper
+
+
 def gather_expand(data, dim, index):
     """
     Gather indices `index` from `data` after expanding along dimension `dim`.
@@ -237,6 +267,7 @@ class BALD(AbstractHeuristic):
             shuffle_prop=shuffle_prop, reverse=True, reduction=reduction
         )
 
+    @require_single_item
     @requireprobs
     def compute_score(self, predictions):
         """
@@ -382,6 +413,7 @@ class BatchBALD(BALD):
             b_preds = exp_y[idx:idx + step]
             yield np.sum(-xlogy(b_preds, b_preds) / mean_entropy, axis=(1, -1)) / M
 
+    @require_single_item
     @requireprobs
     def compute_score(self, predictions):
         """
@@ -485,6 +517,7 @@ class Variance(AbstractHeuristic):
             shuffle_prop=shuffle_prop, reverse=True, reduction=reduction
         )
 
+    @require_single_item
     def compute_score(self, predictions):
         assert predictions.ndim >= 3
         return np.var(predictions, -1)
@@ -505,6 +538,7 @@ class Entropy(AbstractHeuristic):
             shuffle_prop=shuffle_prop, reverse=True, reduction=reduction
         )
 
+    @require_single_item
     @singlepass
     @requireprobs
     def compute_score(self, predictions):
@@ -528,6 +562,7 @@ class Margin(AbstractHeuristic):
             shuffle_prop=shuffle_prop, reverse=False, reduction=reduction
         )
 
+    @require_single_item
     @singlepass
     @requireprobs
     def compute_score(self, predictions):
@@ -549,6 +584,7 @@ class Certainty(AbstractHeuristic):
             shuffle_prop=shuffle_prop, reverse=False, reduction=reduction
         )
 
+    @require_single_item
     @singlepass
     def compute_score(self, predictions):
         return np.max(predictions, axis=1)
