@@ -20,6 +20,7 @@ For a quick introduction to BaaL and Bayesian active learning, please see this [
 
 
 
+
 ## Installation and requirements
 
 BaaL requires `Python>=3.6`.
@@ -44,6 +45,8 @@ At the moment BaaL supports the following methods to perform active learning.
 
 - Monte-Carlo Dropout (Gal et al. 2015)
 - MCDropConnect (Mobiny et al. 2019)
+- Deep ensembles
+- Semi-supervised learning
 
 **Please see our Roadmap [below](./README.md#roadmap-subject-to-change-depending-on-the-community).**
 
