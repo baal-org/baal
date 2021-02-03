@@ -86,8 +86,8 @@ def test_that_precision_metric_calculates_multiclass_correctly(y_ypred):
     precision = Precision(num_classes=predicted.size(1), average=True)
     precision.update(predicted, true)
     true_positive = (
-        (torch.zeros_like(predicted).scatter(1, predicted.argmax(-1).unsqueeze(-1), 1) > 0)
-        & (torch.zeros_like(predicted).scatter(1, true.unsqueeze(-1), 1) > 0)
+            (torch.zeros_like(predicted).scatter(1, predicted.argmax(-1).unsqueeze(-1), 1) > 0)
+            & (torch.zeros_like(predicted).scatter(1, true.unsqueeze(-1), 1) > 0)
     ).sum(dim=0)
     all_positive = (torch.zeros_like(predicted).scatter(1, true.unsqueeze(-1), 1) > 0).sum(dim=0)
     manual_precision = true_positive.float() / all_positive.float()
@@ -215,7 +215,9 @@ def test_ece():
 
     assert np.allclose(ece_calculator.samples, [0, 1, 1])
     assert np.allclose(ece_calculator.tp, [0, 0, 1])
-    assert round(ece_calculator.value, 2) == 0.25
+    assert np.allclose(ece_calculator.conf_agg, np.array([0.0, .5, .8]))
+    assert round(ece_calculator.value, 2) == 0.35
+
 
 def test_ece_percls():
     ece_calculator = ECE_PerCLs(n_cls=3, n_bins=3)
@@ -229,7 +231,10 @@ def test_ece_percls():
 
     assert np.allclose(ece_calculator.samples, np.array([[0, 0, 0], [0, 0, 1], [0, 1, 0]]))
     assert np.allclose(ece_calculator.tp, np.array([[0, 0, 0], [0, 0, 1], [0, 0, 0]]))
-    assert np.allclose(ece_calculator.value, np.array([0.0, 0.0, 0.5]))
+    assert np.allclose(ece_calculator.conf_agg, np.array([[0, 0, 0],
+                                                          [0, 0.0, 0.8],
+                                                          [0, 0.5, 0.]]))
+    assert np.allclose(ece_calculator.value, np.array([0.0, 0.2, 0.5]))
 
     pth = 'tmp'
     Path(pth).mkdir(exist_ok=True)
@@ -237,6 +242,7 @@ def test_ece_percls():
     ece_calculator.plot(pth=os.path.join(pth, 'figure.png'))
     assert os.path.exists(os.path.join(pth, 'figure.png'))
     shutil.rmtree(pth)
+
 
 def test_classification_report():
     met = ClassificationReport(num_classes=3)
