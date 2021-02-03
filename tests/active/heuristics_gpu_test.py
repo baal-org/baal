@@ -3,19 +3,32 @@ import os
 import numpy as np
 import pytest
 import torch
+from torch import nn
+from torch.utils.data import Dataset
+from torchvision import datasets
+from torchvision.transforms import transforms
+
 from baal import ModelWrapper
 from baal.active.heuristics import BALD
 from baal.active.heuristics.heuristics_gpu import BALDGPUWrapper
 from baal.bayesian import Dropout
 from baal.bayesian.dropout import Dropout2d
-from torch import nn
-from torchvision import datasets
-from torchvision.transforms import transforms
 
 
 class Flatten(nn.Module):
     def forward(self, x):
         return x.view([x.shape[0], -1])
+
+
+class SimpleDataset(Dataset):
+    def __init__(self):
+        self.data = torch.randn(100, 3, 32, 32)
+
+    def __len__(self):
+        return 100
+
+    def __getitem__(self, item):
+        return self.data[item], item % 10
 
 
 @pytest.fixture
@@ -31,7 +44,7 @@ def classification_task(tmpdir):
                           nn.Linear(128, 10)
                           )
     model = ModelWrapper(model, nn.CrossEntropyLoss())
-    test = datasets.CIFAR10(tmpdir, train=False, download=True, transform=transforms.ToTensor())
+    test = SimpleDataset()
     return model, test
 
 
@@ -40,11 +53,11 @@ def test_bald_gpu(classification_task):
     model, test_set = classification_task
     wrap = BALDGPUWrapper(model)
 
-    out = wrap.predict_on_dataset(test_set, 16, 10, False, 4)
+    out = wrap.predict_on_dataset(test_set, 4, 10, False, 4)
     assert out.shape[0] == len(test_set)
     bald = BALD()
     torch.manual_seed(1337)
-    out_bald = bald.get_uncertainties(model.predict_on_dataset(test_set, 16, 10, False, 4))
+    out_bald = bald.get_uncertainties(model.predict_on_dataset(test_set, 4, 10, False, 4))
     assert np.allclose(out, out_bald, rtol=1e-5, atol=1e-5)
 
 
