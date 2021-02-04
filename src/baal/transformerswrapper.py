@@ -1,6 +1,10 @@
 import torch
 from typing import Optional, List, Sequence
 import numpy as np
+
+# These packages are optional and not needed for BaaL main package.
+# You can have access to `datasets` and `transformers` if you install
+# BaaL with --dev setup.
 from transformers import Trainer
 
 from baal.utils.array_utils import stack_in_memory
@@ -8,13 +12,32 @@ from baal.utils.iterutils import map_on_tensor
 
 
 class BaalHuggingFaceTrainer(Trainer):
-
+    """
+    The purpose of this wrapper is to provide extra capabilities for HuggingFace Trainer(
+    https://huggingface.co/transformers/v3.0.2/main_classes/trainer.html), so that it can
+    output several forward pass for samples in prediction time and hence be able to work with baal.
+    """
 
     def predict_on_dataset_generator(self,
                                      dataset,
                                      iterations: int = 1,
                                      half: bool = False,
                                      ignore_keys: Optional[List[str]] = None):
+        """
+        Use the model to predict on a dataset `iterations` time.
+
+        Args:
+            dataset (Dataset): Dataset to predict on.
+            iterations (int): Number of iterations per sample.
+            half (bool): If True use half precision.
+            ignore_keys (Optional[List[str]]): A list of keys in the output of your model
+                (if it is a dictionary) that should be ignored when gathering predictions.
+        Notes:
+            The "batch" is made of `batch_size` * `iterations` samples.
+
+        Returns:
+            Generators [batch_size, n_classes, ..., n_iterations].
+        """
 
         dataloader = self.get_eval_dataloader(dataset)
 
@@ -23,13 +46,8 @@ class BaalHuggingFaceTrainer(Trainer):
         # multi-gpu eval
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
-        # Note: in torch.distributed mode, there's no point in wrapping the model
-        # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
         model.eval()
-        # with torch.no_grad():
-        #     if cuda:
-        #         data = to_cuda(data)
         for step, inputs in enumerate(dataloader):
             inputs = map_on_tensor(lambda d: stack_in_memory(d, iterations), inputs)
             _, out, _ = self.prediction_step(model,
@@ -57,7 +75,7 @@ class BaalHuggingFaceTrainer(Trainer):
             dataset (Dataset): Dataset to predict on.
             iterations (int): Number of iterations per sample.
             half (bool): If True use half precision.
-            ignore_keys Optional[List[str]]: A list of keys in the output of your model
+            ignore_keys (Optional[List[str]]): A list of keys in the output of your model
                 (if it is a dictionary) that should be ignored when gathering predictions.
         Notes:
             The "batch" is made of `batch_size` * `iterations` samples.
@@ -74,3 +92,7 @@ class BaalHuggingFaceTrainer(Trainer):
             # Is an Array or a Tensor
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
+
+    def load_state_dict(self, state_dict, strict=True):
+        """Load the model with `state_dict`."""
+        self.model.load_state_dict(state_dict, strict=strict)

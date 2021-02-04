@@ -1,57 +1,33 @@
-from typing import Optional, Callable, Union
-import numpy as np
 import torch
 from torch.utils.data import Dataset
-from baal.active import ActiveLearningDataset
-
-def _identity(x):
-    return x
-
-def active_dataset(dataset,
-                   tokenizer,
-                   target_key: str = "label",
-                   input_key: str = "sentence",
-                   max_seq_len: int = 128,
-                   eval_transform: Optional[Callable] = None,
-                   labelled: Union[np.ndarray, torch.Tensor] = None,
-                   make_unlabelled: Callable = _identity,
-                   random_state=None,
-                   pool_specifics: Optional[dict] = None):
-
-    return ActiveLearningDataset(HuggingFaceDatasets(dataset,
-                                                     tokenizer,
-                                                     target_key,
-                                                     input_key,
-                                                     max_seq_len),
-                                 eval_transform,
-                                 labelled,
-                                 make_unlabelled,
-                                 random_state,
-                                 pool_specifics)
 
 
 class HuggingFaceDatasets(Dataset):
     def __init__(self,
                  dataset,
-                 tokenizer,
+                 tokenizer=None,
                  target_key: str = "label",
                  input_key: str = "sentence",
                  max_seq_len: int = 128,
                  ):
         """
-        Support for HuggingFace Datasets
+        Support for HuggingFace `datasets`: (https://github.com/huggingface/datasets).
+        The purpose of this wrapper is to separate the labels from the rest of the sample
+        information and make the dataset ready to be used by `baal.active.ActiveLearningDataset`.
         Args:
-            dataset:
-            tokenizer:
-            max_seq_len:
+            dataset (Dataset): a dataset provided by huggingface.
+            tokenizer (transformers.PreTrainedTokenizer): a tokenizer provided by huggingface.
+            target_key (str): target key used in the dataset's dictionary.
+            input_key (str): input key used in the dataset's dictionary.
+            max_seq_len (int): max length of a sequence to be used for padding the shorter sequences.
         """
         self.dataset = dataset
-
-        # self.classes = [0, 1]
         self.targets, self.texts = self.dataset[target_key], self.dataset[input_key]
-        self.input_ids, self.attention_masks = self._tokenize(tokenizer, max_seq_len)
+        self.input_ids, self.attention_masks =\
+            self._tokenize(tokenizer, max_seq_len) if tokenizer else (None, None)
 
     def _tokenize(self, tokenizer, max_seq_len):
+
         # For speed purposes, we should use fast tokenizers here, but that is up to the caller
         tokenized = tokenizer(
             self.texts,
@@ -63,7 +39,6 @@ class HuggingFaceDatasets(Dataset):
             return_tensors='pt',
             truncation=True,
         )
-
         return tokenized["input_ids"], tokenized["attention_mask"]
 
     def __len__(self):
@@ -74,9 +49,10 @@ class HuggingFaceDatasets(Dataset):
 
         return (
             {
-                'input_ids': self.input_ids[idx].flatten(),
+                'input_ids': self.input_ids[idx].flatten() if self.input_ids else None,
                 'inputs': self.texts[idx],
-                'attention_mask': self.attention_masks[idx].flatten(),
+                'attention_mask':
+                    self.attention_masks[idx].flatten() if self.attention_masks else None,
             },
             torch.tensor(target, dtype=torch.long),
         )
