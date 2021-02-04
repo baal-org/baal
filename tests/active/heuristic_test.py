@@ -258,6 +258,10 @@ def test_combine_heuristics(heuristic1, heuristic2, weights):
     np.random.seed(1337)
     predictions = [distributions_3d, distributions_5d]
 
+    with pytest.raises(ValueError) as excinfo:
+        heuristic1(predictions)
+    assert "CombineHeuristics" in str(excinfo.value)
+
     if isinstance(heuristic1, Certainty) and not isinstance(heuristic2, Certainty):
         with pytest.raises(Exception) as e_info:
             heuristics = CombineHeuristics([heuristic1, heuristic2], weights=weights,
