@@ -6,14 +6,13 @@ from copy import deepcopy
 
 import torch
 import torch.backends
-from torch import optim
 from tqdm import tqdm
 
 # These packages are optional and not needed for BaaL main package.
 # You can have access to `datasets` and `transformers` if you install
 # BaaL with --dev setup.
 from datasets import load_dataset
-from transformers import BertTokenizer
+from transformers import BertTokenizer, TrainingArguments
 from transformers import BertForSequenceClassification
 
 from baal.active import get_heuristic, active_huggingface_dataset, HuggingFaceDatasets
@@ -33,7 +32,6 @@ def parse_args():
     parser.add_argument("--initial_pool", default=1000, type=int)
     parser.add_argument("--model", default="bert-base-uncased", type=str)
     parser.add_argument("--n_data_to_label", default=100, type=int)
-    parser.add_argument("--lr", default=0.001)
     parser.add_argument("--heuristic", default="bald", type=str)
     parser.add_argument("--iterations", default=20, type=int)
     parser.add_argument("--shuffle_prop", default=0.05, type=float)
@@ -85,17 +83,25 @@ def main():
 
     if use_cuda:
         model.cuda()
-    optimizer = optim.Adam(model.parameters(), lr=hyperparams['lr'])
 
     init_weights = deepcopy(model.state_dict())
 
+    training_args = TrainingArguments(
+        output_dir='/app/baal/results',  # output directory
+        num_train_epochs=1,  # total # of training epochs
+        per_device_train_batch_size=16,  # batch size per device during training
+        per_device_eval_batch_size=64,  # batch size for evaluation
+        warmup_steps=500,  # number of warmup steps for learning rate scheduler
+        weight_decay=0.01,  # strength of weight decay
+        logging_dir='/app/baal/logs',  # directory for storing logs
+    )
+
     # We wrap the huggingface Trainer to create an Active Learning Trainer
     model = BaalHuggingFaceTrainer(model=model,
+                                   args=training_args,
                                    train_dataset=active_set,
                                    eval_dataset=test_set,
-                                   test_dataset=test_set,
-                                   tokenizer=None,
-                                   optimizers=optimizer)
+                                   tokenizer=None)
 
     logs = {}
     logs['epoch'] = 0
