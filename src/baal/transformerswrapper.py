@@ -1,6 +1,7 @@
-import torch
 from typing import Optional, List, Sequence
 import numpy as np
+import structlog
+from tqdm import tqdm
 
 # These packages are optional and not needed for BaaL main package.
 # You can have access to `datasets` and `transformers` if you install
@@ -9,6 +10,8 @@ from transformers import Trainer
 
 from baal.utils.array_utils import stack_in_memory
 from baal.utils.iterutils import map_on_tensor, map_on_dict
+
+log = structlog.get_logger("ModelWrapper")
 
 
 class BaalHuggingFaceTrainer(Trainer):
@@ -40,15 +43,12 @@ class BaalHuggingFaceTrainer(Trainer):
         """
 
         dataloader = self.get_eval_dataloader(dataset)
+        log.info("Start Predict", dataset=len(dataset))
 
         model = self.model
 
-        # multi-gpu eval
-        if self.args.n_gpu > 1:
-            model = torch.nn.DataParallel(model)
-
         model.eval()
-        for step, inputs in enumerate(dataloader):
+        for step, inputs in enumerate(tqdm(dataloader)):
             inputs = map_on_dict(lambda element: map_on_tensor(
                 lambda d: stack_in_memory(d, iterations), element), inputs)
             _, out, _ = self.prediction_step(model,
