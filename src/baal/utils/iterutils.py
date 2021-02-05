@@ -7,6 +7,7 @@ def map_on_tensor(fn, val):
         return [fn(v) for v in val]
     return fn(val)
 
+
 def map_on_dict(fn, val):
     """Map a function on a Tensor or a list of Tensors"""
     if isinstance(val, dict):

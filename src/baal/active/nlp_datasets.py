@@ -19,7 +19,8 @@ class HuggingFaceDatasets(Dataset):
             tokenizer (transformers.PreTrainedTokenizer): a tokenizer provided by huggingface.
             target_key (str): target key used in the dataset's dictionary.
             input_key (str): input key used in the dataset's dictionary.
-            max_seq_len (int): max length of a sequence to be used for padding the shorter sequences.
+            max_seq_len (int): max length of a sequence to be used for padding the shorter
+                sequences.
         """
         self.dataset = dataset
         self.targets, self.texts = self.dataset[target_key], self.dataset[input_key]
@@ -52,7 +53,3 @@ class HuggingFaceDatasets(Dataset):
                 'attention_mask':
                     self.attention_masks[idx].flatten() if len(self.attention_masks) > 0 else None,
                 'label': torch.tensor(target, dtype=torch.long)}
-
-
-
-
