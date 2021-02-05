@@ -111,8 +111,7 @@ def main():
                                      model.predict_on_dataset,
                                      heuristic,
                                      hyperparams.get('n_data_to_label', 1),
-                                     iterations=hyperparams['iterations'],
-                                     use_cuda=use_cuda)
+                                     iterations=hyperparams['iterations'])
 
     for epoch in tqdm(range(args.epoch)):
         # we use the default setup of HuggingFace for training (ex: epoch=1).
