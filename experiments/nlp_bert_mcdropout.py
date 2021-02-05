@@ -18,7 +18,7 @@ from transformers import BertForSequenceClassification
 from baal.active import get_heuristic, active_huggingface_dataset, HuggingFaceDatasets
 from baal.active.active_loop import ActiveLearningLoop
 from baal.bayesian.dropout import patch_module
-from baal import BaalHuggingFaceTrainer
+from baal import BaalTransformersTrainer
 
 """
 Minimal example to use BaaL for NLP Classification.
@@ -97,11 +97,11 @@ def main():
     )
 
     # We wrap the huggingface Trainer to create an Active Learning Trainer
-    model = BaalHuggingFaceTrainer(model=model,
-                                   args=training_args,
-                                   train_dataset=active_set,
-                                   eval_dataset=test_set,
-                                   tokenizer=None)
+    model = BaalTransformersTrainer(model=model,
+                                    args=training_args,
+                                    train_dataset=active_set,
+                                    eval_dataset=test_set,
+                                    tokenizer=None)
 
     logs = {}
     logs['epoch'] = 0

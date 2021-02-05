@@ -3,6 +3,19 @@ from torch.utils.data import Dataset
 
 
 class HuggingFaceDatasets(Dataset):
+    """
+    Support for `huggingface.datasets`: (https://github.com/huggingface/datasets).
+    The purpose of this wrapper is to separate the labels from the rest of the sample information
+    and make the dataset ready to be used by `baal.active.ActiveLearningDataset`.
+
+    Args:
+        dataset (Dataset): a dataset provided by huggingface.
+        tokenizer (transformers.PreTrainedTokenizer): a tokenizer provided by huggingface.
+        target_key (str): target key used in the dataset's dictionary.
+        input_key (str): input key used in the dataset's dictionary.
+        max_seq_len (int): max length of a sequence to be used for padding the shorter
+            sequences.
+    """
     def __init__(self,
                  dataset,
                  tokenizer=None,
@@ -10,18 +23,7 @@ class HuggingFaceDatasets(Dataset):
                  input_key: str = "sentence",
                  max_seq_len: int = 128,
                  ):
-        """
-        Support for HuggingFace `datasets`: (https://github.com/huggingface/datasets).
-        The purpose of this wrapper is to separate the labels from the rest of the sample
-        information and make the dataset ready to be used by `baal.active.ActiveLearningDataset`.
-        Args:
-            dataset (Dataset): a dataset provided by huggingface.
-            tokenizer (transformers.PreTrainedTokenizer): a tokenizer provided by huggingface.
-            target_key (str): target key used in the dataset's dictionary.
-            input_key (str): input key used in the dataset's dictionary.
-            max_seq_len (int): max length of a sequence to be used for padding the shorter
-                sequences.
-        """
+
         self.dataset = dataset
         self.targets, self.texts = self.dataset[target_key], self.dataset[input_key]
         self.input_ids, self.attention_masks =\

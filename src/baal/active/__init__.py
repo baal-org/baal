@@ -38,19 +38,21 @@ def active_huggingface_dataset(dataset,
                                tokenizer=None,
                                target_key: str = "label",
                                input_key: str = "sentence",
-                               max_seq_len: int = 128, **kwargs):
+                               max_seq_len: int = 128,
+                               **kwargs):
     """
-    Wrapping huggingface dataset with baal.active.ActiveLearningDataset.
+    Wrapping huggingface.datasets with baal.active.ActiveLearningDataset.
+
     Args:
         dataset (torch.utils.data.Dataset): a dataset provided by huggingface.
         tokenizer (transformers.PreTrainedTokenizer): a tokenizer provided by huggingface.
         target_key (str): target key used in the dataset's dictionary.
         input_key (str): input key used in the dataset's dictionary.
         max_seq_len (int): max length of a sequence to be used for padding the shorter sequences.
-        **kwargs: ActiveLearningDataset input variables.
+        **kwargs: Parameters forwarded to 'ActiveLearningDataset'.
 
     Returns:
-        an ActiveLearningDataset object.
+        an baal.active.ActiveLearningDataset object.
     """
 
     return ActiveLearningDataset(HuggingFaceDatasets(dataset,

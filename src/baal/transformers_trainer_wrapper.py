@@ -14,11 +14,26 @@ from baal.utils.iterutils import map_on_tensor, map_on_dict
 log = structlog.get_logger("ModelWrapper")
 
 
-class BaalHuggingFaceTrainer(Trainer):
+class BaalTransformersTrainer(Trainer):
     """
-    The purpose of this wrapper is to provide extra capabilities for HuggingFace Trainer(
-    https://huggingface.co/transformers/v3.0.2/main_classes/trainer.html), so that it can
-    output several forward pass for samples in prediction time and hence be able to work with baal.
+    The purpose of this wrapper is to provide extra capabilities for HuggingFace Trainer, so that
+    it can output several forward pass for samples in prediction time and hence be able to work with
+    baal. For a more detailed description of the arguments refer to (
+    https://huggingface.co/transformers/v3.0.2/main_classes/trainer.html)
+
+    Args:
+        model (transformers.PreTrainedModel): The model to train, evaluate or use for predictions.
+        data_collator (Optional(Callable)): The function to use to from a batch.
+        train_dataset (Optional(torch.utils.data.Dataset)): The dataset to use for training.
+        eval_dataset (Optional(torch.utils.data.Dataset)): The dataset to use for evaluation.
+        tokenizer (Optional(transformers.PreTrainedTokenizer)): a tokenizer provided by huggingface.
+        model_init (Optional(Dict)): Model initial weights for fine tuning.
+        compute_metrics (Optional(Callable[[EvalPrediction], Dict])): The function that will be
+            used to compute metrics at evaluation.
+        callbacks (Optional(List[transformers.TrainerCallback])): A list of callbacks to customize
+            the training loop.
+        optimizers (Optional(Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR])):
+            A tuple containing the optimizer and the scheduler to use.
     """
 
     def predict_on_dataset_generator(self,
