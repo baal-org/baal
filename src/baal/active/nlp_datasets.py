@@ -49,10 +49,10 @@ class HuggingFaceDatasets(Dataset):
 
         return (
             {
-                'input_ids': self.input_ids[idx].flatten() if self.input_ids else None,
+                'input_ids': self.input_ids[idx].flatten() if len(self.input_ids) > 0 else None,
                 'inputs': self.texts[idx],
                 'attention_mask':
-                    self.attention_masks[idx].flatten() if self.attention_masks else None,
+                    self.attention_masks[idx].flatten() if len(self.attention_masks) > 0 else None,
             },
             torch.tensor(target, dtype=torch.long),
         )
