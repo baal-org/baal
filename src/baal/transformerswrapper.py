@@ -83,10 +83,10 @@ class BaalHuggingFaceTrainer(Trainer):
         Returns:
             Array [n_samples, n_outputs, ..., n_iterations].
         """
-        preds = list(self.baal_predict_generator(dataset=dataset,
-                                                 iterations=iterations,
-                                                 half=half,
-                                                 ignore_keys=ignore_keys))
+        preds = list(self.predict_on_dataset_generator(dataset=dataset,
+                                                       iterations=iterations,
+                                                       half=half,
+                                                       ignore_keys=ignore_keys))
 
         if len(preds) > 0 and not isinstance(preds[0], Sequence):
             # Is an Array or a Tensor
