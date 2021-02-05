@@ -8,7 +8,7 @@ import numpy as np
 from transformers import Trainer
 
 from baal.utils.array_utils import stack_in_memory
-from baal.utils.iterutils import map_on_tensor
+from baal.utils.iterutils import map_on_tensor, map_on_dict_elements
 
 
 class BaalHuggingFaceTrainer(Trainer):
@@ -49,7 +49,8 @@ class BaalHuggingFaceTrainer(Trainer):
 
         model.eval()
         for step, inputs in enumerate(dataloader):
-            inputs = map_on_tensor(lambda d: stack_in_memory(d, iterations), inputs)
+            inputs = map_on_dict_elements(lambda element: map_on_tensor(
+                lambda d: stack_in_memory(d, iterations), element), inputs)
             _, out, _ = self.prediction_step(model,
                                              inputs,
                                              prediction_loss_only=False,
