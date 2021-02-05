@@ -64,6 +64,5 @@ setup(
     extras_require={
         'test': ['pytest', 'pytest-pep8', 'hypothesis', 'coverage', 'coveralls'],
         'documentation': documentation_requirements,
-        'dev': ['transformers', 'datasets']
     },
 )
