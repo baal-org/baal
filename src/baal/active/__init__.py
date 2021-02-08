@@ -1,4 +1,4 @@
-from typing import Union, Callable
+from typing import Union, Callable, Dict
 
 from . import heuristics
 from .active_loop import ActiveLearningLoop
@@ -49,7 +49,7 @@ def active_huggingface_dataset(dataset,
         target_key (str): target key used in the dataset's dictionary.
         input_key (str): input key used in the dataset's dictionary.
         max_seq_len (int): max length of a sequence to be used for padding the shorter sequences.
-        **kwargs: Parameters forwarded to 'ActiveLearningDataset'.
+        kwargs (Dict): Parameters forwarded to 'ActiveLearningDataset'.
 
     Returns:
         an baal.active.ActiveLearningDataset object.
