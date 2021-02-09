@@ -1,101 +1,55 @@
-import os
-import time
-import random
-import tempfile
 import unittest
-
-import numpy as np
 import pytest
-import torch
-from PIL import Image
-from PIL.Image import NEAREST
-from torch.utils.data import DataLoader
-from torchvision.transforms import Resize, RandomRotation, Compose, ToTensor, ToPILImage
-
-from baal.active import ActiveLearningDataset
-from baal.active.file_dataset import FileDataset, default_image_load_fn
-from baal.utils.transforms import BaaLCompose, GetCanvas, PILToLongTensor
+from torch.utils.data import Dataset
+from transformers import AutoTokenizer
+from baal.active.nlp_datasets import HuggingFaceDatasets
 
 
-class FileDatasetTest(unittest.TestCase):
+class MyDataset(Dataset):
+    def __init__(self):
+        self.dataset = {'sentence': [],
+                        'label': []}
+        for i in range(10):
+            self.dataset['sentence'].append(f'this is test number {i}')
+            self.dataset['label'].append(0 if (i // 2) == 0 else 1)
 
-    @classmethod
-    def setUpClass(cls):
-        tmp_dir = tempfile.gettempdir()
-        paths = []
-        for idx in range(100):
-            path = os.path.join(tmp_dir, "{}.png".format(idx))
-            Image.fromarray(np.random.randint(0, 100, [10, 10, 3], np.uint8)).save(path)
-            paths.append(path)
-        cls.paths = paths
+    def __len__(self):
+        return 10
 
+    def __getitem__(self, item):
+
+        if isinstance(item, int):
+            return {'sentence': self.dataset['sentence'][item],
+                    'label': self.dataset['label'][item] }
+        elif isinstance(item, str):
+            return self.dataset[item]
+
+
+class HuggingFaceDatasetsTest(unittest.TestCase):
     def setUp(self):
-        self.lbls = None
-        self.transform = Compose([Resize(60), RandomRotation(90), ToTensor()])
-        testtransform = Compose([Resize(32), ToTensor()])
-        self.dataset = FileDataset(self.paths, self.lbls, transform=self.transform)
-        self.lbls = self.generate_labels(len(self.paths), 10)
-        self.dataset = FileDataset(self.paths, self.lbls, transform=self.transform)
-        self.active = ActiveLearningDataset(self.dataset,
-                                            pool_specifics={'transform': testtransform},
-                                            labelled=torch.from_numpy(
-                                                (np.array(self.lbls) != -1).astype(np.uint8)))
+        dataset = MyDataset()
+        self.dataset = HuggingFaceDatasets(dataset)
+        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+        self.dataset_with_tokenizer = HuggingFaceDatasets(dataset, tokenizer=tokenizer)
 
-    def generate_labels(self, n, init_lbls):
-        lbls = [-1] * n
-        for i in random.sample(range(n), init_lbls):
-            lbls[i] = i % 10
-        return lbls
+    def test_dataset(self):
+        assert len(self.dataset) == len(self.dataset_with_tokenizer) == 10
+        print(self.dataset[0])
+        assert [key in ['inputs', 'input_ids', 'attention_mask', 'label'] for key, value
+                in self.dataset[0].items()]
+        assert self.dataset[0]['inputs'] == 'this is test number 0'
+        assert self.dataset[0]['label'] == 0
+        assert self.dataset[0]['input_ids'] is None
+        assert self.dataset[0]['attention_mask'] is None
 
-    def test_default_label(self):
-        dataset = FileDataset(self.paths)
-        assert dataset.lbls == [-1] * len(self.paths)
-
-    def test_labelling(self):
-        actually_labelled = [i for i, j in enumerate(self.lbls) if j >= 0]
-        actually_not_labelled = [i for i, j in enumerate(self.lbls) if j < 0]
-        with pytest.warns(UserWarning):
-            self.dataset.label(actually_labelled[0], 1)
-        self.dataset.label(actually_not_labelled[0], 1)
-        assert sum([1 for i, j in enumerate(self.dataset.lbls) if j >= 0]) == 11
-
-    def test_filedataset_segmentation(self):
-        target_trans = Compose([default_image_load_fn,
-                                Resize(60), RandomRotation(90), ToTensor()])
-        file_dataset = FileDataset(self.paths, self.paths, self.transform, target_trans, seed=1337)
-        x, y = file_dataset[0]
-        assert np.allclose(x.numpy(), y.numpy())
-        out1 = list(DataLoader(file_dataset, batch_size=1, num_workers=3, shuffle=False))
-        out2 = list(DataLoader(file_dataset, batch_size=1, num_workers=3, shuffle=False))
-        assert all([np.allclose(x1.numpy(), x2.numpy())
-                    for (x1, _), (x2, _) in zip(out1, out2)])
-
-        file_dataset = FileDataset(self.paths, self.paths, self.transform, target_trans, seed=None)
-        x, y = file_dataset[0]
-        assert np.allclose(x.numpy(), y.numpy())
-        out1 = list(DataLoader(file_dataset, batch_size=1, num_workers=3, shuffle=False))
-        out2 = list(DataLoader(file_dataset, batch_size=1, num_workers=3, shuffle=False))
-        assert not all([np.allclose(x1.numpy(), x2.numpy())
-                        for (x1, _), (x2, _) in zip(out1, out2)])
-
-    def test_segmentation_pipeline(self):
-        class DrawSquare:
-            def __init__(self, side):
-                self.side = side
-
-            def __call__(self, x, **kwargs):
-                x, canvas = x  # x is a [int, ndarray]
-                canvas[:self.side, :self.side] = x
-                return canvas
-
-        target_trans = BaaLCompose(
-            [GetCanvas(), DrawSquare(3), ToPILImage(mode=None), Resize(60, interpolation=0),
-             RandomRotation(10, resample=NEAREST, fill=0.0), PILToLongTensor()])
-        file_dataset = FileDataset(self.paths, [1] * len(self.paths), self.transform, target_trans)
-
-        x, y = file_dataset[0]
-        assert np.allclose(np.unique(y), [0, 1])
-        assert y.shape[1:] == x.shape[1:]
+    def test_tokenizer(self):
+        assert [key in ['inputs', 'input_ids', 'attention_mask', 'label'] for key, value
+                in self.dataset_with_tokenizer[0].items()]
+        assert self.dataset_with_tokenizer[0]['inputs'] == 'this is test number 0'
+        assert self.dataset_with_tokenizer[0]['label'] == 0
+        assert self.dataset_with_tokenizer.input_ids.shape[1] <= 128
+        assert len(self.dataset_with_tokenizer[0]['attention_mask']) ==\
+               len(self.dataset_with_tokenizer[0]['input_ids'])
 
 
 if __name__ == '__main__':

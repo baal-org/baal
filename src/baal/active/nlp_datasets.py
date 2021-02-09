@@ -27,7 +27,7 @@ class HuggingFaceDatasets(Dataset):
         self.dataset = dataset
         self.targets, self.texts = self.dataset[target_key], self.dataset[input_key]
         self.input_ids, self.attention_masks =\
-            self._tokenize(tokenizer, max_seq_len) if tokenizer else (None, None)
+            self._tokenize(tokenizer, max_seq_len) if tokenizer else ([], [])
 
     def _tokenize(self, tokenizer, max_seq_len):
 
