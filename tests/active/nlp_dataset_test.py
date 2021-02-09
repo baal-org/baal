@@ -34,7 +34,6 @@ class HuggingFaceDatasetsTest(unittest.TestCase):
 
     def test_dataset(self):
         assert len(self.dataset) == len(self.dataset_with_tokenizer) == 10
-        print(self.dataset[0])
         assert [key in ['inputs', 'input_ids', 'attention_mask', 'label'] for key, value
                 in self.dataset[0].items()]
         assert self.dataset[0]['inputs'] == 'this is test number 0'
