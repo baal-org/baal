@@ -8,4 +8,3 @@ def map_on_tensor(fn, val):
     elif isinstance(val, dict):
         return {k: fn(v) for k, v in val.items()}
     return fn(val)
-
