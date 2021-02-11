@@ -121,8 +121,12 @@ def main():
         # Validation!
         eval_metrics = model.evaluate()
 
+        # We reorder the unlabelled pool at the frequency of learning_epoch
+        # This helps with speed while not changing the quality of uncertainty estimation.
         if epoch % hyperparams['learning_epoch'] == 0:
             should_continue = active_loop.step()
+
+            # We reset the model weights to relearn from the new trainset.
             model.load_state_dict(init_weights)
             if not should_continue:
                 break

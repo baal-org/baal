@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from baal.utils.iterutils import map_on_tensor, map_on_dict
+from baal.utils.iterutils import map_on_tensor
 
 
 def test_map_on_tensor():
@@ -16,7 +16,7 @@ def test_map_on_dict():
     x = {'key': torch.zeros([10]),
          'door': torch.zeros([10])}
 
-    result =  map_on_dict(lambda xi: (xi + 1).numpy(), x)
+    result =  map_on_tensor(lambda xi: (xi + 1).numpy(), x)
     assert isinstance(result, dict)
     for _, v in result.items():
         assert np.allclose(v, np.ones([10]))
