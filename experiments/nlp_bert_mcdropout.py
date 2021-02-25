@@ -127,7 +127,7 @@ def main():
             should_continue = active_loop.step()
 
             # We reset the model weights to relearn from the new trainset.
-            model.load_state_dict(init_weights)
+            model.model.load_state_dict(init_weights)
             if not should_continue:
                 break
         active_logs = {"epoch": epoch,
