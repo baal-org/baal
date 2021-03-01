@@ -2848,8 +2848,8 @@ button[disabled] {
   background-color: #2e8ece !important; }
 
 .btn-neutral {
-  background-color: #0099ee !important;
-  color: #fff !important; }
+  background-color: #f5f7f9 !important;
+  color: #039bee !important; }
 
 .btn-neutral:hover {
   background-color: #057eb6 !important;

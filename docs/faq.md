@@ -1,6 +1,6 @@
 # Baal FAQ
 
-If you have more questions, please submit an issue and we will include it here!
+If you have more questions, please submit an issue, and we will include it here!
 
 ## How to predict uncertainty per sample in a dataset
 
@@ -29,7 +29,7 @@ uncertainty = heuristic.get_uncertainties_generator(pred_generator)
 
 Yes! See the example in `experiments/segmentation/unet_mcdropout_pascal.py`.
 
-The key idea is to provide the Heuristic with a way to aggregated the uncertainties. In the case of semantic
+The key idea is to provide the Heuristic with a way to aggregate the uncertainties. In the case of semantic
 segmentation, MC-Dropout will provide a distribution per pixel. To reduce this to a single uncertainty value,
 you can provide `reduction` to the Heuristic with one of the following arguments:
 
@@ -61,7 +61,7 @@ metrics['train_ece'].value
 
 There is several ways to use Baal on large tasks.
 
-* If MC sampling does not fit
+* If MC sampling does not fit, you can use a for-loop instead.
     * Set ModelWrapper `replicate_in_memory=False`.
 * If the size of the prediction does not fit.
     * Heuristics support generators
@@ -112,6 +112,8 @@ active_dataset.label(ranks, labels)
 
 ## Tips & Trick for a successful active learning experiment
 
+Many of these tips can be found in our paper [Bayesian active learning for production](https://arxiv.org/abs/2006.09916).
+
 #### Remove Data augmentation when computing uncertainty
 
 You can specify which variables to override when creating the unlabelled pool using the `pool_specifics` argument.
@@ -158,7 +160,7 @@ for al_step in range(NUM_AL_STEP):
 
 When using MC-Dropout, or any other Bayesian methods, you will want to compute the Bayesian model average (BMA) at test time too.
 
-To do so, you can specify the `iterations` parameters in `ModelWrapper.test_on_dataset`. The prediction will be averaged over `iterations` stochastic predictions. 
+To do so, you can specify the `average_predictions` parameters in `ModelWrapper.test_on_dataset`. The prediction will be averaged over `iterations` stochastic predictions. 
 
 This will slightly increase the ECE of your model and will improve the predictive performance as well.
 
@@ -166,4 +168,4 @@ This will slightly increase the ECE of your model and will improve the predictiv
 
 Predicting on the unlabelled pool is the most time consuming part of active learning, especially in expensive tasks such as segmentation.
 
-Our work (to be published) shows that predicting on a random subset of the pool is as effective as the full prediction. BaaL supports this features throught the `max_samples` argument in `ActiveLearningPool`.
+Our work shows that predicting on a random subset of the pool is as effective as the full prediction. BaaL supports this features throught the `max_samples` argument in `ActiveLearningPool`.
