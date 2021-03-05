@@ -3,6 +3,9 @@ import warnings
 from typing import List
 
 import torch
+from packaging.version import parse as parse_version
+
+torch_version = parse_version(torch.__version__)
 
 Sequence = List[str]
 
@@ -55,9 +58,13 @@ class WeightDropConv2d(torch.nn.Conv2d):
         self._weight_dropout = weight_dropout
 
     def forward(self, input):
-        return self._conv_forward(input, torch.nn.functional.dropout(self.weight,
-                                                                     p=self._weight_dropout,
-                                                                     training=True))
+        kwargs = {'input': input,
+                  'weight': torch.nn.functional.dropout(self.weight, p=self._weight_dropout,
+                                                        training=True)}
+        if torch_version >= parse_version('1.8.0'):
+            # Bias was added as a required argument in this version.
+            kwargs['bias'] = self.bias
+        return self._conv_forward(**kwargs)
 
 
 def patch_module(module: torch.nn.Module,
