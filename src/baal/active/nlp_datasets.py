@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 
@@ -16,6 +17,7 @@ class HuggingFaceDatasets(Dataset):
         max_seq_len (int): max length of a sequence to be used for padding the shorter
             sequences.
     """
+
     def __init__(self,
                  dataset,
                  tokenizer=None,
@@ -23,14 +25,17 @@ class HuggingFaceDatasets(Dataset):
                  input_key: str = "sentence",
                  max_seq_len: int = 128,
                  ):
-
         self.dataset = dataset
         self.targets, self.texts = self.dataset[target_key], self.dataset[input_key]
-        self.input_ids, self.attention_masks =\
+        self.targets_list = np.unique(self.targets).tolist()
+        self.input_ids, self.attention_masks = \
             self._tokenize(tokenizer, max_seq_len) if tokenizer else ([], [])
 
-    def _tokenize(self, tokenizer, max_seq_len):
+    @property
+    def num_classes(self):
+        return len(self.targets_list)
 
+    def _tokenize(self, tokenizer, max_seq_len):
         # For speed purposes, we should use fast tokenizers here, but that is up to the caller
         tokenized = tokenizer(
             self.texts,
@@ -48,7 +53,7 @@ class HuggingFaceDatasets(Dataset):
         return len(self.texts)
 
     def __getitem__(self, idx):
-        target = self.targets[idx]
+        target = self.targets_list.index(self.targets[idx])
 
         return {'input_ids': self.input_ids[idx].flatten() if len(self.input_ids) > 0 else None,
                 'inputs': self.texts[idx],
