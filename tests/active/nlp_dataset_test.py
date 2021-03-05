@@ -11,7 +11,7 @@ class MyDataset(Dataset):
                         'label': []}
         for i in range(10):
             self.dataset['sentence'].append(f'this is test number {i}')
-            self.dataset['label'].append(0 if (i // 2) == 0 else 1)
+            self.dataset['label'].append('POS' if (i % 2) == 0 else 'NEG')
 
     def __len__(self):
         return 10
@@ -37,15 +37,16 @@ class HuggingFaceDatasetsTest(unittest.TestCase):
         assert [key in ['inputs', 'input_ids', 'attention_mask', 'label'] for key, value
                 in self.dataset[0].items()]
         assert self.dataset[0]['inputs'] == 'this is test number 0'
-        assert self.dataset[0]['label'] == 0
+        assert self.dataset[0]['label'] == 1
         assert self.dataset[0]['input_ids'] is None
         assert self.dataset[0]['attention_mask'] is None
+        assert self.dataset.num_classes == 2
 
     def test_tokenizer(self):
         assert [key in ['inputs', 'input_ids', 'attention_mask', 'label'] for key, value
                 in self.dataset_with_tokenizer[0].items()]
         assert self.dataset_with_tokenizer[0]['inputs'] == 'this is test number 0'
-        assert self.dataset_with_tokenizer[0]['label'] == 0
+        assert self.dataset_with_tokenizer[0]['label'] == 1
         assert self.dataset_with_tokenizer.input_ids.shape[1] <= 128
         assert len(self.dataset_with_tokenizer[0]['attention_mask']) ==\
                len(self.dataset_with_tokenizer[0]['input_ids'])
