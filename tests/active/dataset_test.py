@@ -129,10 +129,6 @@ class ActiveDatasetTest(unittest.TestCase):
         assert np.equal([i for i in pool], [(0, -1) for i in np.arange(10, 100)]).all()
         assert np.equal([i for i in dataset], [(1, i) for i in np.arange(10)]).all()
 
-        with pytest.warns(DeprecationWarning) as e:
-            ActiveLearningDataset(MyDataset(train_transform))
-        assert len(e) == 1
-
         with pytest.raises(ValueError) as e:
             ActiveLearningDataset(MyDataset(train_transform), pool_specifics={'whatever': 123}).pool
 
