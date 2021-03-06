@@ -198,12 +198,14 @@ class PIModel(SSLModule):
     def val_dataloader(self):
         ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform,
                      download=True)
-        return DataLoader(ds, self.hparams.batch_size, shuffle=False, num_workers=self.hparams.workers)
+        return DataLoader(ds, self.hparams.batch_size,
+                          shuffle=False, num_workers=self.hparams.workers)
 
     def test_dataloader(self):
         ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform,
                      download=True)
-        return DataLoader(ds, self.hparams.batch_size, shuffle=False, num_workers=self.hparams.workers)
+        return DataLoader(ds, self.hparams.batch_size,
+                          shuffle=False, num_workers=self.hparams.workers)
 
     def epoch_end(self, outputs):
         avg_metrics = {}

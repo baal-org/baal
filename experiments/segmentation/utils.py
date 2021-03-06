@@ -3,7 +3,8 @@ from typing import List
 import numpy as np
 import segmentation_models_pytorch as smp
 from segmentation_models_pytorch.base.modules import Activation
-from torch import nn, nn as nn
+import torch
+from torch import nn
 from torch.nn import functional as F
 from torchvision import datasets
 from torchvision.transforms import transforms
@@ -36,11 +37,11 @@ pascal_voc_ids = np.array([
 
 
 def active_pascal(
-    path="/tmp",
-    *args,
-    transform=transforms.ToTensor(),
-    test_transform=transforms.ToTensor(),
-    **kwargs,
+        path="/tmp",
+        *args,
+        transform=transforms.ToTensor(),
+        test_transform=transforms.ToTensor(),
+        **kwargs,
 ):
     """Get active Pascal-VOC 2102 datasets.
     Arguments:
@@ -116,7 +117,8 @@ class FocalLoss(nn.Module):
         if self.alpha is not None:
             if self.alpha.type() != input.data.type():
                 self.alpha = self.alpha.type_as(input.data)
-            at = self.alpha.gather(0, target.data.view(-1))
+            select = (target != 0).type(torch.LongTensor).to(self.alpha.device)
+            at = self.alpha.gather(0, select.data.view(-1))
             logpt = logpt * at
 
         loss = -1 * (1 - pt) ** self.gamma * logpt

@@ -50,3 +50,6 @@ RUN pip install -r /app/baal/test-requirements.txt
 RUN pip install -r /app/baal/requirements.txt
 COPY --from=base_baal /app/baal .
 RUN pip install -e . --no-use-pep517
+
+# ---- release image ----
+From base_baal as release

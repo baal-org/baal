@@ -206,7 +206,11 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     def reset_labeled(self):
         """Reset the label map."""
+<<<<<<< HEAD
         self.labelled = np.zeros(len(self._dataset), dtype=np.bool)
+=======
+        self._labelled = np.zeros(len(self._dataset), dtype=bool)
+>>>>>>> 3d123c941aa89b311099e15eee0fbc96c7b7345d
 
     def is_labelled(self, idx: int) -> bool:
         """Check if a datapoint is labelled."""
@@ -268,9 +272,9 @@ class ActiveNumpyArray(ActiveLearningDataset):
         if labelled is not None:
             if isinstance(labelled, torch.Tensor):
                 labelled = labelled.numpy()
-            labelled = labelled.astype(np.bool)
+            labelled = labelled.astype(bool)
         else:
-            labelled = np.zeros(len(dataset[0]), dtype=np.bool)
+            labelled = np.zeros(len(dataset[0]), dtype=bool)
         super().__init__(dataset, labelled=labelled)
 
     @property
