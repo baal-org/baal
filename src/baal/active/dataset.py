@@ -206,29 +206,29 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     def reset_labeled(self):
         """Reset the label map."""
-<<<<<<< HEAD
         self.labelled = np.zeros(len(self._dataset), dtype=np.bool)
-=======
-        self._labelled = np.zeros(len(self._dataset), dtype=bool)
->>>>>>> 3d123c941aa89b311099e15eee0fbc96c7b7345d
 
-    def is_labelled(self, idx: int) -> bool:
-        """Check if a datapoint is labelled."""
-        return self.labelled[idx] == 1
 
-    def get_raw(self, idx: int) -> None:
-        """Get a datapoint from the underlying dataset."""
-        return self._dataset[idx]
+def is_labelled(self, idx: int) -> bool:
+    """Check if a datapoint is labelled."""
+    return self.labelled[idx] == 1
 
-    def state_dict(self):
-        """Return the state_dict, ie. the labelled map and random_state."""
-        return {'labelled': self.labelled,
-                'random_state': self.random_state}
 
-    def load_state_dict(self, state_dict):
-        """Load the labelled map and random_state with give state_dict."""
-        self.labelled = state_dict['labelled']
-        self.random_state = state_dict['random_state']
+def get_raw(self, idx: int) -> None:
+    """Get a datapoint from the underlying dataset."""
+    return self._dataset[idx]
+
+
+def state_dict(self):
+    """Return the state_dict, ie. the labelled map and random_state."""
+    return {'labelled': self.labelled,
+            'random_state': self.random_state}
+
+
+def load_state_dict(self, state_dict):
+    """Load the labelled map and random_state with give state_dict."""
+    self.labelled = state_dict['labelled']
+    self.random_state = state_dict['random_state']
 
 
 class ActiveLearningPool(torchdata.Dataset):
