@@ -38,9 +38,9 @@ class ActiveLearningDataset(torchdata.Dataset):
         if labelled is not None:
             if isinstance(labelled, torch.Tensor):
                 labelled = labelled.numpy()
-            self.labelled = labelled.astype(np.bool)
+            self.labelled = labelled.astype(bool)
         else:
-            self.labelled = np.zeros(len(self._dataset), dtype=np.bool)
+            self.labelled = np.zeros(len(self._dataset), dtype=bool)
 
         if pool_specifics is None:
             pool_specifics = {}
@@ -209,26 +209,26 @@ class ActiveLearningDataset(torchdata.Dataset):
         self.labelled = np.zeros(len(self._dataset), dtype=np.bool)
 
 
-def is_labelled(self, idx: int) -> bool:
-    """Check if a datapoint is labelled."""
-    return self.labelled[idx] == 1
+    def is_labelled(self, idx: int) -> bool:
+        """Check if a datapoint is labelled."""
+        return self.labelled[idx] == 1
 
 
-def get_raw(self, idx: int) -> None:
-    """Get a datapoint from the underlying dataset."""
-    return self._dataset[idx]
+    def get_raw(self, idx: int) -> None:
+        """Get a datapoint from the underlying dataset."""
+        return self._dataset[idx]
 
 
-def state_dict(self):
-    """Return the state_dict, ie. the labelled map and random_state."""
-    return {'labelled': self.labelled,
-            'random_state': self.random_state}
+    def state_dict(self):
+        """Return the state_dict, ie. the labelled map and random_state."""
+        return {'labelled': self.labelled,
+                'random_state': self.random_state}
 
 
-def load_state_dict(self, state_dict):
-    """Load the labelled map and random_state with give state_dict."""
-    self.labelled = state_dict['labelled']
-    self.random_state = state_dict['random_state']
+    def load_state_dict(self, state_dict):
+        """Load the labelled map and random_state with give state_dict."""
+        self.labelled = state_dict['labelled']
+        self.random_state = state_dict['random_state']
 
 
 class ActiveLearningPool(torchdata.Dataset):
