@@ -208,22 +208,18 @@ class ActiveLearningDataset(torchdata.Dataset):
         """Reset the label map."""
         self.labelled = np.zeros(len(self._dataset), dtype=np.bool)
 
-
     def is_labelled(self, idx: int) -> bool:
         """Check if a datapoint is labelled."""
         return self.labelled[idx] == 1
-
 
     def get_raw(self, idx: int) -> None:
         """Get a datapoint from the underlying dataset."""
         return self._dataset[idx]
 
-
     def state_dict(self):
         """Return the state_dict, ie. the labelled map and random_state."""
         return {'labelled': self.labelled,
                 'random_state': self.random_state}
-
 
     def load_state_dict(self, state_dict):
         """Load the labelled map and random_state with give state_dict."""
