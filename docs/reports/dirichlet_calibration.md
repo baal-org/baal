@@ -143,3 +143,6 @@ calibrated_model = calibrator.calibrated_model
 
 In this report, we tested the effect of calibration on an active learning pipeline. In addition, our code is freely available in our open source library.
 
+## Author(s)
+- Frédéric Branchaud-Charron
+- Parmida Atighehchian
