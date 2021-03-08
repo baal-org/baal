@@ -45,6 +45,7 @@ For support, we have several ways to help you:
     How to do research and plot progress <notebooks/active_learning_process.ipynb>
     How to use in production <notebooks/baal_prod_cls.ipynb>
     How to use deep ensembles <notebooks/deep_ensemble.ipynb>
+    How to use baal for transformers models <notebooks/nlp_classification.ipynb>
     
 .. toctree ::
     :caption: Compatibility
@@ -58,6 +59,7 @@ For support, we have several ways to help you:
     :maxdepth: 1
     
     Combining calibration and variational inference for active learning <reports/dirichlet_calibration>
+    Double descend in active learning <reports/double_descend.md>
 
 .. toctree::
     :caption: Literature and support
