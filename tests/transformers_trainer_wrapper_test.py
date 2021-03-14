@@ -1,4 +1,5 @@
 import unittest
+from copy import deepcopy
 
 import numpy as np
 import pytest
@@ -31,6 +32,7 @@ class BaalTransformerTrainer(unittest.TestCase):
         self.model = GPT2LMHeadModel(config)
         self.wrapper = BaalTransformersTrainer(model=self.model,
                                                args=args,
+                                               train_dataset=self.dataset,
                                                eval_dataset=self.dataset,
                                                tokenizer=None)
 
@@ -54,6 +56,18 @@ class BaalTransformerTrainer(unittest.TestCase):
         l = self.wrapper.predict_on_dataset(self.dataset, 10, half=True)
         assert next(l_gen).dtype == np.float16
         assert l.dtype == np.float16
+
+    def test_load_state_dic(self):
+        model_weights = deepcopy(list(self.wrapper.model.parameters())[0])
+        initial_state_dict = deepcopy(self.wrapper.model.state_dict())
+        self.wrapper.train()
+        weights_after_training = deepcopy(list(self.wrapper.model.parameters())[0])
+        assert not torch.equal(model_weights.data, weights_after_training.data)
+
+        self.wrapper.load_state_dict(initial_state_dict)
+
+        reloaded_weights = deepcopy(list(self.wrapper.model.parameters())[0])
+        assert torch.equal(model_weights.data, reloaded_weights.data)
 
 
 if __name__ == '__main__':
