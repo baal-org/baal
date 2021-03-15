@@ -48,12 +48,12 @@ For support, we have several ways to help you:
     
     
 .. toctree ::
-    :caption: Compatibility
+    :caption: Compatibility with other libraries
     :maxdepth: 1
     
     How to use with Pytorch Lightning <notebooks/pytorch_lightning.ipynb>
-    How to use baal for transformers models <notebooks/nlp_classification.ipynb>
-    How to use with SkLearn <notebooks/sklearn_tutorial.ipynb>
+    How to use with HuggingFace <notebooks/nlp_classification.ipynb>
+    How to use with Scikit-Learn <notebooks/sklearn_tutorial.ipynb>
     
 .. toctree ::
     :caption: Technical Reports
@@ -64,7 +64,7 @@ For support, we have several ways to help you:
 
 .. toctree::
     :caption: Literature and support
-    :maxdepth: 1
+    :maxdepth: 2
 
     Background literature <literature/index>
 ```

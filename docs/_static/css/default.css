@@ -941,9 +941,11 @@ big, small {
   content: ""; }
 
 .fa-arrow-circle-left:before, .icon-circle-arrow-left:before {
+  margin: 2px 5px 1px 1px;
   content: ""; }
 
 .fa-arrow-circle-right:before, .icon-circle-arrow-right:before {
+  margin: 2px 1px 1px 5px;
   content: ""; }
 
 .fa-arrow-circle-up:before {
@@ -2854,9 +2856,6 @@ button[disabled] {
 .btn-neutral:hover {
   background-color: #057eb6 !important;
   color: #fff !important; }
-
-.btn-neutral:visited {
-  background-color: #057eb6 !important; }
 
 .btn-success {
   background-color: #27AE60 !important; }
