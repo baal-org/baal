@@ -23,8 +23,8 @@ patience epochs to make sure that the loss is not oscillating.
 #### Resetting the weights of the model
 During active learning, we reset the model weights to some initial/random weights after
 each active learning step, so that the model is ready to learn from the new distribution of labelled samples without
-the prior bias of the previous distribution of labelled samples. Some studies show that resetting the weights for the
-last few layers of a network could be enough for removing this prior bias and hence, it would speed up the process by
+the prior bias of the previous distribution of labelled samples. In this [paper](https://arxiv.org/pdf/1811.12535v1.pdf), it is shown that the last few layers have the most influential weights for estimating model uncertainty in Bayesian neural architecture, and hence, we have made it possible in our pipeline to do active learning with only resetting the weights for the
+last few layers of a network. In this study, you will see if taken proper measurements resetting only the linear layers could be enough for removing this prior bias, and hence, it would speed up the process by
 not forcing the model to learn from scratch. However, depending on whether we are using early stopping or not this can
 introduce double descent and be harmful to the procedure. In our experiments
 `rs: full` defines, resetting the model weights to their initial weights and `rs: partial` indicates resetting the

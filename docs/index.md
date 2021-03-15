@@ -45,13 +45,14 @@ For support, we have several ways to help you:
     How to do research and plot progress <notebooks/active_learning_process.ipynb>
     How to use in production <notebooks/baal_prod_cls.ipynb>
     How to use deep ensembles <notebooks/deep_ensemble.ipynb>
-    How to use baal for transformers models <notebooks/nlp_classification.ipynb>
+    
     
 .. toctree ::
     :caption: Compatibility
     :maxdepth: 1
     
     How to use with Pytorch Lightning <notebooks/pytorch_lightning.ipynb>
+    How to use baal for transformers models <notebooks/nlp_classification.ipynb>
     How to use with SkLearn <notebooks/sklearn_tutorial.ipynb>
     
 .. toctree ::

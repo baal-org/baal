@@ -48,7 +48,7 @@ At the moment BaaL supports the following methods to perform active learning.
 - Deep ensembles
 - Semi-supervised learning
 
-If you want to propose new methods, please raise an issue.
+If you want to propose new methods, please submit an issue.
 
 
 The **Monte-Carlo Dropout** method is a known approximation for Bayesian neural

@@ -18,7 +18,8 @@ We hope to include a summary for each of then in the future, but for now we have
 * [Advances in Variational inference](https://arxiv.org/pdf/1711.05597.pdf) (Zhang et al, 2018)
   * Gives a quick introduction to VI and the most recent advances.
 * [A Simple Baseline for Bayesian Uncertainty in Deep Learning](https://arxiv.org/abs/1902.02476) (Maddox et al. 2019)
-  * Paper that presents SWAG, an easy way to create ensembles.
+  * Presents SWAG, an easy way to create ensembles.
+
     
     
 
@@ -26,7 +27,8 @@ We hope to include a summary for each of then in the future, but for now we have
 * [Deep Bayesian Active Learning with Image Data](https://arxiv.org/pdf/1703.02910.pdf) (Gal and Islam and Ghahramani, 2017)
   * Fundamental paper on how to do Bayesian active learning. A must read.
 * [Sampling bias in active learning](http://cseweb.ucsd.edu/~dasgupta/papers/twoface.pdf) (Dasgupta 2009)
-  * Present sampling bias and how to solve it by combining heuristics and random selection.
+  * Presents sampling bias and how to solve it by combining heuristics and random selection.
+
 * [Bayesian Active Learning for Classification and  Preference Learning](https://arxiv.org/pdf/1112.5745.pdf) (Houlsby et al. 2011)
   * Fundamental paper on one of the main heuristic BALD.
 
