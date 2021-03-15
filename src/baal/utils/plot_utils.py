@@ -11,6 +11,7 @@ FG_COLORS = ['b', 'g', 'r', 'c', 'm', 'y', 'tab:orange', 'tab:purple',
 def make_animation_from_data(features: np.ndarray, labels: np.ndarray,
                              labelled_at: np.ndarray, classes: List[str]) -> List[np.ndarray]:
     """
+    Make an animation that show the progress of labelling.
 
     Args:
         features: 2d features representation of the inputs. Shape [samples, 2]

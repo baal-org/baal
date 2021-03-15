@@ -18,8 +18,6 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     Args:
         dataset (torch.data.Dataset): The baseline dataset.
-        eval_transform (Optional(Callable)): DEPRECATED
-                                            Transformations to call on the evaluation dataset.
         labelled (Union[np.ndarray, torch.Tensor]):
             An array/tensor that acts as a boolean mask which is True for every
             data point that is labelled, and False for every data point that is not
