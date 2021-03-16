@@ -31,8 +31,7 @@ class MyDataset(Dataset):
 
 class ActiveDatasetTest(unittest.TestCase):
     def setUp(self):
-        self.dataset = ActiveLearningDataset(MyDataset(),
-                                             make_unlabelled=lambda x: (x[0], -1))
+        self.dataset = ActiveLearningDataset(MyDataset(), make_unlabelled=lambda x: (x[0], -1))
 
     def test_len(self):
         assert len(self.dataset) == 0
@@ -47,14 +46,13 @@ class ActiveDatasetTest(unittest.TestCase):
         assert self.dataset.n_unlabelled == 0
         assert len(self.dataset.pool) == 0
 
-        dummy_dataset = ActiveLearningDataset(MyDataset(), labelled=self.dataset._labelled,
+        dummy_dataset = ActiveLearningDataset(MyDataset(), labelled=self.dataset.labelled,
                                               make_unlabelled=lambda x: (x[0], -1))
         assert len(dummy_dataset) == len(self.dataset)
         assert len(dummy_dataset.pool) == len(self.dataset.pool)
 
-        dummy_lbl = torch.from_numpy(self.dataset._labelled.astype(np.float32))
-        dummy_dataset = ActiveLearningDataset(MyDataset(), labelled=dummy_lbl,
-                                              make_unlabelled=lambda x: (x[0], -1))
+        dummy_lbl = torch.from_numpy(self.dataset.labelled.astype(np.float32))
+        dummy_dataset = ActiveLearningDataset(MyDataset(), labelled=dummy_lbl, make_unlabelled=lambda x: (x[0], -1))
         assert len(dummy_dataset) == len(self.dataset)
         assert len(dummy_dataset.pool) == len(self.dataset.pool)
 
@@ -119,22 +117,17 @@ class ActiveDatasetTest(unittest.TestCase):
         dataset_1.label_randomly(5)
         dataset_2.label_randomly(5)
 
-        assert np.allclose(dataset_1._labelled, dataset_2._labelled)
+        assert np.allclose(dataset_1.labelled, dataset_2.labelled)
 
     def test_transform(self):
         train_transform = Lambda(lambda k: 1)
         test_transform = Lambda(lambda k: 0)
-        dataset = ActiveLearningDataset(MyDataset(train_transform),
-                                        pool_specifics={'transform': test_transform},
-                                        make_unlabelled=lambda x: (x[0], -1))
+        dataset = ActiveLearningDataset(MyDataset(train_transform), make_unlabelled=lambda x: (x[0], -1),
+                                        pool_specifics={'transform': test_transform})
         dataset.label(np.arange(10))
         pool = dataset.pool
         assert np.equal([i for i in pool], [(0, -1) for i in np.arange(10, 100)]).all()
         assert np.equal([i for i in dataset], [(1, i) for i in np.arange(10)]).all()
-
-        with pytest.warns(DeprecationWarning) as e:
-            ActiveLearningDataset(MyDataset(train_transform), eval_transform=train_transform)
-        assert len(e) == 1
 
         with pytest.raises(ValueError) as e:
             ActiveLearningDataset(MyDataset(train_transform), pool_specifics={'whatever': 123}).pool
@@ -150,21 +143,21 @@ class ActiveDatasetTest(unittest.TestCase):
         dataset_1.label_randomly(10)
         dataset_2 = ActiveLearningDataset(MyDataset(), random_state=seed)
         dataset_2.label_randomly(10)
-        assert not np.allclose(dataset_1._labelled, dataset_2._labelled)
+        assert not np.allclose(dataset_1.labelled, dataset_2.labelled)
 
         seed = 50
         dataset_1 = ActiveLearningDataset(MyDataset(), random_state=seed)
         dataset_1.label_randomly(10)
         dataset_2 = ActiveLearningDataset(MyDataset(), random_state=seed)
         dataset_2.label_randomly(10)
-        assert np.allclose(dataset_1._labelled, dataset_2._labelled)
+        assert np.allclose(dataset_1.labelled, dataset_2.labelled)
 
         seed = np.random.RandomState(50)
         dataset_1 = ActiveLearningDataset(MyDataset(), random_state=seed)
         dataset_1.label_randomly(10)
         dataset_2 = ActiveLearningDataset(MyDataset(), random_state=seed)
         dataset_2.label_randomly(10)
-        assert not np.allclose(dataset_1._labelled, dataset_2._labelled)
+        assert not np.allclose(dataset_1.labelled, dataset_2.labelled)
 
     def test_label_randomly_full(self):
         dataset_1 = ActiveLearningDataset(MyDataset())

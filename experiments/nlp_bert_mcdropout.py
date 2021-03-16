@@ -91,7 +91,6 @@ def main():
         num_train_epochs=1,  # total # of training epochs
         per_device_train_batch_size=16,  # batch size per device during training
         per_device_eval_batch_size=64,  # batch size for evaluation
-        warmup_steps=500,  # number of warmup steps for learning rate scheduler
         weight_decay=0.01,  # strength of weight decay
         logging_dir='/app/baal/logs',  # directory for storing logs
     )

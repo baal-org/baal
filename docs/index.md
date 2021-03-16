@@ -8,23 +8,31 @@
 # Welcome to the documentation for baal (**ba**yesian **a**ctive **l**earning)
 
 <a href="https://github.com/ElementAI/baal">
-<img src="http://www.pngall.com/wp-content/uploads/2016/04/Github-Free-PNG-Image.png" width=64 /></a>
+<img src="_static/images/GitHub-Mark-64px.png" style="width:30px;height:30px;" /></a> <!-- Place this tag where you want the button to render. -->
+<a class="github-button" href="https://github.com/ElementAI/baal" data-size="large" data-show-count="true" aria-label="Star ElementAI/baal on GitHub">Star</a>
 
-baal aims to implement active learning using metrics of uncertainty derived
-from approximations of bayesian posteriors in neural networks.
+BaaL is a Bayesian active learning library. We provide methods to estimate sampling from the posterior distribution
+in order to maximize the efficiency of labelling during active learning.
 
-# Support
+To know more on what is Bayesian active learning, see our [User guide](user_guide/index.md).
 
-For support, please see if your question is already answered in our FAQ.
-If it is not there, please file an issue or join our Gitter.
+We are a member of Pytorch's ecosystem, and we welcome contributions from the community.
+If you have any question, we are reachable on [Gitter](https://gitter.im/eai-baal/community#).
 
-Baal has several components:
+## Support
+
+For support, we have several ways to help you:
+
+* Our [FAQ](faq.md)
+* Submit an issue on Github [here](https://github.com/ElementAI/baal/issues/new/choose)
+* Join our [Gitter](https://gitter.im/eai-baal/community#)!
 
 ```eval_rst
 .. toctree::
-    :caption: Components of baal
-    :maxdepth: 3
+    :caption: Learn more about BaaL
+    :maxdepth: 1
 
+    User guide <user_guide/index>
     Active learning dataset and training loop classes <notebooks/active-learning.ipynb>
     Methods for approximating bayesian posteriors <notebooks/posteriors.ipynb>
     API Index <api/index>
@@ -34,19 +42,29 @@ Baal has several components:
     :caption: Tutorials
     :maxdepth: 1
     
-    Use BaaL in production (Classification) <notebooks/baal_prod_cls.ipynb>
-    Use BaaL with Pytorch Lightning <notebooks/pytorch_lightning.ipynb>
-    Use BaaL with SkLearn (Classification) <notebooks/sklearn_tutorial.ipynb>
+    How to do research and plot progress <notebooks/active_learning_process.ipynb>
+    How to use in production <notebooks/baal_prod_cls.ipynb>
+    How to use deep ensembles <notebooks/deep_ensemble.ipynb>
+    
     
 .. toctree ::
-    :caption: Reports
+    :caption: Compatibility with other libraries
+    :maxdepth: 1
+    
+    How to use with Pytorch Lightning <notebooks/pytorch_lightning.ipynb>
+    How to use with HuggingFace <notebooks/nlp_classification.ipynb>
+    How to use with Scikit-Learn <notebooks/sklearn_tutorial.ipynb>
+    
+.. toctree ::
+    :caption: Technical Reports
     :maxdepth: 1
     
     Combining calibration and variational inference for active learning <reports/dirichlet_calibration>
+    Double descend in active learning <reports/double_descend.md>
 
 .. toctree::
     :caption: Literature and support
-    :maxdepth: 1
+    :maxdepth: 2
 
     Background literature <literature/index>
 ```

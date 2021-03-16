@@ -33,6 +33,9 @@ class EnsembleModelWrapper(ModelWrapper):
         self._weights.append(deepcopy(self.model.state_dict()))
 
     def clear_checkpoints(self):
+        """
+        Clear the list of saved checkpoints.
+        """
         self._weights.clear()
 
     def predict_on_batch(self, data, iterations=1, cuda=False):

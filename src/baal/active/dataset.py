@@ -18,8 +18,6 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     Args:
         dataset (torch.data.Dataset): The baseline dataset.
-        eval_transform (Optional(Callable)): DEPRECATED
-                                            Transformations to call on the evaluation dataset.
         labelled (Union[np.ndarray, torch.Tensor]):
             An array/tensor that acts as a boolean mask which is True for every
             data point that is labelled, and False for every data point that is not
@@ -31,30 +29,19 @@ class ActiveLearningDataset(torchdata.Dataset):
                                          Useful to remove data augmentation.
     """
 
-    def __init__(
-        self,
-        dataset: torchdata.Dataset,
-        eval_transform: Optional[Callable] = None,
-        labelled: Union[np.ndarray, torch.Tensor] = None,
-        make_unlabelled: Callable = _identity,
-        random_state=None,
-        pool_specifics: Optional[dict] = None
-    ) -> None:
+    def __init__(self, dataset: torchdata.Dataset, labelled: Union[np.ndarray, torch.Tensor] = None,
+                 make_unlabelled: Callable = _identity, random_state=None,
+                 pool_specifics: Optional[dict] = None) -> None:
         self._dataset = dataset
         if labelled is not None:
             if isinstance(labelled, torch.Tensor):
                 labelled = labelled.numpy()
-            self._labelled = labelled.astype(bool)
+            self.labelled = labelled.astype(bool)
         else:
-            self._labelled = np.zeros(len(self._dataset), dtype=bool)
+            self.labelled = np.zeros(len(self._dataset), dtype=bool)
 
         if pool_specifics is None:
             pool_specifics = {}
-        if eval_transform is not None:
-            warnings.warn("""eval_transform is deprecated and will be removed shortly.
-            Please update your constructor to use
-             `pool_specifics={{'transform': {}}}`""".format(eval_transform), DeprecationWarning)
-            pool_specifics['transform'] = eval_transform
         self.pool_specifics = pool_specifics
 
         self.make_unlabelled = make_unlabelled
@@ -62,6 +49,12 @@ class ActiveLearningDataset(torchdata.Dataset):
         self.can_label = self.check_dataset_can_label()
 
         self.random_state = check_random_state(random_state)
+
+    @property
+    def _labelled(self):
+        warnings.warn("_labelled as been renamed labelled. Please update your script.",
+                      DeprecationWarning)
+        return self.labelled
 
     def check_dataset_can_label(self):
         """Check if a dataset can be labelled.
@@ -90,7 +83,7 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     def __len__(self) -> int:
         """Return how many actual data / label pairs we have."""
-        return self._labelled.sum()
+        return self.labelled.sum()
 
     class ActiveIter():
         """Iterator over an ActiveLearningDataset."""
@@ -116,12 +109,12 @@ class ActiveLearningDataset(torchdata.Dataset):
     @property
     def n_unlabelled(self):
         """The number of unlabelled data points."""
-        return (~self._labelled).sum()
+        return (~self.labelled).sum()
 
     @property
     def n_labelled(self):
         """The number of labelled data points."""
-        return self._labelled.sum()
+        return self.labelled.sum()
 
     @property
     def pool(self) -> torchdata.Dataset:
@@ -139,7 +132,7 @@ class ActiveLearningDataset(torchdata.Dataset):
                 raise ValueError(f"{pool_dataset} doesn't have {attr}")
 
         pool_dataset = torchdata.Subset(pool_dataset,
-                                        (~self._labelled).nonzero()[0].reshape([-1]))
+                                        (~self.labelled).nonzero()[0].reshape([-1]))
         ald = ActiveLearningPool(pool_dataset, make_unlabelled=self.make_unlabelled)
         return ald
 
@@ -147,13 +140,13 @@ class ActiveLearningDataset(torchdata.Dataset):
     """
 
     def _labelled_to_oracle_index(self, index: int) -> int:
-        return self._labelled.nonzero()[0][index].squeeze().item()
+        return self.labelled.nonzero()[0][index].squeeze().item()
 
     def _pool_to_oracle_index(self, index: Union[int, List[int]]) -> List[int]:
         if isinstance(index, np.int64) or isinstance(index, int):
             index = [index]
 
-        lbl_nz = (~self._labelled).nonzero()[0]
+        lbl_nz = (~self.labelled).nonzero()[0]
         return [int(lbl_nz[idx].squeeze().item()) for idx in index]
 
     def _oracle_to_pool_index(self, index: Union[int, List[int]]) -> List[int]:
@@ -161,7 +154,7 @@ class ActiveLearningDataset(torchdata.Dataset):
             index = [index]
 
         # Pool indices are the unlabelled, starts at 0
-        lbl_cs = np.cumsum(~self._labelled) - 1
+        lbl_cs = np.cumsum(~self.labelled) - 1
         return [int(lbl_cs[idx].squeeze().item()) for idx in index]
 
     def label(self, index: Union[list, int], value: Optional[Any] = None) -> None:
@@ -182,7 +175,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         for index, val in zip_longest(indexes, value, fillvalue=None):
             if self.can_label and val is not None:
                 self._dataset.label(index, val)
-                self._labelled[index] = 1
+                self.labelled[index] = 1
             elif self.can_label and val is None:
                 warnings.warn("""The dataset is able to label data, but no label was provided.
                                  The dataset will be unchanged from this action!
@@ -190,7 +183,7 @@ class ActiveLearningDataset(torchdata.Dataset):
                                   `ActiveLearningDataset.can_label` to `False`.
                                   """, UserWarning)
             elif not self.can_label:
-                self._labelled[index] = 1
+                self.labelled[index] = 1
                 if val is not None:
                     warnings.warn(
                         "We will consider the original label of this datasample : {}, {}.".format(
@@ -211,11 +204,11 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     def reset_labeled(self):
         """Reset the label map."""
-        self._labelled = np.zeros(len(self._dataset), dtype=bool)
+        self.labelled = np.zeros(len(self._dataset), dtype=np.bool)
 
     def is_labelled(self, idx: int) -> bool:
         """Check if a datapoint is labelled."""
-        return self._labelled[idx] == 1
+        return self.labelled[idx] == 1
 
     def get_raw(self, idx: int) -> None:
         """Get a datapoint from the underlying dataset."""
@@ -223,12 +216,12 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     def state_dict(self):
         """Return the state_dict, ie. the labelled map and random_state."""
-        return {'labelled': self._labelled,
+        return {'labelled': self.labelled,
                 'random_state': self.random_state}
 
     def load_state_dict(self, state_dict):
         """Load the labelled map and random_state with give state_dict."""
-        self._labelled = state_dict['labelled']
+        self.labelled = state_dict['labelled']
         self.random_state = state_dict['random_state']
 
 
@@ -281,12 +274,12 @@ class ActiveNumpyArray(ActiveLearningDataset):
     @property
     def pool(self):
         """Return the unlabelled portion of the dataset."""
-        return self._dataset[0][~self._labelled], self._dataset[1][~self._labelled]
+        return self._dataset[0][~self.labelled], self._dataset[1][~self.labelled]
 
     @property
     def dataset(self):
         """Return the labelled portion of the dataset."""
-        return self._dataset[0][self._labelled], self._dataset[1][self._labelled]
+        return self._dataset[0][self.labelled], self._dataset[1][self.labelled]
 
     def get_raw(self, idx: int) -> None:
         return self._dataset[0][idx], self._dataset[1][idx]

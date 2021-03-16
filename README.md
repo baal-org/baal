@@ -20,6 +20,7 @@ For a quick introduction to BaaL and Bayesian active learning, please see this [
 
 
 
+
 ## Installation and requirements
 
 BaaL requires `Python>=3.6`.
@@ -44,8 +45,11 @@ At the moment BaaL supports the following methods to perform active learning.
 
 - Monte-Carlo Dropout (Gal et al. 2015)
 - MCDropConnect (Mobiny et al. 2019)
+- Deep ensembles
+- Semi-supervised learning
 
-**Please see our Roadmap [below](./README.md#roadmap-subject-to-change-depending-on-the-community).**
+If you want to propose new methods, please submit an issue.
+
 
 The **Monte-Carlo Dropout** method is a known approximation for Bayesian neural
 networks. In this method, the dropout layer is used both in training and test
@@ -97,16 +101,6 @@ provided at _[src/baal/active/active_loop.py](src/baal/active/active_loop.py)_.
 This class provides functionality to get the predictions on the unlabeled pool
 after each (few) epoch(s) and sort the next set of data items to be labeled
 based on the calculated uncertainty of the pool.
-
-
-### Roadmap (Subject to change depending on the community.)
-
-* [x] Initial FOSS release with MCDropout (Gal et al. 2015)
-* [x] MCDropConnect (Mobiny et al. 2019)
-* [ ] Bayesian layers (Shridhar et al. 2019)
-* [ ] Unsupervised methods
-* [ ] NNGP (Panov et al. 2019)
-* [ ] SWAG (Zellers et al. 2018)
 
 
 ### Re-run our Experiments

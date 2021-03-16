@@ -40,7 +40,7 @@ author = 'Parmida Atighehchian, Frédéric Branchaud-Charron, Jan Freyberg'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '1.2.1'
+release = '1.3.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -67,7 +67,7 @@ extensions = [
 
 # We need to mock these packages to compile without deps.
 autodoc_mock_imports = ["PIL", "tqdm", "structlog", "torch", "torchvision", "numpy", "sklearn",
-                        "scipy", "baal.utils.cuda_utils"]
+                        "scipy", "baal.utils.cuda_utils", "transformers"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -107,7 +107,7 @@ pygments_style = None
 #
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-html_logo = "literature/images/logo-transparent.png"
+html_logo = "_static/images/logo-transparent.png"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -118,7 +118,10 @@ html_logo = "literature/images/logo-transparent.png"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['_static', '_static/images']
+html_css_files = [
+    'css/default.css',
+]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

@@ -132,7 +132,7 @@ def test_batch_bald_fails_on_5d(distributions, reduction):
     bald = BatchBALD(100, reduction=reduction)
     with pytest.raises(ValueError) as e:
         marg = bald(distributions)
-    assert 'BatchBALD only works on classification' in str(e)
+    assert 'BatchBALD only works on classification' in str(e.value)
 
 
 @pytest.mark.parametrize('distributions, reduction',
