@@ -63,6 +63,7 @@ setup(
     install_requires=reqs,
     extras_require={
         'test': ['pytest', 'pytest-pep8', 'hypothesis', 'coverage', 'coveralls'],
+        'nlp': ['transformers', 'datasets'],
         'documentation': documentation_requirements,
     },
 )
