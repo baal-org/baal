@@ -1,7 +1,7 @@
 import pickle
 import unittest
-import warnings
 import unittest.mock
+import warnings
 
 import numpy as np
 import pytest
@@ -224,6 +224,14 @@ def test_warning_raised_on_label():
         assert not al.can_label
         assert len(w) == 1
         assert "label" in str(w[-1].message)
+
+
+def test_warning_raised_on_deprecation():
+    with warnings.catch_warnings(record=True) as w:
+        al = ActiveLearningDataset(MyDataset())
+        _ = al._labelled
+        assert len(w) == 1
+        assert w[0].category is DeprecationWarning
 
 
 if __name__ == '__main__':
