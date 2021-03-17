@@ -10,6 +10,4 @@ tqdm
 h5py
 structlog
 pytorch-lightning==0.8.5
-transformers
-datasets
 packaging

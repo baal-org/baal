@@ -4,9 +4,11 @@ import structlog
 from tqdm import tqdm
 
 # These packages are optional and not needed for BaaL main package.
-# You can have access to `datasets` and `transformers` if you install
-# BaaL with --dev setup.
-from transformers import Trainer
+try:
+    from transformers import Trainer
+except ImportError:
+    raise ImportError("`transformers` library is required to use this module."
+                      " Please do `pip install baal[nlp]`")
 
 from baal.utils.array_utils import stack_in_memory
 from baal.utils.iterutils import map_on_tensor
