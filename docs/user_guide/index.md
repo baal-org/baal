@@ -42,21 +42,18 @@ While we know that AL creates more balanced datasets, better calibrated models a
 At ICLR 2020, Farquhar et al. showed that sampling bias produces biased risk estimators and they propose a new unbiased estimator that gets good results on simple models. We hope that work in this area continues so that we can better understand the impact of active learning.
 
 
-```eval_rst
-.. toctree::
-    :caption: Resources
-    :maxdepth: 1
+**Resources**
+    
+* [Literature review](../literature/index.md)
+* [Active learning dataset and training loop classes](../notebooks/active-learning)
+* [Methods for approximating bayesian posteriors](../notebooks/posteriors)
+* [Full active learning example](../notebooks/active_learning_process)
 
-    Literature review <../literature/index>
-    Active learning dataset and training loop classes <../notebooks/active-learning.ipynb>
-    Methods for approximating bayesian posteriors <../notebooks/posteriors.ipynb>
-    Full active learning example <../notebooks/active_learning_process>
-```
 
 **References**
-Kirsch, Andreas, Joost Van Amersfoort, and Yarin Gal. "Batchbald: Efficient and diverse batch acquisition for deep bayesian active learning." NeurIPS (2019).
-Jain, Siddhartha, Ge Liu, and David Gifford. "Information Condensing Active Learning." arXiv preprint arXiv:2002.07916 (2020).
-Houlsby, Neil, et al. "Bayesian active learning for classification and preference learning." arXiv preprint arXiv:1112.5745 (2011).
-Gal, Yarin, and Zoubin Ghahramani. "Dropout as a bayesian approximation: Representing model uncertainty in deep learning." international conference on machine learning. PMLR, 2016.
+* Kirsch, Andreas, Joost Van Amersfoort, and Yarin Gal. "Batchbald: Efficient and diverse batch acquisition for deep bayesian active learning." NeurIPS (2019).
+* Jain, Siddhartha, Ge Liu, and David Gifford. "Information Condensing Active Learning." arXiv preprint arXiv:2002.07916 (2020).
+* Houlsby, Neil, et al. "Bayesian active learning for classification and preference learning." arXiv preprint arXiv:1112.5745 (2011).
+* Gal, Yarin, and Zoubin Ghahramani. "Dropout as a bayesian approximation: Representing model uncertainty in deep learning." international conference on machine learning. PMLR, 2016.
 
 ---

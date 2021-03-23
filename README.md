@@ -1,9 +1,9 @@
-# Bayesian Active Learning (Baal)
+# Bayesian Active Learning (BaaL)
 [![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal)  [![Documentation Status](https://readthedocs.org/projects/baal/badge/?version=latest)](https://baal.readthedocs.io/en/latest/?badge=latest) [![Gitter](https://badges.gitter.im/eai-baal/community.svg)](https://gitter.im/eai-baal/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 ---
 
 <p align="left">
-  <img height=15% width=25% src="https://github.com/ElementAI/baal/blob/master/docs/literature/images/repo_logo_25_no_corner.svg">
+  <img height=15% width=25% src="https://github.com/ElementAI/baal/blob/master/docs/_static/images/logo-transparent.png?raw=true">
 </p>
 
 BaaL is an active learning library developed at
@@ -25,11 +25,13 @@ For a quick introduction to BaaL and Bayesian active learning, please see this [
 
 BaaL requires `Python>=3.6`.
 
-To install baal using pip: `pip install baal`
+To install BaaL using pip: `pip install baal`
 
-To install baal from source: `pip install -e .`
+To install BaaL from source: `pip install -e .`
 
 For requirements please see: _[requirements.txt](requirements.txt)_.
+
+To use BaaL with [HuggingFace](https://huggingface.co/) Trainers : `pip install baal[nlp]`
 
 ## What is Active Learning?
 
@@ -52,7 +54,7 @@ If you want to propose new methods, please submit an issue.
 
 
 The **Monte-Carlo Dropout** method is a known approximation for Bayesian neural
-networks. In this method, the dropout layer is used both in training and test
+networks. In this method, the Dropout layer is used both in training and test
 time. By running the model multiple times whilst randomly dropping weights, we calculate the uncertainty of the prediction using one of the uncertainty measurements in [heuristics.py](src/baal/active/heuristics/heuristics.py).
 
 The framework consists of four main parts, as demonstrated in the flowchart below:

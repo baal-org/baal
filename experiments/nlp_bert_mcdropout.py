@@ -88,7 +88,7 @@ def main():
 
     training_args = TrainingArguments(
         output_dir='/app/baal/results',  # output directory
-        num_train_epochs=1,  # total # of training epochs
+        num_train_epochs=hyperparams['learning_epoch'],  # total # of training epochs
         per_device_train_batch_size=16,  # batch size per device during training
         per_device_eval_batch_size=64,  # batch size for evaluation
         weight_decay=0.01,  # strength of weight decay
@@ -122,13 +122,13 @@ def main():
 
         # We reorder the unlabelled pool at the frequency of learning_epoch
         # This helps with speed while not changing the quality of uncertainty estimation.
-        if epoch % hyperparams['learning_epoch'] == 0:
-            should_continue = active_loop.step()
+        should_continue = active_loop.step()
 
-            # We reset the model weights to relearn from the new trainset.
-            model.load_state_dict(init_weights)
-            if not should_continue:
-                break
+        # We reset the model weights to relearn from the new trainset.
+        model.load_state_dict(init_weights)
+        model.lr_scheduler = None
+        if not should_continue:
+            break
         active_logs = {"epoch": epoch,
                        "labeled_data": active_set._labelled,
                        "Next Training set size": len(active_set)}

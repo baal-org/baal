@@ -32,7 +32,7 @@ COPY requirements.txt /app/baal/requirements.txt
 RUN pip install -r /app/baal/requirements.txt
 COPY . /app/baal
 WORKDIR /app/baal
-RUN pip install -e . --no-use-pep517
+RUN pip install -e .[nlp] --no-use-pep517
 
 # ---- test -----
 # we need to install test dependencies before, so we cannot use 'base_baal' as base image
@@ -49,7 +49,7 @@ COPY ./requirements.txt /app/baal/requirements.txt
 RUN pip install -r /app/baal/test-requirements.txt
 RUN pip install -r /app/baal/requirements.txt
 COPY --from=base_baal /app/baal .
-RUN pip install -e . --no-use-pep517
+RUN pip install -e .[nlp] --no-use-pep517
 
 # ---- release image ----
-From base_baal as release
+FROM base_baal as release
