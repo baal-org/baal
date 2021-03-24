@@ -16,30 +16,39 @@ In addition, we propose a [cheat sheet](./baal_cheatsheet.md) that will help use
 
 ## Active learning
 
-Active learning is a field of machine learning where we reduce the labelling cost by only labelling the most informative examples. Datasets, especially in industry, contain many similar examples. Labelling these brings no information to the model and therefore are not useful.
+Active learning is a field of machine learning that reduces labelling cost by only labelling the most informative examples.
+Datasets, especially in industry, contain many similar examples that would bring no information to the model.
 
-To select the next example to label, we first train a machine learning model on the trained dataset. Then we compute the model's uncertainty on all unlabelled examples. The most uncertain is selected to be labelled.
+To select the next example to label, we first train a machine learning model on the trained dataset.
+Then we compute the model's uncertainty on all unlabelled examples. The most uncertain is selected to be labelled.
 
 
 ## Bayesian active learning
 
-Bayesian active learning builds upon active learning by framing the problem from a Bayesian point-of-view. In this case, we want to maximize the mutual information between a model's predictions and its parameters.
+Bayesian active learning builds upon active learning by framing the problem from a Bayesian point-of-view.
+In this case, we want to reduce the epistemic uncertainty (ie. the model's uncertainty) on a dataset.
 
-In addition, we will do this by sampling from the posterior distribution allowing us to better estimate the uncertainty. As an example, it is common to use MC-Dropout (Gal and Ghahramani, 2016) and BALD (Houlsby et al. 2013) to do this. The former allows us to draw from the posterior distribution and the latter estimates the mutual information. In recent years, new approaches were suggested to improve BALD such as BatchBALD (Kirsch et al, 2019) or ICAL (Jain et al. 2020), but they work on similar principles. 
+In addition, we will do this by sampling from the posterior distribution allowing us to better estimate the uncertainty.
+As an example, it is common to use MC-Dropout (Gal and Ghahramani, 2016) and BALD (Houlsby et al. 2013) to do this.
+The former allows us to draw from the posterior distribution and the latter estimates the mutual information.
+In recent years, new approaches were suggested to improve BALD such as BatchBALD (Kirsch et al, 2019) or ICAL (Jain et al. 2020), but they work on similar principles. 
+
 
 ## Open challenges
 
-Active learning is a challenging field, many techniques work only on classification or are sensitive the data distribution. Simply doing random selection is strong in some cases such as semantic segmentation. 
-
-In this context, it is vital to have some domain knowledge on the problem.
+Active learning is a challenging field, many techniques work only on classification or are sensitive to the data distribution.
+Often, uniform selection sets a strong baseline, especially on academic datasets.
 
 ### Consequences of using AL
 
 The effect of using active learning is an understudied problem.
 
-While we know that AL creates more balanced datasets, better calibrated models and such. We do not know what is the effect of sampling bias in all settings. 
+While we know that AL creates more balanced datasets, better calibrated models and such.
+We do not know what is the effect of sampling bias in all settings. 
 
-At ICLR 2020, Farquhar et al. showed that sampling bias produces biased risk estimators and they propose a new unbiased estimator that gets good results on simple models. We hope that work in this area continues so that we can better understand the impact of active learning.
+At ICLR 2020, Farquhar et al. showed that sampling bias produces biased estimators,
+and they propose a new unbiased estimator that gets good results on simple models.
+We hope that work in this area continues so that we can better understand the impact of active learning.
 
 
 **Resources**
