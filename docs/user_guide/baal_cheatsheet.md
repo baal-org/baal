@@ -23,7 +23,7 @@ We assume that `baal.bayesian.dropout.patch_module` has been applied to the mode
    :header: "Description", "Equation", "BaaL"
    :widths: 20, 20, 40
 
-   "Bayesian Model Averaging", ":math:`\hat{T} = p(y \mid x, {\cal D})= \int p(y \mid x, \theta)p(\theta \mid D) d\theta)`", "`wrapper.predict_on_dataset(dataset, batch_size=B, iterations=I, use_cuda=True).mean(-1)`"
+   "Bayesian Model Averaging", ":math:`\hat{T} = p(y \mid x, {\cal D})= \int p(y \mid x, \theta)p(\theta \mid D) d\theta`", "`wrapper.predict_on_dataset(dataset, batch_size=B, iterations=I, use_cuda=True).mean(-1)`"
    "MC-Dropout", ":math:`T = \{p(y\mid x_j, \theta_i)\} \mid x_j \in {\cal D}' ,i \in \{1, \ldots, I\}`", "`wrapper.predict_on_dataset(dataset, batch_size=B, iterations=I, use_cuda=True)`"
    "BALD", ":math:`{\cal I}[y, \theta \mid x, {\cal D}] = {\cal H}[y \mid x, {\cal D}] - {\cal E}_{p(\theta \mid {\cal D})}[{\cal H}[y \mid x, \theta]]`", "`bald.get_uncertainties(T)`"
    "Entropy", ":math:`\sum_c \hat{T}_c \log(\hat{T}_c)`", "`entropy.get_uncertainties(T)`"

@@ -25,7 +25,7 @@ pred_generator = wrapper.predict_on_dataset_generator(dataset, batch_size=32, it
 uncertainty = heuristic.get_uncertainties_generator(pred_generator)
 ```
 
-## Does BaaL works on semantic segmentation?
+## Does BaaL work on semantic segmentation?
 
 Yes! See the example in `experiments/segmentation/unet_mcdropout_pascal.py`.
 
@@ -70,7 +70,7 @@ There is several ways to use Baal on large tasks.
 
 ## How can I specify that a label is missing and how to label it.
 
-The source of truth for what is labelled is the `ActiveLearningDataset._labelled` array.
+The source of truth for what is labelled is the `ActiveLearningDataset.labelled` array.
 This means that we will never train on a sample if it is not labelled according to this array.
 This array determines the split between the labelled and unlabelled datasets.
 
@@ -114,7 +114,7 @@ active_dataset.label(ranks, labels)
 
 Many of these tips can be found in our paper [Bayesian active learning for production](https://arxiv.org/abs/2006.09916).
 
-#### Remove Data augmentation when computing uncertainty
+#### Remove data augmentation when computing uncertainty
 
 You can specify which variables to override when creating the unlabelled pool using the `pool_specifics` argument.
 ```python

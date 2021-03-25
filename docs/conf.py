@@ -58,6 +58,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinx_copybutton',
     "sphinx_automodapi.automodapi",
     "nbsphinx",
     "recommonmark",
