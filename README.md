@@ -16,9 +16,7 @@ Our paper can be read on [arXiv](https://arxiv.org/abs/2006.09916). It includes 
 
 In this [blog post](https://www.elementai.com/news/2019/element-ai-makes-its-bayesian-active-learning-library-open-source), we present our library.
 
-For a quick introduction to BaaL and Bayesian active learning, please see this [presentation](https://drive.google.com/file/d/1icbTSbhl-Cs1X4k5XKYOEWfhkx9wBPdw/view?usp=sharing).
-
-
+For a quick introduction to BaaL and Bayesian active learning, please see this [presentation](https://drive.google.com/file/d/1icbTSbhl-Cs1X4k5XKYOEWfhkx9wBPdw/view?usp=sharing) or visit our [User guide](https://baal.readthedocs.io/en/latest/user_guide/index.html).
 
 
 ## Installation and requirements
@@ -33,8 +31,17 @@ For requirements please see: _[requirements.txt](requirements.txt)_.
 
 To use BaaL with [HuggingFace](https://huggingface.co/) Trainers : `pip install baal[nlp]`
 
-## What is Active Learning?
+## Academic works using BaaL
 
+* [Bayesian active learning for production, a systematic study and a reusable library
+](https://arxiv.org/abs/2006.09916) (Atighehchian et al. 2020)
+* [Synbols: Probing Learning Algorithms with Synthetic Datasets
+](https://nips.cc/virtual/2020/public/poster_0169cf885f882efd795951253db5cdfb.html) (Lacoste et al. 2020)
+* [Can Active Learning Preemptively Mitigate Fairness Issues?
+](https://arxiv.org/pdf/2104.06879.pdf) (Branchaud-Charron et al, 2021)
+
+
+# What is active learning?
 Active learning is a special case of machine learning in which a learning
 algorithm is able to interactively query the user (or some other information
 source) to obtain the desired outputs at new data points
