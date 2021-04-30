@@ -9,5 +9,5 @@ torchvision>=0.7.0
 tqdm
 h5py
 structlog
-pytorch-lightning==0.8.5
+pytorch-lightning>=1.1.0
 packaging

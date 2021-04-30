@@ -1,12 +1,13 @@
 import sys
 import types
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Sequence
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 import numpy as np
 import structlog
-from pytorch_lightning import Trainer, Callback
+from pytorch_lightning import Trainer, Callback, LightningDataModule
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from baal.active import ActiveLearningDataset
@@ -18,16 +19,35 @@ from baal.utils.iterutils import map_on_tensor
 log = structlog.get_logger('PL testing')
 
 
+class BaaLDataModule(LightningDataModule):
+    def __init__(self, active_dataset: ActiveLearningDataset, batch_size=1,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.active_dataset = active_dataset
+        self.batch_size = batch_size
+
+    def pool_dataloader(self):
+        return DataLoader(self.active_dataset.pool, batch_size=self.batch_size, num_workers=4, shuffle=False)
+
+    def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
+        if 'active_dataset' in checkpoint:
+            self.active_dataset.load_state_dict(checkpoint['active_dataset'])
+        else:
+            log.warning("'active_dataset' not in checkpoint!")
+
+    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> Dict:
+        checkpoint['active_dataset'] = self.active_dataset.state_dict()
+        return checkpoint
+
+
 class ActiveLearningMixin(ABC):
     """Pytorch Lightning Mixin which adds methods to perform
     active learning.
     """
-    active_dataset = ...
     hparams = ...
 
-    @abstractmethod
     def pool_loader(self):
-        """DataLoader for the pool."""
+        """DataLoader for the pool. Must be defined if you do not use a DataModule"""
         pass
 
     def predict_step(self, data, batch_idx):
@@ -44,13 +64,6 @@ class ActiveLearningMixin(ABC):
         x, _ = data
         out = mc_inference(self, x, self.hparams.iterations, self.hparams.replicate_in_memory)
         return out
-
-    def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        self.active_dataset.load_state_dict(checkpoint['active_dataset'])
-
-    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        checkpoint['active_dataset'] = self.active_dataset.state_dict()
-        return checkpoint
 
 
 class ResetCallback(Callback):
@@ -70,6 +83,7 @@ class ResetCallback(Callback):
     def on_train_start(self, trainer, module):
         """Will reset the module to its initial weights."""
         module.load_state_dict(self.weights)
+        trainer.current_epoch = 0
 
 
 class BaalTrainer(Trainer):
@@ -130,15 +144,7 @@ class BaalTrainer(Trainer):
         # teardown, TODO customize this later?
         model.cpu()
 
-    def _get_indices(self, pool_loader):
-        pool = pool_loader.dataset
-        if self.max_sample != -1 and self.max_sample < len(pool):
-            indices = np.random.choice(len(pool), self.max_sample, replace=False)
-        else:
-            indices = np.arange(len(pool))
-        return indices
-
-    def step(self) -> bool:
+    def step(self, datamodule: Optional[BaaLDataModule] = None) -> bool:
         """
         Perform an active learning step.
 
@@ -151,15 +157,16 @@ class BaalTrainer(Trainer):
 
         """
         # High to low
-        pool_loader = self.get_model().pool_loader()
+        if datamodule is None:
+            pool_loader = self.get_model().pool_loader()
+        else:
+            pool_loader = datamodule.pool_dataloader()
 
         if len(self.get_model().active_dataset.pool) > 0:
             # TODO Add support for max_samples in pool_loader
-            indices = np.arange(self.get_model().active_dataset.n_unlabelled)
             probs = self.predict_on_dataset_generator(dataloader=pool_loader, **self.kwargs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
-                to_label = indices[np.array(to_label)]
                 if len(to_label) > 0:
                     self.dataset.label(to_label[: self.ndata_to_label])
                     return True
