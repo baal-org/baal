@@ -6,15 +6,15 @@ from typing import Dict, Any, Optional
 
 import numpy as np
 import structlog
-from pytorch_lightning import Trainer, Callback, LightningDataModule
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-
+import torch
 from baal.active import ActiveLearningDataset
 from baal.active.heuristics import heuristics
 from baal.modelwrapper import mc_inference
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
+from pytorch_lightning import Trainer, Callback, LightningDataModule
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 log = structlog.get_logger('PL testing')
 
@@ -27,7 +27,9 @@ class BaaLDataModule(LightningDataModule):
         self.batch_size = batch_size
 
     def pool_dataloader(self):
-        return DataLoader(self.active_dataset.pool, batch_size=self.batch_size, num_workers=4, shuffle=False)
+        """Create Dataloader for the pool of unlabelled examples."""
+        return DataLoader(self.active_dataset.pool,
+                          batch_size=self.batch_size, num_workers=4, shuffle=False)
 
     def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
         if 'active_dataset' in checkpoint:
@@ -109,25 +111,27 @@ class BaalTrainer(Trainer):
         self.dataset = dataset
         self.kwargs = kwargs
 
-    def predict_on_dataset(self, dataloader=None, *args, **kwargs):
-        preds = list(self.predict_on_dataset_generator(dataloader))
+    def predict_on_dataset(self, model=None, dataloader=None, *args, **kwargs):
+        "For documentation, see `predict_on_dataset_generator`"
+        preds = list(self.predict_on_dataset_generator(model, dataloader))
 
         if len(preds) > 0 and not isinstance(preds[0], Sequence):
             # Is an Array or a Tensor
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
 
-    def predict_on_dataset_generator(self, dataloader=None, *args, **kwargs):
+    def predict_on_dataset_generator(self, model=None, dataloader=None, *args, **kwargs):
         """Predict on the pool loader.
 
         Args:
+            model: Model to be used in prediction. If None, will get the Trainer's model.
             dataloader (Optional[DataLoader]): If provided, will predict on this dataloader.
                                                 Otherwise, uses model.pool_loader().
 
         Returns:
             Numpy arrays with all the predictions.
         """
-        model = self.get_model()
+        model = model or self.get_model()
         model.eval()
         if self.on_gpu:
             model.cuda(self.root_gpu)
@@ -139,14 +143,18 @@ class BaalTrainer(Trainer):
         for idx, batch in enumerate(tqdm(dataloader, total=len(dataloader), file=sys.stdout)):
             if self.on_gpu:
                 batch = to_cuda(batch)
-            pred = self.model.predict_step(batch, idx)
+            pred = model.predict_step(batch, idx)
             yield map_on_tensor(lambda x: x.detach().cpu().numpy(), pred)
         # teardown, TODO customize this later?
         model.cpu()
 
-    def step(self, datamodule: Optional[BaaLDataModule] = None) -> bool:
+    def step(self, model=None, datamodule: Optional[BaaLDataModule] = None) -> bool:
         """
         Perform an active learning step.
+
+        model: Model to be used in prediction. If None, will get the Trainer's model.
+        dataloader (Optional[DataLoader]): If provided, will predict on this dataloader.
+                                                Otherwise, uses model.pool_loader().
 
         Notes:
             This will get the pool from the model pool_loader and if max_sample is set, it will
@@ -159,12 +167,20 @@ class BaalTrainer(Trainer):
         # High to low
         if datamodule is None:
             pool_loader = self.get_model().pool_loader()
+            pool_len = self.get_model().active_dataset.n_unlabelled
         else:
             pool_loader = datamodule.pool_dataloader()
+            pool_len = datamodule.active_dataset.n_unlabelled
+        model = model if model is not None else self.get_model()
 
-        if len(self.get_model().active_dataset.pool) > 0:
+        if isinstance(pool_loader.sampler, torch.utils.data.sampler.RandomSampler):
+            log.warning("Your pool_dataloader has `shuffle=True`,"
+                        " it is best practice to turn this off.")
+
+        if pool_len > 0:
             # TODO Add support for max_samples in pool_loader
-            probs = self.predict_on_dataset_generator(dataloader=pool_loader, **self.kwargs)
+            probs = self.predict_on_dataset_generator(model=model,
+                                                      dataloader=pool_loader, **self.kwargs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
                 if len(to_label) > 0:

@@ -34,8 +34,8 @@ For support, we have several ways to help you:
     :maxdepth: 1
 
     User guide <user_guide/index>
-    Active learning dataset and training loop classes <notebooks/active-learning.ipynb>
-    Methods for approximating bayesian posteriors <notebooks/posteriors.ipynb>
+    Active learning dataset and training loop classes <notebooks/fundamentals/active-learning.ipynb>
+    Methods for approximating bayesian posteriors <notebooks/fundamentals/posteriors.ipynb>
     API Index <api/index>
     FAQ <faq>
 
@@ -52,9 +52,9 @@ For support, we have several ways to help you:
     :caption: Compatibility with other libraries
     :maxdepth: 1
     
-    How to use with Pytorch Lightning <notebooks/pytorch_lightning.ipynb>
-    How to use with HuggingFace <notebooks/nlp_classification.ipynb>
-    How to use with Scikit-Learn <notebooks/sklearn_tutorial.ipynb>
+    How to use with Pytorch Lightning <notebooks/compatibility/pytorch_lightning.ipynb>
+    How to use with HuggingFace <notebooks/compatibility/nlp_classification.ipynb>
+    How to use with Scikit-Learn <notebooks/compatibility/sklearn_tutorial.ipynb>
     
 .. toctree ::
     :caption: Technical Reports

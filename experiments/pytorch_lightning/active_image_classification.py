@@ -4,7 +4,6 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 import structlog
-import torch
 from pytorch_lightning import LightningModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch import optim
@@ -40,7 +39,7 @@ class Cifar10DataModule(BaaLDataModule):
         return DataLoader(self.active_dataset, self.batch_size, shuffle=True, num_workers=4)
 
     def test_dataloader(self, *args, **kwargs) -> DataLoader:
-        return DataLoader(self.test_set, self.batch_size, shuffle=True, num_workers=4)
+        return DataLoader(self.test_set, self.batch_size, shuffle=False, num_workers=4)
 
 
 class VGG16(LightningModule, ActiveLearningMixin):
@@ -73,7 +72,7 @@ class VGG16(LightningModule, ActiveLearningMixin):
         # calculate loss
         loss_val = self.criterion(y_hat, y)
 
-        self.log("train_loss", loss_val, prog_bar=True)
+        self.log("train_loss", loss_val, prog_bar=True, on_epoch=True)
         return loss_val
 
     def test_step(self, batch, batch_idx):
@@ -81,9 +80,9 @@ class VGG16(LightningModule, ActiveLearningMixin):
         y_hat = self(x)
 
         # calculate loss
-        loss_val = self.criterion(y, y_hat)
+        loss_val = self.criterion(y_hat, y)
 
-        self.log("test_loss", loss_val, prog_bar=True)
+        self.log("test_loss", loss_val, prog_bar=True, on_epoch=True)
         return loss_val
 
     def configure_optimizers(self):
@@ -91,25 +90,8 @@ class VGG16(LightningModule, ActiveLearningMixin):
         return whatever optimizers we want here
         :return: list of optimizers
         """
-        optimizer = optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+        optimizer = optim.SGD(self.parameters(), lr=self.hparams.learning_rate, momentum=0.9, weight_decay=5e-4)
         return [optimizer], []
-
-    def validation_epoch_end(self, outputs):
-        return self.epoch_end(outputs)
-
-    def epoch_end(self, outputs):
-        out = {}
-        if len(outputs) > 0:
-            out = {key: torch.stack([x[key]
-                                     for x in outputs]).mean()
-                   for key in outputs[0].keys() if isinstance(key, torch.Tensor)}
-        return out
-
-    def test_epoch_end(self, outputs):
-        return self.epoch_end(outputs)
-
-    def training_epoch_end(self, outputs):
-        return self.epoch_end(outputs)
 
     @classmethod
     def add_model_specific_args(cls, parser):
@@ -128,6 +110,7 @@ def parse_arguments():
     parser.add_argument('--heuristic', type=str, default='bald', help="Which heuristic to use.")
     parser.add_argument('--data_root', type=str, default='/tmp', help="Where to store data.")
     parser.add_argument('--query_size', type=int, default=100, help="How many items to label per step.")
+    parser.add_argument('--training_duration', type=int, default=30, help="How many epochs per step.")
     parser.add_argument('--gpus', type=int, default=1, help="How many GPUs to use.")
     return parser.parse_args()
 
@@ -135,18 +118,23 @@ def parse_arguments():
 def main():
     pl.seed_everything(42)
     args = parse_arguments()
+    # Create our dataset.
     datamodule = Cifar10DataModule(args.data_root, batch_size=args.batch_size)
     datamodule.active_dataset.label_randomly(10)
+    # Get our heuristic to compute uncertainty.
     heuristic = get_heuristic(args.heuristic, shuffle_prop=0.0, reduction='none')
-    model = VGG16(**vars(args))
+    model = VGG16(**vars(args))  # Instantiate VGG16
+
+    # Make our PL Trainer
     logger = TensorBoardLogger(save_dir=os.path.join('/tmp/', 'logs', 'active'), name='CIFAR10')
     trainer = BaalTrainer.from_argparse_args(args,
                                              # The weights of the model will change as it gets
                                              # trained; we need to keep a copy (deepcopy) so that
                                              # we can reset them.
-                                             logger=logger,
                                              callbacks=[ResetCallback(copy.deepcopy(model.state_dict()))],
                                              dataset=datamodule.active_dataset,
+                                             max_epochs=args.training_duration,
+                                             logger=logger,
                                              heuristic=heuristic,
                                              ndata_to_label=args.query_size
                                              )
@@ -154,9 +142,9 @@ def main():
     AL_STEPS = 100
     for al_step in range(AL_STEPS):
         print(f'Step {al_step} Dataset size {len(datamodule.active_dataset)}')
-        trainer.fit(model, datamodule=datamodule)
-        trainer.test(model, datamodule=datamodule)
-        should_continue = trainer.step(datamodule=datamodule)
+        trainer.fit(model, datamodule=datamodule)  # Train the model on the labelled set.
+        trainer.test(model, datamodule=datamodule)  # Get test performance.
+        should_continue = trainer.step(model, datamodule=datamodule)  # Label the top-k most uncertain examples.
         if not should_continue:
             break
 
