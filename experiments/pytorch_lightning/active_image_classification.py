@@ -15,7 +15,7 @@ from torchvision.transforms import transforms
 
 from baal.active import ActiveLearningDataset, get_heuristic
 from baal.bayesian.dropout import patch_module
-from baal.utils.pytorch_lightning import ActiveLearningMixin, ResetCallback, BaalTrainer, BaaLDataModule
+from baal.utils.pytorch_lightning import ActiveLightningModule, ResetCallback, BaalTrainer, BaaLDataModule
 
 log = structlog.get_logger('PL testing')
 
@@ -42,7 +42,7 @@ class Cifar10DataModule(BaaLDataModule):
         return DataLoader(self.test_set, self.batch_size, shuffle=False, num_workers=4)
 
 
-class VGG16(LightningModule, ActiveLearningMixin):
+class VGG16(LightningModule, ActiveLightningModule):
     def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters()

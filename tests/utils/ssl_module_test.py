@@ -12,8 +12,8 @@ from tests.utils.ssl_iterator_test import SSLTestDataset
 
 
 class TestSSLModule(SSLModule):
-    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace, **kwargs):
-        super().__init__(active_dataset, hparams, **kwargs)
+    def __init__(self, active_dataset: ActiveLearningDataset, **kwargs):
+        super().__init__(active_dataset, **kwargs)
         self.linear = nn.Linear(784, 10)
 
         self.labeled_data = []
@@ -54,7 +54,7 @@ class SSLModuleTest(unittest.TestCase):
             'batch_size': 10,
             'workers': 0}
 
-        module = TestSSLModule(self.al_dataset, Namespace(**hparams))
+        module = TestSSLModule(self.al_dataset, **hparams)
         trainer = Trainer(max_epochs=1, num_sanity_val_steps=0, progress_bar_refresh_rate=0, logger=False,
                           checkpoint_callback=False)
         trainer.fit(module)

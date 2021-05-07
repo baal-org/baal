@@ -12,10 +12,10 @@ from torchvision.models import vgg16
 
 from baal.active import ActiveLearningDataset, get_heuristic
 from baal.bayesian.dropout import patch_module
-from baal.utils.pytorch_lightning import ActiveLearningMixin, BaalTrainer, ResetCallback
+from baal.utils.pytorch_lightning import ActiveLightningModule, BaalTrainer, ResetCallback
 
 
-class PIActiveLearningModel(ActiveLearningMixin, PIModel):
+class PIActiveLearningModel(ActiveLightningModule, PIModel):
     def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace,
                  network: nn.Module):
         super().__init__(active_dataset, hparams, network)

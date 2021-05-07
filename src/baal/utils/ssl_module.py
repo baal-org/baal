@@ -3,6 +3,7 @@ from argparse import Namespace
 from typing import Dict
 
 import pytorch_lightning as pl
+
 from baal.active import ActiveLearningDataset
 from baal.utils.ssl_iterator import SemiSupervisedIterator
 
@@ -17,10 +18,9 @@ class SSLModule(pl.LightningModule):
         **kwargs (**dict): extra arguments
     """
 
-    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace, **kwargs):
+    def __init__(self, active_dataset: ActiveLearningDataset, **kwargs):
         super().__init__()
-
-        self.hparams = hparams
+        self.save_hyperparameters()
         self.active_dataset = active_dataset
 
     def supervised_training_step(self, batch, *args) -> Dict:

@@ -12,7 +12,7 @@ from baal.active.heuristics import heuristics
 from baal.modelwrapper import mc_inference
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
-from pytorch_lightning import Trainer, Callback, LightningDataModule
+from pytorch_lightning import Trainer, Callback, LightningDataModule, LightningModule
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -42,28 +42,33 @@ class BaaLDataModule(LightningDataModule):
         return checkpoint
 
 
-class ActiveLearningMixin(ABC):
-    """Pytorch Lightning Mixin which adds methods to perform
+class ActiveLightningModule(LightningModule):
+    """Pytorch Lightning class which adds methods to perform
     active learning.
     """
-    hparams = ...
 
     def pool_dataloader(self):
         """DataLoader for the pool. Must be defined if you do not use a DataModule"""
-        pass
+        raise NotImplementedError
 
-    def predict_step(self, data, batch_idx):
+    def predict_step(self, batch, batch_idx, dataloader_idx: Optional[int] = None):
         """Predict on batch using MC inference `I` times.
         `I` is defined in the hparams property.
         Args:
             data (Tensor): Data to feed to the model.
             batch_idx (int): Batch index.
+            dataloader_idx: Index of the current dataloader (not used)
 
         Returns:
             Models predictions stacked `I` times on the last axis.
+
+        Notes:
+            If `hparams.replicate_in_memeory` is True, we will stack inputs I times.
+            This might create OoM errors. In that case, set it to False.
         """
         # Get the input only.
-        x, _ = data
+        x, _ = batch
+        # Perform Monte-Carlo Inference fro I iterations.
         out = mc_inference(self, x, self.hparams.iterations, self.hparams.replicate_in_memory)
         return out
 
@@ -131,7 +136,7 @@ class BaalTrainer(Trainer):
         Returns:
             Numpy arrays with all the predictions.
         """
-        model = model or self.get_model()
+        model = model or self.lightning_module
         model.eval()
         if self.on_gpu:
             model.cuda(self.root_gpu)
@@ -166,18 +171,16 @@ class BaalTrainer(Trainer):
         """
         # High to low
         if datamodule is None:
-            pool_dataloader = self.get_model().pool_dataloader()
-            pool_len = self.get_model().active_dataset.n_unlabelled
+            pool_dataloader = self.lightning_module.pool_dataloader()
         else:
             pool_dataloader = datamodule.pool_dataloader()
-            pool_len = datamodule.active_dataset.n_unlabelled
-        model = model if model is not None else self.get_model()
+        model = model if model is not None else self.lightning_module
 
         if isinstance(pool_dataloader.sampler, torch.utils.data.sampler.RandomSampler):
             log.warning("Your pool_dataloader has `shuffle=True`,"
                         " it is best practice to turn this off.")
 
-        if pool_len > 0:
+        if len(pool_dataloader) > 0:
             # TODO Add support for max_samples in pool_dataloader
             probs = self.predict_on_dataset_generator(model=model,
                                                       dataloader=pool_dataloader, **self.kwargs)
