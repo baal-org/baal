@@ -71,7 +71,7 @@ def a_pl_module(hparams):
     return SimplePytorchLightning(**hparams)
 
 
-def test_pool_loader(a_data_module):
+def test_pool_dataloader(a_data_module):
     assert len(a_data_module.pool_dataloader()) == 2
 
 

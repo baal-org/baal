@@ -48,7 +48,7 @@ class ActiveLearningMixin(ABC):
     """
     hparams = ...
 
-    def pool_loader(self):
+    def pool_dataloader(self):
         """DataLoader for the pool. Must be defined if you do not use a DataModule"""
         pass
 
@@ -126,7 +126,7 @@ class BaalTrainer(Trainer):
         Args:
             model: Model to be used in prediction. If None, will get the Trainer's model.
             dataloader (Optional[DataLoader]): If provided, will predict on this dataloader.
-                                                Otherwise, uses model.pool_loader().
+                                                Otherwise, uses model.pool_dataloader().
 
         Returns:
             Numpy arrays with all the predictions.
@@ -135,7 +135,7 @@ class BaalTrainer(Trainer):
         model.eval()
         if self.on_gpu:
             model.cuda(self.root_gpu)
-        dataloader = dataloader or model.pool_loader()
+        dataloader = dataloader or model.pool_dataloader()
         if len(dataloader) == 0:
             return None
 
@@ -154,10 +154,10 @@ class BaalTrainer(Trainer):
 
         model: Model to be used in prediction. If None, will get the Trainer's model.
         dataloader (Optional[DataLoader]): If provided, will predict on this dataloader.
-                                                Otherwise, uses model.pool_loader().
+                                                Otherwise, uses model.pool_dataloader().
 
         Notes:
-            This will get the pool from the model pool_loader and if max_sample is set, it will
+            This will get the pool from the model pool_dataloader and if max_sample is set, it will
             **require** the data_loader sampler to select `max_pool` samples.
 
         Returns:
@@ -166,21 +166,21 @@ class BaalTrainer(Trainer):
         """
         # High to low
         if datamodule is None:
-            pool_loader = self.get_model().pool_loader()
+            pool_dataloader = self.get_model().pool_dataloader()
             pool_len = self.get_model().active_dataset.n_unlabelled
         else:
-            pool_loader = datamodule.pool_dataloader()
+            pool_dataloader = datamodule.pool_dataloader()
             pool_len = datamodule.active_dataset.n_unlabelled
         model = model if model is not None else self.get_model()
 
-        if isinstance(pool_loader.sampler, torch.utils.data.sampler.RandomSampler):
+        if isinstance(pool_dataloader.sampler, torch.utils.data.sampler.RandomSampler):
             log.warning("Your pool_dataloader has `shuffle=True`,"
                         " it is best practice to turn this off.")
 
         if pool_len > 0:
-            # TODO Add support for max_samples in pool_loader
+            # TODO Add support for max_samples in pool_dataloader
             probs = self.predict_on_dataset_generator(model=model,
-                                                      dataloader=pool_loader, **self.kwargs)
+                                                      dataloader=pool_dataloader, **self.kwargs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
                 if len(to_label) > 0:

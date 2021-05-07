@@ -22,7 +22,7 @@ class PIActiveLearningModel(ActiveLearningMixin, PIModel):
 
         self.network = patch_module(self.network)
 
-    def pool_loader(self):
+    def pool_dataloader(self):
         return DataLoader(self.active_dataset.pool, self.hparams.batch_size, shuffle=False,
                           num_workers=4)
 
