@@ -1,7 +1,7 @@
 ARG IMAGE_TAG
 
 # ------ Base -----
-FROM pytorch/pytorch:1.8.0-cuda11.1-cudnn8-devel as base_baal
+FROM pytorch/pytorch:1.8.1-cuda11.1-cudnn8-devel as base_baal
 
 RUN pip install --upgrade pip
 COPY requirements.txt /app/baal/requirements.txt
@@ -12,7 +12,7 @@ RUN pip install -e .[nlp] --no-use-pep517
 
 # ---- test -----
 # we need to install test dependencies before, so we cannot use 'base_baal' as base image
-FROM pytorch/pytorch:1.8.0-cuda11.1-cudnn8-devel as test_baal
+FROM pytorch/pytorch:1.8.1-cuda11.1-cudnn8-devel as test_baal
 
 WORKDIR /app/baal
 

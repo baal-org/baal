@@ -7,7 +7,7 @@ jobs:
   tests_running:
     docker:
       # specify the version you desire here
-      - image: pytorch/pytorch:1.8.0-cuda11.1-cudnn8-devel
+      - image: pytorch/pytorch:1.8.1-cuda11.1-cudnn8-devel
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
