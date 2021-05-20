@@ -1,56 +1,76 @@
 import sys
 import types
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Sequence
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 import numpy as np
 import structlog
-from pytorch_lightning import Trainer, Callback
-from tqdm import tqdm
-
+import torch
 from baal.active import ActiveLearningDataset
 from baal.active.heuristics import heuristics
 from baal.modelwrapper import mc_inference
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
+from pytorch_lightning import Trainer, Callback, LightningDataModule, LightningModule
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 log = structlog.get_logger('PL testing')
 
 
-class ActiveLearningMixin(ABC):
-    """Pytorch Lightning Mixin which adds methods to perform
+class BaaLDataModule(LightningDataModule):
+    def __init__(self, active_dataset: ActiveLearningDataset, batch_size=1,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.active_dataset = active_dataset
+        self.batch_size = batch_size
+
+    def pool_dataloader(self):
+        """Create Dataloader for the pool of unlabelled examples."""
+        return DataLoader(self.active_dataset.pool,
+                          batch_size=self.batch_size, num_workers=4, shuffle=False)
+
+    def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
+        if 'active_dataset' in checkpoint:
+            self.active_dataset.load_state_dict(checkpoint['active_dataset'])
+        else:
+            log.warning("'active_dataset' not in checkpoint!")
+
+    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> Dict:
+        checkpoint['active_dataset'] = self.active_dataset.state_dict()
+        return checkpoint
+
+
+class ActiveLightningModule(LightningModule):
+    """Pytorch Lightning class which adds methods to perform
     active learning.
     """
-    active_dataset = ...
-    hparams = ...
 
-    @abstractmethod
-    def pool_loader(self):
-        """DataLoader for the pool."""
-        pass
+    def pool_dataloader(self):
+        """DataLoader for the pool. Must be defined if you do not use a DataModule"""
+        raise NotImplementedError
 
-    def predict_step(self, data, batch_idx):
+    def predict_step(self, batch, batch_idx, dataloader_idx: Optional[int] = None):
         """Predict on batch using MC inference `I` times.
         `I` is defined in the hparams property.
         Args:
             data (Tensor): Data to feed to the model.
             batch_idx (int): Batch index.
+            dataloader_idx: Index of the current dataloader (not used)
 
         Returns:
             Models predictions stacked `I` times on the last axis.
+
+        Notes:
+            If `hparams.replicate_in_memeory` is True, we will stack inputs I times.
+            This might create OoM errors. In that case, set it to False.
         """
         # Get the input only.
-        x, _ = data
+        x, _ = batch
+        # Perform Monte-Carlo Inference fro I iterations.
         out = mc_inference(self, x, self.hparams.iterations, self.hparams.replicate_in_memory)
         return out
-
-    def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        self.active_dataset.load_state_dict(checkpoint['active_dataset'])
-
-    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        checkpoint['active_dataset'] = self.active_dataset.state_dict()
-        return checkpoint
 
 
 class ResetCallback(Callback):
@@ -70,6 +90,7 @@ class ResetCallback(Callback):
     def on_train_start(self, trainer, module):
         """Will reset the module to its initial weights."""
         module.load_state_dict(self.weights)
+        trainer.current_epoch = 0
 
 
 class BaalTrainer(Trainer):
@@ -95,29 +116,31 @@ class BaalTrainer(Trainer):
         self.dataset = dataset
         self.kwargs = kwargs
 
-    def predict_on_dataset(self, dataloader=None, *args, **kwargs):
-        preds = list(self.predict_on_dataset_generator(dataloader))
+    def predict_on_dataset(self, model=None, dataloader=None, *args, **kwargs):
+        "For documentation, see `predict_on_dataset_generator`"
+        preds = list(self.predict_on_dataset_generator(model, dataloader))
 
         if len(preds) > 0 and not isinstance(preds[0], Sequence):
             # Is an Array or a Tensor
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
 
-    def predict_on_dataset_generator(self, dataloader=None, *args, **kwargs):
+    def predict_on_dataset_generator(self, model=None, dataloader=None, *args, **kwargs):
         """Predict on the pool loader.
 
         Args:
+            model: Model to be used in prediction. If None, will get the Trainer's model.
             dataloader (Optional[DataLoader]): If provided, will predict on this dataloader.
-                                                Otherwise, uses model.pool_loader().
+                                                Otherwise, uses model.pool_dataloader().
 
         Returns:
             Numpy arrays with all the predictions.
         """
-        model = self.get_model()
+        model = model or self.lightning_module
         model.eval()
         if self.on_gpu:
             model.cuda(self.root_gpu)
-        dataloader = dataloader or model.pool_loader()
+        dataloader = dataloader or model.pool_dataloader()
         if len(dataloader) == 0:
             return None
 
@@ -125,25 +148,21 @@ class BaalTrainer(Trainer):
         for idx, batch in enumerate(tqdm(dataloader, total=len(dataloader), file=sys.stdout)):
             if self.on_gpu:
                 batch = to_cuda(batch)
-            pred = self.model.predict_step(batch, idx)
+            pred = model.predict_step(batch, idx)
             yield map_on_tensor(lambda x: x.detach().cpu().numpy(), pred)
         # teardown, TODO customize this later?
         model.cpu()
 
-    def _get_indices(self, pool_loader):
-        pool = pool_loader.dataset
-        if self.max_sample != -1 and self.max_sample < len(pool):
-            indices = np.random.choice(len(pool), self.max_sample, replace=False)
-        else:
-            indices = np.arange(len(pool))
-        return indices
-
-    def step(self) -> bool:
+    def step(self, model=None, datamodule: Optional[BaaLDataModule] = None) -> bool:
         """
         Perform an active learning step.
 
+        model: Model to be used in prediction. If None, will get the Trainer's model.
+        dataloader (Optional[DataLoader]): If provided, will predict on this dataloader.
+                                                Otherwise, uses model.pool_dataloader().
+
         Notes:
-            This will get the pool from the model pool_loader and if max_sample is set, it will
+            This will get the pool from the model pool_dataloader and if max_sample is set, it will
             **require** the data_loader sampler to select `max_pool` samples.
 
         Returns:
@@ -151,15 +170,22 @@ class BaalTrainer(Trainer):
 
         """
         # High to low
-        pool_loader = self.get_model().pool_loader()
+        if datamodule is None:
+            pool_dataloader = self.lightning_module.pool_dataloader()
+        else:
+            pool_dataloader = datamodule.pool_dataloader()
+        model = model if model is not None else self.lightning_module
 
-        if len(self.get_model().active_dataset.pool) > 0:
-            # TODO Add support for max_samples in pool_loader
-            indices = np.arange(self.get_model().active_dataset.n_unlabelled)
-            probs = self.predict_on_dataset_generator(dataloader=pool_loader, **self.kwargs)
+        if isinstance(pool_dataloader.sampler, torch.utils.data.sampler.RandomSampler):
+            log.warning("Your pool_dataloader has `shuffle=True`,"
+                        " it is best practice to turn this off.")
+
+        if len(pool_dataloader) > 0:
+            # TODO Add support for max_samples in pool_dataloader
+            probs = self.predict_on_dataset_generator(model=model,
+                                                      dataloader=pool_dataloader, **self.kwargs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
-                to_label = indices[np.array(to_label)]
                 if len(to_label) > 0:
                     self.dataset.label(to_label[: self.ndata_to_label])
                     return True

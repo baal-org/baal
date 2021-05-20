@@ -81,9 +81,8 @@ class PIModel(SSLModule):
     test_transform = transforms.Compose([transforms.ToTensor(),
                                          transforms.Normalize(3 * [0.5], 3 * [0.5])])
 
-    def __init__(self, active_dataset: ActiveLearningDataset, hparams: Namespace,
-                 network: nn.Module):
-        super().__init__(active_dataset, hparams)
+    def __init__(self, active_dataset: ActiveLearningDataset, network: nn.Module, **kwargs):
+        super().__init__(active_dataset, **kwargs)
 
         self.network = network
 

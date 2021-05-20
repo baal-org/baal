@@ -1,8 +1,11 @@
+import sys
+
 import numpy as np
 import pytest
 from baal.utils.plot_utils import make_animation_from_data
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="Does not work on Mac.")
 def test_make_animation_from_data():
     x = np.random.rand(4, 2)
     y = np.random.rand(4)
