@@ -31,7 +31,7 @@ For requirements please see: _[requirements.txt](requirements.txt)_.
 
 To use BaaL with [HuggingFace](https://huggingface.co/) Trainers : `pip install baal[nlp]`
 
-## Academic works using BaaL
+## Papers using BaaL
 
 * [Bayesian active learning for production, a systematic study and a reusable library
 ](https://arxiv.org/abs/2006.09916) (Atighehchian et al. 2020)
@@ -46,7 +46,6 @@ Active learning is a special case of machine learning in which a learning
 algorithm is able to interactively query the user (or some other information
 source) to obtain the desired outputs at new data points
 (to understand the concept in more depth, refer to our [tutorial](https://baal.readthedocs.io/en/latest/)).
-
 
 ## BaaL Framework
 
