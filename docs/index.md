@@ -46,7 +46,6 @@ For support, we have several ways to help you:
     How to do research and plot progress <notebooks/active_learning_process.ipynb>
     How to use in production <notebooks/baal_prod_cls.ipynb>
     How to use deep ensembles <notebooks/deep_ensemble.ipynb>
-    Can ActiveLearning mitigate bias in datasets <notebooks/ActiveFairness.ipynb>
 
 .. toctree ::
     :caption: Compatibility with other libraries
@@ -62,6 +61,7 @@ For support, we have several ways to help you:
     
     Combining calibration and variational inference for active learning <reports/dirichlet_calibration>
     Double descend in active learning <reports/double_descend.md>
+    Can ActiveLearning mitigate bias in datasets <notebooks/ActiveFairness.ipynb>
 
 .. toctree::
     :caption: Literature and support
