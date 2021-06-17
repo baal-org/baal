@@ -2,19 +2,39 @@ FROM aldro61/synbols:v1.0.2 as base
 FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-devel
 WORKDIR /workspace/
 RUN apt-get update && \
-    apt-get install -y curl fonts-cantarell fontconfig git icu-devtools ipython3 jq libcairo2-dev libhdf5-dev pkg-config ttf-ubuntu-font-family unzip wget
+    apt-get install -y curl \
+                       fonts-cantarell \
+                       fontconfig \
+                       git \
+                       icu-devtools \
+                       ipython3 \
+                       jq \
+                       libcairo2-dev \
+                       libhdf5-dev \
+                       pkg-config \
+                       ttf-ubuntu-font-family \
+                       unzip \
+                       wget
 RUN conda config --append channels conda-forge
 RUN pip install --upgrade pip
 RUN pip install git+https://github.com/ElementAI/active-fairness.git
-RUN pip install baal==1.3.0
-RUN pip install synbols --upgrade
-RUN pip install fontTools==4.4.0 h5py==2.10.0 matplotlib==3.1.3 numpy==1.18.1 pycairo==1.19.1 pyicu-binary==2.3.1 Pillow scipy tqdm==4.48.0
-RUN pip install notebook
+RUN pip install baal==1.3.0 \
+                fontTools==4.4.0 \
+                h5py==2.10.0 \
+                matplotlib==3.1.3 \
+                notebook \
+                numpy==1.18.1 \
+                Pillow \
+                pycairo==1.19.1 \
+                pyicu-binary==2.3.1 \
+                scipy \
+                synbols \
+                tqdm==4.48.0
+
 COPY --from=base /locales/ /locales/
 COPY --from=base /etc/fonts /etc/fonts
 COPY --from=base /usr/share/fonts /usr/share/fonts
 CMD jupyter notebook --ip=0.0.0.0 --port=8080 --no-browser \
     --NotebookApp.token='' \
-    --NotebookApp.custom_display_url=https://${EAI_JOB_ID}.job.console.elementai.com \
     --NotebookApp.disable_check_xsrf=True \
     --NotebookApp.allow_origin='*'
