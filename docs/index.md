@@ -60,7 +60,7 @@ For support, we have several ways to help you:
     
     Combining calibration and variational inference for active learning <reports/dirichlet_calibration>
     Double descend in active learning <reports/double_descend.md>
-    Can active learning mitigate bias in datasets <notebooks/ActiveFairness.ipynb>
+    Can active learning mitigate bias in datasets <notebooks/fairness/ActiveFairness.ipynb>
 
 .. toctree::
     :caption: Literature and support
