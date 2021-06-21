@@ -8,4 +8,5 @@ nbsphinx
 sphinx_automodapi
 sphinx-copybutton
 numpydoc
+docutils==0.16
 recommonmark
