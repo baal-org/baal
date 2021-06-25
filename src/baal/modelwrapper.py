@@ -280,7 +280,8 @@ class ModelWrapper:
         preds = list(self.predict_on_dataset_generator(dataset=dataset, batch_size=batch_size,
                                                        iterations=iterations, use_cuda=use_cuda,
                                                        workers=workers, collate_fn=collate_fn,
-                                                       half=half))
+                                                       half=half,
+                                                       verbose=verbose))
 
         if len(preds) > 0 and not isinstance(preds[0], Sequence):
             # Is an Array or a Tensor
