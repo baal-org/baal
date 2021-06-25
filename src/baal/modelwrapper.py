@@ -120,13 +120,13 @@ class ModelWrapper:
         return history
 
     def test_on_dataset(
-        self,
-        dataset: Dataset,
-        batch_size: int,
-        use_cuda: bool,
-        workers: int = 4,
-        collate_fn: Optional[Callable] = None,
-        average_predictions: int = 1,
+            self,
+            dataset: Dataset,
+            batch_size: int,
+            use_cuda: bool,
+            workers: int = 4,
+            collate_fn: Optional[Callable] = None,
+            average_predictions: int = 1,
     ):
         """
         Test the model on a Dataset `dataset`.
@@ -213,7 +213,8 @@ class ModelWrapper:
 
     def predict_on_dataset_generator(self, dataset: Dataset, batch_size: int, iterations: int,
                                      use_cuda: bool, workers: int = 4,
-                                     collate_fn: Optional[Callable] = None, half=False):
+                                     collate_fn: Optional[Callable] = None, half=False,
+                                     verbose=True):
         """
         Use the model to predict on a dataset `iterations` time.
 
@@ -225,6 +226,7 @@ class ModelWrapper:
             workers (int): Number of workers to use.
             collate_fn (Optional[Callable]): The collate function to use.
             half (bool): If True use half precision.
+            verbose (bool): If True use tqdm to display progress
 
         Notes:
             The "batch" is made of `batch_size` * `iterations` samples.
@@ -242,7 +244,9 @@ class ModelWrapper:
                             batch_size,
                             False, num_workers=workers,
                             collate_fn=collate_fn)
-        for idx, (data, _) in enumerate(tqdm(loader, total=len(loader), file=sys.stdout)):
+        if verbose:
+            loader = tqdm(loader, total=len(loader), file=sys.stdout)
+        for idx, (data, _) in enumerate(loader):
 
             pred = self.predict_on_batch(data, iterations, use_cuda)
             pred = map_on_tensor(lambda x: x.detach(), pred)
@@ -252,7 +256,8 @@ class ModelWrapper:
 
     def predict_on_dataset(self, dataset: Dataset, batch_size: int, iterations: int,
                            use_cuda: bool, workers: int = 4,
-                           collate_fn: Optional[Callable] = None, half=False):
+                           collate_fn: Optional[Callable] = None, half=False,
+                           verbose=True):
         """
         Use the model to predict on a dataset `iterations` time.
 
@@ -264,6 +269,7 @@ class ModelWrapper:
             workers (int): Number of workers to use.
             collate_fn (Optional[Callable]): The collate function to use.
             half (bool): If True use half precision.
+            verbose (bool): If True use tqdm to show progress.
 
         Notes:
             The "batch" is made of `batch_size` * `iterations` samples.
@@ -315,11 +321,11 @@ class ModelWrapper:
         return loss
 
     def test_on_batch(
-        self,
-        data: torch.Tensor,
-        target: torch.Tensor,
-        cuda: bool = False,
-        average_predictions: int = 1,
+            self,
+            data: torch.Tensor,
+            target: torch.Tensor,
+            cuda: bool = False,
+            average_predictions: int = 1,
     ):
         """
         Test the current model on a batch.
