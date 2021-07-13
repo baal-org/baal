@@ -26,6 +26,9 @@ def read(*names, **kwargs):
 with open('requirements.txt') as f:
     reqs = [line.strip() for line in f]
 
+with open('test-requirements.txt') as f:
+    testreqs = [line.strip() for line in f]
+
 with open('documentation-requirements.txt') as f:
     documentation_requirements = [line.strip() for line in f]
 
@@ -62,7 +65,7 @@ setup(
     ],
     install_requires=reqs,
     extras_require={
-        'test': ['pytest', 'pytest-pep8', 'hypothesis', 'coverage', 'coveralls', 'torchvision>=0.7.0'],
+        'test': testreqs,
         'nlp': ['transformers', 'datasets'],
         'documentation': documentation_requirements,
     },
