@@ -62,7 +62,7 @@ setup(
     ],
     install_requires=reqs,
     extras_require={
-        'test': ['pytest', 'pytest-pep8', 'hypothesis', 'coverage', 'coveralls'],
+        'test': ['pytest', 'pytest-pep8', 'hypothesis', 'coverage', 'coveralls', 'torchvision>=0.7.0'],
         'nlp': ['transformers', 'datasets'],
         'documentation': documentation_requirements,
     },
