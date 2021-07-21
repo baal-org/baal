@@ -26,8 +26,14 @@ def read(*names, **kwargs):
 with open('requirements.txt') as f:
     reqs = [line.strip() for line in f]
 
+with open('test-requirements.txt') as f:
+    testreqs = [line.strip() for line in f]
+
 with open('documentation-requirements.txt') as f:
     documentation_requirements = [line.strip() for line in f]
+
+# vision dependencies are also used for testing
+visionreqs = ['torchvision>=0.7.0']
 
 setup(
     name='baal',
@@ -62,8 +68,9 @@ setup(
     ],
     install_requires=reqs,
     extras_require={
-        'test': ['pytest', 'pytest-pep8', 'hypothesis', 'coverage', 'coveralls'],
+        'test': testreqs + visionreqs,
         'nlp': ['transformers', 'datasets'],
+        'vision': visionreqs,
         'documentation': documentation_requirements,
     },
 )
