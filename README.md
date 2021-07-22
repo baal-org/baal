@@ -147,11 +147,11 @@ To contribute, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 At ElementAI, the BaaL team tests and implements the most recent papers on uncertainty estimation and active learning.
 The BaaL team is here to serve you!
 
-- [Parmida Atighehchian](mailto:parmida@elementai.com)
-- [Frédéric Branchaud-Charron](mailto:frederic.branchaud-charron@elementai.com)
+- [Parmida Atighehchian](mailto:parmida.atighehchian@servicenow.com)
+- [Frédéric Branchaud-Charron](mailto:frederic.branchaud-charron@servicenow.com)
 - [Jan Freyberg](mailto:jan.freyberg@gmail.com)
-- [Rafael Pardinas](mailto:rafael.pardinas@elementai.com)
-- [Lorne Schell](mailto:lorne.schell@elementai.com)
+- [Rafael Pardinas](mailto:rafael.pardinas@servicenow.com)
+- [Lorne Schell](mailto:lorne.schell@servicenow.com)
 
 ### How to cite
 
