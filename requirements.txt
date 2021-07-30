@@ -8,5 +8,5 @@ torch>=1.6.0
 tqdm
 h5py
 structlog
-pytorch-lightning>=1.2.0
+pytorch-lightning>=1.4.0
 packaging
