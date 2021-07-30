@@ -91,7 +91,7 @@ class ResetCallback(Callback):
     def on_train_start(self, trainer, module):
         """Will reset the module to its initial weights."""
         module.load_state_dict(self.weights)
-        trainer.current_epoch = 0
+        trainer.fit_loop.current_epoch = 0
 
 
 class BaalTrainer(Trainer):
