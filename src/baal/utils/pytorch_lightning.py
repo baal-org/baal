@@ -140,7 +140,7 @@ class BaalTrainer(Trainer):
         model = model or self.lightning_module
         model.eval()
         if isinstance(self.accelerator, GPUAccelerator):
-            model.cuda(self.root_gpu)
+            model.cuda(self.accelerator.root_device)
         dataloader = dataloader or model.pool_dataloader()
         if len(dataloader) == 0:
             return None
