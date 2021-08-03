@@ -13,6 +13,7 @@ from baal.modelwrapper import mc_inference
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
 from pytorch_lightning import Trainer, Callback, LightningDataModule, LightningModule
+from pytorch_lightning.accelerators import GPUAccelerator
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -90,7 +91,7 @@ class ResetCallback(Callback):
     def on_train_start(self, trainer, module):
         """Will reset the module to its initial weights."""
         module.load_state_dict(self.weights)
-        trainer.current_epoch = 0
+        trainer.fit_loop.current_epoch = 0
 
 
 class BaalTrainer(Trainer):
@@ -138,15 +139,15 @@ class BaalTrainer(Trainer):
         """
         model = model or self.lightning_module
         model.eval()
-        if self.on_gpu:
-            model.cuda(self.root_gpu)
+        if isinstance(self.accelerator, GPUAccelerator):
+            model.cuda(self.accelerator.root_device)
         dataloader = dataloader or model.pool_dataloader()
         if len(dataloader) == 0:
             return None
 
         log.info("Start Predict", dataset=len(dataloader))
         for idx, batch in enumerate(tqdm(dataloader, total=len(dataloader), file=sys.stdout)):
-            if self.on_gpu:
+            if isinstance(self.accelerator, GPUAccelerator):
                 batch = to_cuda(batch)
             pred = model.predict_step(batch, idx)
             yield map_on_tensor(lambda x: x.detach().cpu().numpy(), pred)

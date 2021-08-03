@@ -115,7 +115,7 @@ def test_reset_callback_resets_weights(a_data_module):
     model = vgg16()
     trainer = BaalTrainer(dataset=a_data_module.active_dataset,
                           max_epochs=3, default_root_dir='/tmp')
-    trainer.current_epoch = 10
+    trainer.fit_loop.current_epoch = 10
     initial_weights = copy.deepcopy(model.state_dict())
     initial_params = copy.deepcopy(list(model.parameters()))
     callback = ResetCallback(initial_weights)
