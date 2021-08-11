@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+from datasets import Dataset as HFDataset
 
 
 class HuggingFaceDatasets(Dataset):
@@ -19,7 +20,7 @@ class HuggingFaceDatasets(Dataset):
     """
 
     def __init__(self,
-                 dataset,
+                 dataset: HFDataset,
                  tokenizer=None,
                  target_key: str = "label",
                  input_key: str = "sentence",
@@ -60,3 +61,4 @@ class HuggingFaceDatasets(Dataset):
                 'attention_mask':
                     self.attention_masks[idx].flatten() if len(self.attention_masks) > 0 else None,
                 'label': torch.tensor(target, dtype=torch.long)}
+
