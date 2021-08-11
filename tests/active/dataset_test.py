@@ -2,19 +2,20 @@ import pickle
 import unittest
 import unittest.mock
 import warnings
+from typing import Sequence
 
 import numpy as np
 import pytest
 import torch
 from sklearn.datasets import load_iris
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset as torchdata
 from torchvision.transforms import Lambda
 
 from baal.active import ActiveLearningDataset
 from baal.active.dataset import ActiveNumpyArray
 
 
-class MyDataset(Dataset):
+class MyDataset(torchdata):
     def __init__(self, transform=None):
         self.transform = transform
         pass
@@ -27,6 +28,29 @@ class MyDataset(Dataset):
         if self.transform:
             feature = self.transform(item)
         return (feature, item)
+
+
+class MyArrowDataset():
+    def __init__(self):
+        self.data = {'label': [1, 2, 3, 4, 5],
+                     'index': [0, 1, 2, 3, 4],
+                     'character': ['bold' if 1 % 2 ==0 else 'italic' for i in range(5)]}
+
+    def __len__(self):
+        return 100
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            index = item % 5
+            out = {key: [self.data[key][index]] for key in self.data.keys()}
+        elif isinstance(item, str):
+            out = self.data[item]
+        elif isinstance(item, Sequence) and isinstance(item[0], int):
+            index_slice = [indx % 5 for indx in item]
+            out = {key: self.data[key][index_slice] for key in self.data.keys()}
+        else:
+            raise RuntimeError("the item is not supported")
+        return out
 
 
 class ActiveDatasetTest(unittest.TestCase):
@@ -197,6 +221,16 @@ def test_numpydataset():
     assert [a == b for a, b in zip(dataset.get_raw(0), (x[0], y[0]))]
 
     assert (next(iter(dataset))[0] == dataset[0][0]).all()
+
+
+def test_arrowds():
+    dataset = ActiveLearningDataset(MyArrowDataset())
+    dataset.label(np.arange(10))
+    assert len(dataset) == 10
+    assert len(dataset.pool) == 90
+    data = dataset.pool[0]
+    keys = ["label", "index", "character"]
+    assert [k in keys and len(v)==1 for k, v in data.items()]
 
 
 def test_pickable():

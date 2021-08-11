@@ -132,7 +132,7 @@ class ActiveLearningDataset(torchdata.Dataset):
                 raise ValueError(f"{pool_dataset} doesn't have {attr}")
 
         pool_dataset = torchdata.Subset(pool_dataset,
-                                        (~self.labelled).nonzero()[0].reshape([-1]))
+                                        (~self.labelled).nonzero()[0].reshape([-1]).tolist())
         ald = ActiveLearningPool(pool_dataset, make_unlabelled=self.make_unlabelled)
         return ald
 
