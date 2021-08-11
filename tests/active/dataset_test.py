@@ -8,14 +8,14 @@ import numpy as np
 import pytest
 import torch
 from sklearn.datasets import load_iris
-from torch.utils.data import Dataset as torchdata
+from torch.utils.data import Dataset
 from torchvision.transforms import Lambda
 
 from baal.active import ActiveLearningDataset
 from baal.active.dataset import ActiveNumpyArray
 
 
-class MyDataset(torchdata):
+class MyDataset(Dataset):
     def __init__(self, transform=None):
         self.transform = transform
         pass
