@@ -61,4 +61,3 @@ class HuggingFaceDatasets(Dataset):
                 'attention_mask':
                     self.attention_masks[idx].flatten() if len(self.attention_masks) > 0 else None,
                 'label': torch.tensor(target, dtype=torch.long)}
-
