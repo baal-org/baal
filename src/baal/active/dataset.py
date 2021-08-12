@@ -1,5 +1,5 @@
 import warnings
-from copy import copy
+from copy import deepcopy
 from itertools import zip_longest
 from typing import Union, Optional, Callable, Tuple, List, Any
 
@@ -123,7 +123,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         Raises:
             ValueError if a pool specific attribute cannot be set.
         """
-        pool_dataset = copy(self._dataset)
+        pool_dataset = deepcopy(self._dataset)
 
         for attr, new_val in self.pool_specifics.items():
             if hasattr(pool_dataset, attr):
@@ -132,7 +132,7 @@ class ActiveLearningDataset(torchdata.Dataset):
                 raise ValueError(f"{pool_dataset} doesn't have {attr}")
 
         pool_dataset = torchdata.Subset(pool_dataset,
-                                        (~self.labelled).nonzero()[0].reshape([-1]))
+                                        (~self.labelled).nonzero()[0].reshape([-1]).tolist())
         ald = ActiveLearningPool(pool_dataset, make_unlabelled=self.make_unlabelled)
         return ald
 

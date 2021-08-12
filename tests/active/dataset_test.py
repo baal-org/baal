@@ -2,19 +2,21 @@ import pickle
 import unittest
 import unittest.mock
 import warnings
+from typing import Sequence
 
 import numpy as np
 import pytest
 import torch
+import datasets as HFdata
+import torch.utils.data as torchdata
 from sklearn.datasets import load_iris
-from torch.utils.data import Dataset
 from torchvision.transforms import Lambda
 
 from baal.active import ActiveLearningDataset
 from baal.active.dataset import ActiveNumpyArray
 
 
-class MyDataset(Dataset):
+class MyDataset(torchdata.Dataset):
     def __init__(self, transform=None):
         self.transform = transform
         pass
@@ -199,6 +201,16 @@ def test_numpydataset():
     assert (next(iter(dataset))[0] == dataset[0][0]).all()
 
 
+def test_arrowds():
+    dataset = HFdata.load_dataset('glue', 'sst2')['test']
+    dataset = ActiveLearningDataset(dataset)
+    dataset.label(np.arange(10))
+    assert len(dataset) == 10
+    assert len(dataset.pool) == 1811
+    data = dataset.pool[0]
+    assert [k in ['idx', 'label', 'sentence'] for k, v in data.items()]
+
+
 def test_pickable():
     dataset_1 = ActiveLearningDataset(MyDataset())
     l = len(dataset_1.pool)
@@ -208,7 +220,7 @@ def test_pickable():
 
 
 def test_warning_raised_on_label():
-    class DS(Dataset):
+    class DS(torchdata.Dataset):
         def __init__(self):
             self.x = [1, 2, 3]
             self.label = [1, 1, 1]
