@@ -241,11 +241,14 @@ class AbstractHeuristic:
         else:
             scores = self.get_uncertainties(predictions)
 
-        return self.reorder_indices(scores)
+        return self.reorder_indices(scores), scores
 
     def __call__(self, predictions):
-        """Rank the predictions according to their uncertainties."""
-        return self.get_ranks(predictions)
+        """Rank the predictions according to their uncertainties.
+
+        Only return the scores and not the associated uncertainties.
+        """
+        return self.get_ranks(predictions)[0]
 
 
 class BALD(AbstractHeuristic):
@@ -434,7 +437,10 @@ class BatchBALD(BALD):
         conditional_entropies_B = self._conditional_entropy(predictions)
         bald_out = super().compute_score(predictions)
         # We start with the most uncertain sample according to BALD.
-        history = self.reduction(bald_out).argsort()[-1:].tolist()
+        bald_out = self.reduction(bald_out)
+        history = bald_out.argsort()[-1:].tolist()
+        uncertainties = np.zeros_like(bald_out)
+        uncertainties[history[0]] = bald_out.max()
         for step in range(self.num_samples):
             # Draw `num_draw` example from history, take entropy
             # TODO use numpy/numba
@@ -452,23 +458,14 @@ class BatchBALD(BALD):
             assert partial_multi_bald_b.ndim == 1
             winner_index = partial_multi_bald_b.argmax()
             history.append(winner_index)
+            uncertainties[winner_index] = partial_multi_bald_b.max()
 
             if partial_multi_bald_b.max() < MIN_SPREAD:
                 COUNT += 1
                 if COUNT > 50 or len(history) >= predictions.shape[0]:
                     break
 
-        return np.array(history)
-
-    def reorder_indices(self):
-        """This function is not supported by BatchBald.
-
-        Raises:
-            All the time.
-        """
-        raise Exception("BatchBald needs to have the whole pool at once,"
-                        "to be able to have relevant informationa chunk"
-                        " processing is not supported by BatchBald")
+        return uncertainties
 
     def get_ranks(self, predictions):
         """
@@ -493,11 +490,7 @@ class BatchBALD(BALD):
             raise ValueError("BatchBALD only works on classification"
                              "Expected shape= [batch_size, C, Iterations]")
 
-        ranks = self.get_uncertainties(predictions)
-
-        assert ranks.ndim == 1
-        ranks = _shuffle_subset(ranks, self.shuffle_prop)
-        return ranks
+        return super().get_ranks(predictions)
 
 
 class Variance(AbstractHeuristic):
@@ -613,29 +606,15 @@ class Random(Precomputed):
         reduction (Union[str, callable]): UNUSED.
     """
 
-    def __init__(self, shuffle_prop=0.0, reduction='none'):
+    def __init__(self, shuffle_prop=0.0, reduction='none', seed=None):
         super().__init__(1.0, False)
+        if seed is not None:
+            self.rng = np.random.RandomState(seed)
+        else:
+            self.rng = np.random
 
-    def reorder_indices(self, predictions):
-        """
-        Order indices randomly.
-
-        Args:
-            predictions (ndarray): predictions for samples
-
-        Returns:
-            ranked indices (randomly)
-        """
-        if isinstance(predictions, Sequence):
-            predictions = np.concatenate(predictions)
-        ranks = np.arange(predictions.shape[0])
-        ranks = _shuffle_subset(ranks, self.shuffle_prop)
-        return ranks
-
-    def get_ranks(self, predictions):
-        if isinstance(predictions, types.GeneratorType):
-            predictions = np.array([np.ones([t.shape[0]]) for t in predictions]).reshape([-1])
-        return self.reorder_indices(predictions)
+    def compute_score(self, predictions):
+        return self.rng.rand(predictions.shape[0])
 
 
 class CombineHeuristics(AbstractHeuristic):
@@ -736,20 +715,3 @@ class CombineHeuristics(AbstractHeuristic):
             ranks = ranks[::-1]
         ranks = _shuffle_subset(ranks, self.shuffle_prop)
         return ranks
-
-    def get_ranks(self, predictions):
-        """
-        Rank the predictions according to the weighted vote of each heuristic.
-
-        Args:
-            predictions (list[ndarray]):
-                list[[batch_size, C, ..., Iterations], [batch_size, C, ..., Iterations], ...]
-
-        Returns:
-            Ranked index according to the uncertainty (highest to lowest).
-
-        """
-
-        scores_list = self.get_uncertainties(predictions)
-
-        return self.reorder_indices(scores_list)

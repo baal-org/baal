@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from baal.active import ActiveLearningDataset
 from torch.utils.data import Dataset
 from datasets import Dataset as HFDataset
 
@@ -61,3 +62,31 @@ class HuggingFaceDatasets(Dataset):
                 'attention_mask':
                     self.attention_masks[idx].flatten() if len(self.attention_masks) > 0 else None,
                 'label': torch.tensor(target, dtype=torch.long)}
+
+
+def active_huggingface_dataset(dataset,
+                               tokenizer=None,
+                               target_key: str = "label",
+                               input_key: str = "sentence",
+                               max_seq_len: int = 128,
+                               **kwargs):
+    """
+    Wrapping huggingface.datasets with baal.active.ActiveLearningDataset.
+
+    Args:
+        dataset (torch.utils.data.Dataset): a dataset provided by huggingface.
+        tokenizer (transformers.PreTrainedTokenizer): a tokenizer provided by huggingface.
+        target_key (str): target key used in the dataset's dictionary.
+        input_key (str): input key used in the dataset's dictionary.
+        max_seq_len (int): max length of a sequence to be used for padding the shorter sequences.
+        kwargs (Dict): Parameters forwarded to 'ActiveLearningDataset'.
+
+    Returns:
+        an baal.active.ActiveLearningDataset object.
+    """
+
+    return ActiveLearningDataset(HuggingFaceDatasets(dataset,
+                                                     tokenizer,
+                                                     target_key,
+                                                     input_key,
+                                                     max_seq_len), **kwargs)
