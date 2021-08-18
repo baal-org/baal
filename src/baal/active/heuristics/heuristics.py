@@ -234,6 +234,7 @@ class AbstractHeuristic:
 
         Returns:
             Ranked index according to the uncertainty (highest to lowes).
+            Scores for all predictions.
 
         """
         if isinstance(predictions, types.GeneratorType):
@@ -604,6 +605,7 @@ class Random(Precomputed):
     Args:
         shuffle_prop (float): UNUSED
         reduction (Union[str, callable]): UNUSED.
+        seed (Optional[int]): If provided, will seed the random generator.
     """
 
     def __init__(self, shuffle_prop=0.0, reduction='none', seed=None):
