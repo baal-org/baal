@@ -75,12 +75,14 @@ class ActiveLearningLoop:
                     to_label = indices[np.array(to_label)]
                 if self.uncertainty_folder is not None:
                     # We save uncertainty in a file.
+                    uncertainty_name = f"uncertainty_pool={len(pool)}" \
+                                       f"_labelled={len(self.dataset)}.pkl"
                     pickle.dump({
                         'indices': indices,
                         'uncertainty': uncertainty,
                         'dataset': self.dataset.state_dict()},
                         open(pjoin(self.uncertainty_folder,
-                                   f"uncertainty_pool={len(pool)}_labelled={len(self.dataset)}.pkl"),
+                                   uncertainty_name),
                              'wb'))
                 if len(to_label) > 0:
                     self.dataset.label(to_label[: self.ndata_to_label])

@@ -1,8 +1,9 @@
 import numpy as np
 import torch
-from baal.active import ActiveLearningDataset
-from torch.utils.data import Dataset
 from datasets import Dataset as HFDataset
+from torch.utils.data import Dataset
+
+from baal.active import ActiveLearningDataset
 
 
 class HuggingFaceDatasets(Dataset):

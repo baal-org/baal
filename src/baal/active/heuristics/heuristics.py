@@ -300,7 +300,7 @@ class BatchBALD(BALD):
     Implementation of BatchBALD from https://github.com/BlackHC/BatchBALD
 
     Args:
-        num_samples (int): Number of samples to select.
+        num_samples (int): Number of samples to select (also called query_size).
         num_draw (int): Number of draw to perform from the history.
                         From the paper `40000 // num_classes` is suggested.
         shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias
@@ -309,7 +309,8 @@ class BatchBALD(BALD):
             (default: 'none').
 
     Notes:
-        This implementation only returns the ranking and not the score.
+        This implementation returns the scores
+         which is not necessarily ordered in the same way as they were selected.
 
     References:
         https://arxiv.org/abs/1906.08158
@@ -406,13 +407,12 @@ class BatchBALD(BALD):
         M = selected.shape[0]
         predictions = predictions.swapaxes(1, 2)
 
-        exp_y = np.array(
-            [np.matmul(selected, predictions[i]) for i in range(predictions.shape[0])]) / K
+        exp_y = np.matmul(selected, predictions) / K
         assert exp_y.shape == (B, M, C)
         mean_entropy = selected.mean(-1, keepdims=True)[None]
         assert mean_entropy.shape == (1, M, 1)
 
-        step = 256
+        step = 10_000
         for idx in range(0, exp_y.shape[0], step):
             b_preds = exp_y[idx:idx + step]
             yield np.sum(-xlogy(b_preds, b_preds) / mean_entropy, axis=(1, -1)) / M
@@ -463,7 +463,7 @@ class BatchBALD(BALD):
 
             if partial_multi_bald_b.max() < MIN_SPREAD:
                 COUNT += 1
-                if COUNT > 50 or len(history) >= predictions.shape[0]:
+                if COUNT > 10 or len(history) >= self.num_samples:
                     break
 
         return uncertainties

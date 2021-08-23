@@ -119,7 +119,7 @@ def test_file_saving(tmpdir):
     _ = active_loop.step()
     assert len(os.listdir(tmpdir)) == 1
     file = pjoin(tmpdir, os.listdir(tmpdir)[0])
-    assert "pool=90" in file and "labelled=10"
+    assert "pool=90" in file and "labelled=10" in file
     data = pickle.load(open(file, 'rb'))
     assert len(data['uncertainty']) == 90
     # The diff between the current state and the step before is the newly labelled item.
