@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.dataloader import default_collate
 from tqdm import tqdm
 
-from baal.utils.array_utils import stack_in_memory
+from baal.utils.array_utils import stack_in_memory, to_prob
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
 from baal.utils.metrics import Loss
@@ -461,3 +461,53 @@ def mc_inference(model, data, iterations, replicate_in_memory):
         else:
             out = torch.stack(out, dim=-1)
     return out
+
+
+# TODO: to put it in PL and ModelWrapper and Transformers Wrapper or just a helper function ?
+def embeddings_grad_on_batch(model, data, use_cuda: bool = True):
+    """ the model needs to have a function to get the embedding results before the last layer ONLY for classification now"""
+    with torch.no_grad():
+        if use_cuda:
+            data = to_cuda(data)
+            out = model.get_embeddings(data)
+        probs = to_prob(model(data))
+        model_preds = np.argmax(probs, 1)
+
+        embedding_grads = np.zeros(out.shape[0], out.shape[1] * probs.shape[1])
+        for idx in range(probs.shape[0]):
+            for lbl in range(probs.shape[1]):
+                if model_preds[idx] == lbl:
+                    embedding_grads[idx][out.shape[1] * lbl: out.shape[1] * (lbl + 1)] = out[idx] * (
+                            1 - probs[idx][lbl])
+                else:
+                    embedding_grads[idx][out.shape[1] * lbl: out.shape[1] * (lbl + 1)] = out[idx] * (
+                                - probs[idx][lbl])
+        return torch.Tensor(embedding_grads)
+
+
+# change to not be a generator for now
+def embeddings_grads(dataset,
+                     model: torch.nn.Module,
+                     batch_size: int,
+                     workers: int = 4,
+                     use_cuda: bool = True,
+                     collate_fn=None,
+                     verbose=True):
+    log.info("Get Embeddings", dataset=len(dataset))
+    collate_fn = collate_fn or default_collate
+    loader = DataLoader(dataset,
+                        batch_size,
+                        False, num_workers=workers,
+                        collate_fn=collate_fn)
+    model.eval()
+    if verbose:
+        loader = tqdm(loader, total=len(loader), file=sys.stdout)
+
+    embeddings_grads = []
+    for idx, (data, _) in enumerate(loader):
+
+        batch_grad = embeddings_grad_on_batch(model, data, use_cuda)
+        batch_grad = map_on_tensor(lambda x: x.detach(), batch_grad)
+        batch_grad = map_on_tensor(lambda x: x.cpu().numpy(), batch_grad)
+        embeddings_grads.append(batch_grad)
+    return np.vstack(embeddings_grads)

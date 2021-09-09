@@ -5,9 +5,10 @@ from functools import wraps as _wraps
 from typing import List
 
 import numpy as np
-import scipy.stats
 import torch
+import scipy.stats
 from scipy.special import xlogy
+from sklearn.metrics import pairwise_distances
 from torch import Tensor
 
 from baal.utils.array_utils import to_prob
@@ -500,6 +501,80 @@ class BatchBALD(BALD):
         return ranks
 
 
+class BADGE(AbstractHeuristic):
+    """
+    Batch Active Learning by Diverse Gradient Embeddings.
+    Args:
+        n_centroids (int): The number of centroids for kmean++ and the query size at each AL step.
+        shuffle_prop (float): Amount of noise to put in the ranking. Helps with selection bias
+            (default: 0.0).
+    References:
+        https://arxiv.org/pdf/1906.03671.pdf
+    Notes:
+        We do NOT return a score using this heuristic.
+        We only return the ranks for the first #n_centroids samples.
+    """
+    def __init__(self, n_centroids, shuffle_prop=0.0, reduction='none'):
+        super().__init__(
+            shuffle_prop=shuffle_prop, reverse=False, reduction=reduction
+        )
+
+        # resetting for every AL step might be needed! TBD!
+        self.n_centroids = n_centroids
+
+    def init_centers(self, x):
+        """
+        Using Kmeans++ to find the centers.
+
+        Args:
+            x (ndarray): The distribution in which we are looking for the centroids
+        References:
+            https://github.com/JordanAsh/badge/blob/master/query_strategies/badge_sampling.py
+        Returns:
+            The ranked indices of the centers.
+        """
+        ind = np.argmax([np.linalg.norm(s, 2) for s in x])
+        mu = [x[ind]]
+        indsAll = [ind]
+        centInds = [0.] * len(x)
+        cent = 0
+        while len(mu) < self.n_centroids:
+            if len(mu) == 1:
+                D2 = pairwise_distances(x, mu).ravel().astype(float)
+            else:
+                newD = pairwise_distances(x, [mu[-1]]).ravel().astype(float)
+                for i in range(len(x)):
+                    if D2[i] > newD[i]:
+                        centInds[i] = cent
+                        D2[i] = newD[i]
+            print(str(len(mu)) + '\t' + str(sum(D2)), flush=True)
+            D2 = D2.ravel().astype(float)
+            Ddist = (D2 ** 2) / sum(D2 ** 2)
+            customDist = scipy.stats.rv_discrete(name='custm', values=(np.arange(len(D2)), Ddist))
+            ind = customDist.rvs(size=1)[0]
+            while ind in indsAll:
+                ind = customDist.rvs(size=1)[0]
+            mu.append(x[ind])
+            indsAll.append(ind)
+            cent += 1
+        return indsAll
+
+    def get_ranks(self, embedding_grads):
+        """
+        Returns the n_centroids most uncertain indices in a descending order.
+        Args:
+            embedding_grads (ndarray): The array containing the gradients of the embeddings
+            for each data point.
+
+        Returns:
+            n_centroids ranked indices according to the embedding gradient (highest to lowes).
+
+        """
+        # Combine Heuristics should not work with this as long as we dont have a score for each index.
+        ranks = self.init_centers(embedding_grads)
+        return ranks
+
+
 class Variance(AbstractHeuristic):
     """
     Sort by the highest variance.
@@ -668,6 +743,9 @@ class CombineHeuristics(AbstractHeuristic):
 
     def __init__(self, heuristics: List, weights: List, reduction='mean', shuffle_prop=0.0):
         super(CombineHeuristics, self).__init__(reduction=reduction, shuffle_prop=shuffle_prop)
+
+        _help = "BADGE cannot be combined with any other heuristic!"
+        assert all([not isinstance(heuristic, BADGE) for heuristic in heuristics]), _help
         self.composed_heuristic = heuristics
         self.weights = weights
         reversed = [bool(heuristic.reversed) for heuristic in self.composed_heuristic]

@@ -30,7 +30,8 @@ def get_heuristic(name: str, shuffle_prop: float = 0.0,
         'bald': heuristics.BALD,
         'variance': heuristics.Variance,
         'precomputed': heuristics.Precomputed,
-        'batch_bald': heuristics.BatchBALD
+        'batch_bald': heuristics.BatchBALD,
+        'badge': heuristics.BADGE
     }[name](shuffle_prop=shuffle_prop, reduction=reduction, **kwargs)
 
 
