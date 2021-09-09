@@ -1,4 +1,4 @@
-# Semi-supervised learning support
+# API Design proposal
 
 ---
 | Status        | Proposed       |
