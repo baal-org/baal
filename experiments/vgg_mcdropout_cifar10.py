@@ -12,10 +12,10 @@ from torchvision.models import vgg16
 from torchvision.transforms import transforms
 from tqdm import tqdm
 
-from baal.active import get_heuristic, ActiveLearningDataset
-from baal.active.active_loop import ActiveLearningLoop
+from baal import get_heuristic, ActiveLearningDataset
+from baal import ActiveLearningLoop
 from baal.bayesian.dropout import patch_module
-from baal.modelwrapper import ModelWrapper
+from baal import ModelWrapper
 
 """
 Minimal example to use BaaL.

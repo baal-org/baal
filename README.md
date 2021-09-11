@@ -16,7 +16,7 @@ Our paper can be read on [arXiv](https://arxiv.org/abs/2006.09916). It includes 
 
 In this [blog post](https://www.elementai.com/news/2019/element-ai-makes-its-bayesian-active-learning-library-open-source), we present our library.
 
-For a quick introduction to BaaL and Bayesian active learning, please see this [presentation](https://drive.google.com/file/d/1icbTSbhl-Cs1X4k5XKYOEWfhkx9wBPdw/view?usp=sharing) or visit our [User guide](https://baal.readthedocs.io/en/latest/user_guide/index.html).
+For a quick introduction to BaaL and Bayesian active learning, please see this [seminar](hhttps://www.youtube.com/watch?v=HG7imRQN3-k) or visit our [User guide](https://baal.readthedocs.io/en/latest/user_guide/index.html).
 
 
 ## Installation and requirements
@@ -25,9 +25,7 @@ BaaL requires `Python>=3.6`.
 
 To install BaaL using pip: `pip install baal`
 
-To install BaaL from source: `pip install -e .`
-
-For requirements please see: _[requirements.txt](requirements.txt)_.
+To install BaaL from source: `poetry install`
 
 To use BaaL with [HuggingFace](https://huggingface.co/) Trainers : `pip install baal[nlp]`
 
@@ -61,7 +59,7 @@ If you want to propose new methods, please submit an issue.
 
 The **Monte-Carlo Dropout** method is a known approximation for Bayesian neural
 networks. In this method, the Dropout layer is used both in training and test
-time. By running the model multiple times whilst randomly dropping weights, we calculate the uncertainty of the prediction using one of the uncertainty measurements in [heuristics.py](src/baal/active/heuristics/heuristics.py).
+time. By running the model multiple times whilst randomly dropping weights, we calculate the uncertainty of the prediction using one of the uncertainty measurements in [heuristics.py](baal/active/heuristics/heuristics.py).
 
 The framework consists of four main parts, as demonstrated in the flowchart below:
 
@@ -74,14 +72,14 @@ The framework consists of four main parts, as demonstrated in the flowchart belo
   <img src="./docs/literature/images/Baalscheme.svg">
 </p>
 
-To get started, wrap your dataset in our _[**ActiveLearningDataset**](src/baal/active/dataset.py)_ class. This will ensure that the dataset is split into
+To get started, wrap your dataset in our _[**ActiveLearningDataset**](baal/active/dataset.py)_ class. This will ensure that the dataset is split into
 `training` and `pool` sets. The `pool` set represents the portion of the training set which is yet
 to be labelled.
 
 
-We provide a lightweight object _[**ModelWrapper**](src/baal/modelwrapper.py)_ similar to `keras.Model` to make it easier to train and test the model. If your model is not ready for active learning, we provide Modules to prepare them. 
+We provide a lightweight object _[**ModelWrapper**](baal/modelwrapper.py)_ similar to `keras.Model` to make it easier to train and test the model. If your model is not ready for active learning, we provide Modules to prepare them. 
 
-For example, the _[**MCDropoutModule**](src/baal/bayesian/dropout.py)_ wrapper changes the existing dropout layer
+For example, the _[**MCDropoutModule**](baal/bayesian/dropout.py)_ wrapper changes the existing dropout layer
 to be used in both training and inference time and the `ModelWrapper` makes
 the specifies the number of iterations to run at training and inference.
 
@@ -105,7 +103,7 @@ for al_step in range(N_ALSTEP):
 
 For a complete experiment, we provide _[experiments/](experiments/)_ to understand how to
 write an active training process. Generally, we use the **ActiveLearningLoop**
-provided at _[src/baal/active/active_loop.py](src/baal/active/active_loop.py)_.
+provided at _[src/baal/active/active_loop.py](baal/active/active_loop.py)_.
 This class provides functionality to get the predictions on the unlabeled pool
 after each (few) epoch(s) and sort the next set of data items to be labeled
 based on the calculated uncertainty of the pool.
