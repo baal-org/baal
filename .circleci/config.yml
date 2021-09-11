@@ -22,7 +22,7 @@ jobs:
             pip install cmake "poetry==1.1.7"
             poetry config virtualenvs.create true
             poetry config virtualenvs.in-project true
-            poetry install --no-interaction --no-ansi --remove-untracked
+            poetry install --no-interaction --no-ansi --remove-untracked -E nlp -E vision
       - save_cache:
           key: v2-{{ checksum "poetry.lock" }}
           paths:
