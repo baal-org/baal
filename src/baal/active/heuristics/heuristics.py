@@ -533,31 +533,28 @@ class BADGE(AbstractHeuristic):
         Returns:
             The ranked indices of the centers.
         """
-        ind = np.argmax([np.linalg.norm(s, 2) for s in x])
-        mu = [x[ind]]
-        indsAll = [ind]
-        centInds = [0.] * len(x)
-        cent = 0
+        # check for each sample which one has the largest distance between the outed gradients
+        idx = np.argmax([np.linalg.norm(s, 2) for s in x])
+
+        # the selected data point with largest distance among the gradients
+        mu = [x[idx]]
+        chosen_idxs = [idx]
+        dist_from_center = pairwise_distances(x, mu).ravel().astype(float)
         while len(mu) < self.n_centroids:
-            if len(mu) == 1:
-                D2 = pairwise_distances(x, mu).ravel().astype(float)
-            else:
-                newD = pairwise_distances(x, [mu[-1]]).ravel().astype(float)
-                for i in range(len(x)):
-                    if D2[i] > newD[i]:
-                        centInds[i] = cent
-                        D2[i] = newD[i]
-            print(str(len(mu)) + '\t' + str(sum(D2)), flush=True)
-            D2 = D2.ravel().astype(float)
-            Ddist = (D2 ** 2) / sum(D2 ** 2)
-            customDist = scipy.stats.rv_discrete(name='custm', values=(np.arange(len(D2)), Ddist))
-            ind = customDist.rvs(size=1)[0]
-            while ind in indsAll:
-                ind = customDist.rvs(size=1)[0]
-            mu.append(x[ind])
-            indsAll.append(ind)
-            cent += 1
-        return indsAll
+            if len(mu) > 1:
+                # update the pairwise distances with respect to the lately added center, if the new distance is larger,
+                # keep the previous.
+                # (that data sample is more likely to be in a cluster that its centriod is already picked)
+                dist_from_center = np.minimum(pairwise_distances(x, [mu[-1]]).ravel().astype(float), dist_from_center)
+
+            # create the distance probability array for each data point wrt the lastly added center
+            dist_prob = np.nan_to_num((dist_from_center ** 2) / sum(dist_from_center ** 2))
+            idx = np.random.choice(np.arange(len(x)), p=dist_prob)
+            while idx in chosen_idxs:
+                idx = np.random.choice(np.arange(len(x)), p=dist_prob)
+            mu.append(x[idx])
+            chosen_idxs.append(idx)
+        return chosen_idxs
 
     def get_ranks(self, embedding_grads):
         """
@@ -571,6 +568,8 @@ class BADGE(AbstractHeuristic):
 
         """
         # Combine Heuristics should not work with this as long as we dont have a score for each index.
+        embedding_grads = self.reduction(embedding_grads)
+        assert embedding_grads.ndim == 2
         ranks = self.init_centers(embedding_grads)
         return ranks
 

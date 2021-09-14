@@ -12,6 +12,7 @@ from baal.active.heuristics import (
     Certainty,
     Variance,
     BatchBALD,
+    BADGE,
     AbstractHeuristic,
     requireprobs,
     Precomputed,
@@ -175,6 +176,34 @@ def test_margin(distributions, reduction):
 @pytest.mark.parametrize(
     'distributions, reduction',
     [
+        (distributions_5d, lambda x: np.mean(x, axis=(2, 3, 4))),
+        (distributions_3d, lambda x: np.mean(x, axis=2)),
+        (distribution_2d, 'none'),
+    ],
+)
+def test_badge(distributions, reduction):
+    # Note: the first element with Badge is always randomly chosen and after that
+    # the indices are chosen based on their distance from the current cluster.
+
+    badge = BADGE(n_centroids=1, reduction=reduction)
+    marg = badge(distributions)
+    assert len(marg) == 1
+    assert np.all(marg == [0])
+
+    badge = BADGE(n_centroids=2, reduction=reduction)
+    marg = badge(distributions)
+    assert len(marg) == 2
+    assert np.all(marg == [0, 2])
+
+    badge = BADGE(n_centroids=3, reduction=reduction)
+    marg = badge(distributions)
+    assert len(marg) == 3
+    assert np.all(marg == [0, 2, 1])
+
+
+@pytest.mark.parametrize(
+    'distributions, reduction',
+    [
         (distributions_5d, 'mean'),
         (distributions_5d, lambda x: np.mean(x, axis=(1, 2))),
         (distributions_3d, 'none'),
@@ -252,17 +281,23 @@ def test_that_precomputed_passes_back_predictions():
      (BALD(), Entropy(reduction='mean'), [0.9, 0.8]),
      (Entropy(), Variance(), [4, 8]),
      (Certainty(), Variance(), [9, 2]),
-     (Certainty(), Certainty(reduction='mean'), [1, 3])]
+     (Certainty(), Certainty(reduction='mean'), [1, 3]),
+     (Certainty(), BADGE(2), [4, 5])]
 )
 def test_combine_heuristics(heuristic1, heuristic2, weights):
     np.random.seed(1337)
     predictions = [distributions_3d, distributions_5d]
-
     with pytest.raises(ValueError) as excinfo:
         heuristic1(predictions)
     assert "CombineHeuristics" in str(excinfo.value)
 
     if isinstance(heuristic1, Certainty) and not isinstance(heuristic2, Certainty):
+        if isinstance(heuristic2, BADGE):
+            with pytest.raises(AssertionError) as e_info:
+                heuristics = CombineHeuristics([heuristic1, heuristic2], weights=weights,
+                                               reduction='mean')
+                assert 'BADGE cannot be combined with any other heuristic!' in str(
+                    e_info.value)
         with pytest.raises(Exception) as e_info:
             heuristics = CombineHeuristics([heuristic1, heuristic2], weights=weights,
                                            reduction='mean')
