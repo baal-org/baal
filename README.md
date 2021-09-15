@@ -16,7 +16,10 @@ Our paper can be read on [arXiv](https://arxiv.org/abs/2006.09916). It includes 
 
 In this [blog post](https://www.elementai.com/news/2019/element-ai-makes-its-bayesian-active-learning-library-open-source), we present our library.
 
-For a quick introduction to BaaL and Bayesian active learning, please see this [seminar](hhttps://www.youtube.com/watch?v=HG7imRQN3-k) or visit our [User guide](https://baal.readthedocs.io/en/latest/user_guide/index.html).
+For a quick introduction to BaaL and Bayesian active learning, please see these links:
+* [Seminar with Label Studio](https://www.youtube.com/watch?v=HG7imRQN3-k)
+* [User guide](https://baal.readthedocs.io/en/latest/user_guide/index.html)
+* [Bayesian active learning presentation](https://drive.google.com/file/d/13UUDsS1rvqDnXza7L0j4bnqyhOT5TDSt/view?usp=sharing)
 
 
 ## Installation and requirements
