@@ -9,6 +9,7 @@ from torchvision.datasets import MNIST
 from baal import ActiveLearningDataset, ModelWrapper
 from baal.active import ActiveLearningLoop
 from baal.active.heuristics import BALD
+from baal.bayesian.dropout import patch_module
 
 use_cuda = torch.cuda.is_available()
 
@@ -19,7 +20,7 @@ test_ds = MNIST('/tmp', train=False, transform=test_transform, download=True)
 
 # Uses an ActiveLearningDataset to help us split labelled and unlabelled examples.
 al_dataset = ActiveLearningDataset(train_ds, pool_specifics={'transform': test_transform})
-al_dataset.label_randomly(200) # Start with 200 items labelled.
+al_dataset.label_randomly(200)  # Start with 200 items labelled.
 
 # Creates an MLP to classify MNIST
 model = nn.Sequential(nn.Flatten(),
@@ -29,6 +30,7 @@ model = nn.Sequential(nn.Flatten(),
                       nn.Dropout(),
                       nn.Linear(512, 10)
                       )
+model = patch_module(model)  # Set dropout layers for MC-Dropout.
 if use_cuda:
     model = model.cuda()
 wrapper = ModelWrapper(model=model, criterion=nn.CrossEntropyLoss())
