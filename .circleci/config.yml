@@ -1,54 +1,43 @@
-# Python CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-python/ for more details
-#
-version: 2
-jobs:
-  tests_running:
+version: 2.1
+
+executors:
+  baal:
+    resource_class: medium
     docker:
-      # specify the version you desire here
-      - image: pytorch/pytorch:1.8.1-cuda11.1-cudnn8-devel
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    working_directory: ~/baal
-
+      - image: circleci/python:3.8
+jobs:
+  install_and_test_backend:
+    executor: baal
     steps:
       - checkout
-
+      - restore_cache:
+          keys:
+            - v2-{{ checksum "poetry.lock" }}
+            - v2
       - run:
           name: install dependencies
           command: |
             pip config set global.progress_bar off
             pip install --upgrade pip
-            pip install -r test-requirements.txt
-            pip install -e .[nlp]
-
+            pip install cmake "poetry==1.1.7"
+            poetry config virtualenvs.create true
+            poetry config virtualenvs.in-project true
+            poetry install --no-interaction --no-ansi --remove-untracked -E nlp -E vision
+      - save_cache:
+          key: v2-{{ checksum "poetry.lock" }}
+          paths:
+            - .venv
       - run:
           name: Setup Environment Variables
           command: |
-            echo "export CI_BRANCH=${CIRCLE_BRANCH}" >> $BASH_ENV   
+            echo "export CI_BRANCH=${CIRCLE_BRANCH}" >> $BASH_ENV
             echo "export CI_BUILD_URL=${CIRCLE_BUILD_URL}" >> $BASH_ENV
             echo "export CI_BUILD_NUMBER=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
             echo "export CI_NAME=circle" >> $BASH_ENV
-
-      # pep8
       - run:
-          name: run flake8
+          name: run tests
           command: |
-            flake8 src/
-
-      - run:
-          name: run coverage
-          command: |
-            pytest tests --cov=src
-
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
+            make test
   fossa:
     docker:
       # specify the version you desire here
@@ -85,7 +74,7 @@ workflows:
   version: 2
   run_test:
     jobs:
-      - tests_running
+      - install_and_test_backend
       - fossa:
           filters:
             branches:

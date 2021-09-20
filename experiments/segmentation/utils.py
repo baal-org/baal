@@ -9,7 +9,7 @@ from torch.nn import functional as F
 from torchvision import datasets
 from torchvision.transforms import transforms
 
-from baal.active import ActiveLearningDataset
+from baal import ActiveLearningDataset
 
 pascal_voc_ids = np.array([
     [0, 0, 0],

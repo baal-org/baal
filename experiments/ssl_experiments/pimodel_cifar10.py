@@ -5,12 +5,10 @@ https://arxiv.org/abs/1610.02242
 """
 
 import argparse
-from argparse import Namespace
 from typing import Dict
 
 import numpy as np
 import torch
-from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.hub import load_state_dict_from_url
 
 from torch import nn, Tensor
@@ -19,8 +17,8 @@ from torchvision import transforms
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg11
 
-from baal.active import ActiveLearningDataset
-from baal.utils.ssl_module import SSLModule
+from baal import ActiveLearningDataset
+from baal import SSLModule
 
 import torch.multiprocessing
 

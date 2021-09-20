@@ -4,7 +4,7 @@ from argparse import Namespace
 import torch
 from baal.active import ActiveLearningDataset
 from pytorch_lightning import Trainer
-from src.baal.utils.ssl_module import SSLModule
+from baal.utils.ssl_module import SSLModule
 from torch import nn
 from torch.utils.data import ConcatDataset
 
