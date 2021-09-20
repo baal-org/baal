@@ -36,6 +36,11 @@ class SSLModule(pl.LightningModule):
             return self.unsupervised_training_step(SemiSupervisedIterator.get_batch(batch), *args)
 
     def train_dataloader(self) -> SemiSupervisedIterator:
+        """SemiSupervisedIterator for train set.
+
+        Returns:
+            SemiSupervisedIterator on the train set + pool set.
+        """
         return SemiSupervisedIterator(
             self.active_dataset,
             self.hparams.batch_size,
