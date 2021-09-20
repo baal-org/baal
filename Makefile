@@ -6,3 +6,6 @@ test: lint
 
 format:
 	poetry run black baal
+
+requirements.txt: poetry.lock
+	poetry export --without-hashes -f requirements.txt > requirements.txt

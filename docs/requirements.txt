@@ -1,0 +1,9 @@
+sphinx>2
+sphinx_rtd_theme
+asteroid-sphinx-theme
+jupyter_sphinx
+Pygments>=2.6.1
+nbsphinx
+sphinx_automodapi
+numpydoc
+recommonmark
