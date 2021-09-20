@@ -15,6 +15,7 @@ from baal.utils.array_utils import stack_in_memory, to_prob
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
 from baal.utils.metrics import Loss
+from baal.utils.graddient_embeddings import register_embedding_gradient_hooks, register_embedding_list_hook
 
 log = structlog.get_logger("ModelWrapper")
 
@@ -34,15 +35,19 @@ class ModelWrapper:
     Args:
         model (nn.Module): The model to optimize.
         criterion (Callable): A loss function.
+        embedding_layer Optional(str): The name of last embedding layer.
         replicate_in_memory (bool): Replicate in memory optional.
     """
 
     def __init__(self, model, criterion,
-                 replicate_in_memory=True):
+                 embedding_layer=None,
+                 replicate_in_memory=True
+                 ):
         self.model = model
         self.criterion = criterion
         self.metrics = dict()
         self.add_metric('loss', lambda: Loss())
+        self.embedding_layer = embedding_layer
         self.replicate_in_memory = replicate_in_memory
 
     def add_metric(self, name: str, initializer: Callable):
@@ -84,6 +89,28 @@ class ModelWrapper:
                     v.update(loss)
                 else:
                     v.update(out, target)
+
+    def get_embedding_grads(self, dataset, optimizer, batch_size, use_cuda,
+                            collate_fn: Optional[Callable] = None):
+        """
+
+        Args:
+            data:
+            batch_size:
+            use_cuda:
+            collate_fn:
+
+        Returns:
+
+        """
+        self.train()
+        collate_fn = collate_fn or default_collate
+        embedding_gradients = []
+        for data, _ in DataLoader(dataset, batch_size, True, num_workers=0,
+                                       collate_fn=collate_fn):
+            embedding_gradients.append(self.get_embedding_grads_on_batch(data, optimizer, use_cuda))
+
+        return np.vstack(embedding_gradients)
 
     def train_on_dataset(self, dataset, optimizer, batch_size, epoch, use_cuda, workers=4,
                          collate_fn: Optional[Callable] = None,
@@ -288,6 +315,31 @@ class ModelWrapper:
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
 
+    def get_embedding_grads_on_batch(self, data, optimizer, cuda=False):
+        """
+
+        Args:
+            data:
+            cuda:
+
+        Returns:
+
+        """
+        if cuda:
+            data, target = to_cuda(data)
+        optimizer.zero_grad()
+        embedding_list = []
+        embedding_gradients = []
+        handle = register_embedding_list_hook(self.model, embedding_list, self.embedding_layer)
+        hook = register_embedding_gradient_hooks(self.model, embedding_gradients, self.embedding_layer)
+        output = self.model(data)
+        model_preds = torch.argmax(output, 1)
+        loss = self.criterion(torch.from_numpy(np.vstack(embedding_gradients)), model_preds)
+        loss.backward()
+        handle.remove()
+        hook.remove()
+        return np.vstack(embedding_gradients)
+
     def train_on_batch(self, data, target, optimizer, cuda=False,
                        regularizer: Optional[Callable] = None):
         """
@@ -465,7 +517,8 @@ def mc_inference(model, data, iterations, replicate_in_memory):
 
 # TODO: to put it in PL and ModelWrapper and Transformers Wrapper or just a helper function ?
 def embeddings_grad_on_batch(model, data, use_cuda: bool = True):
-    """ the model needs to have a function to get the embedding results before the last layer ONLY for classification now"""
+    """ the model needs to have a function to get the embedding results
+    before the last layer ONLY for classification now"""
     with torch.no_grad():
         if use_cuda:
             data = to_cuda(data)
