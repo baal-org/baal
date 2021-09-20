@@ -5,5 +5,7 @@ jupyter_sphinx
 Pygments>=2.6.1
 nbsphinx
 sphinx_automodapi
+sphinx-copybutton
 numpydoc
 recommonmark
+docutils==0.16
