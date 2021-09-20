@@ -49,7 +49,8 @@ class ActiveLearningLoop:
         Perform an active learning step.
 
         Args:
-            pool (iterable): dataset pool indices.
+            pool (iterable): Optional dataset pool indices.
+                             If not set, will use pool from the active set.
 
         Returns:
             boolean, Flag indicating if we continue training.
