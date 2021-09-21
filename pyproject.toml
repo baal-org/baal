@@ -11,7 +11,7 @@ authors = ["Parmida Atighehchian <parmida.atighehchian@servicenow.com>",
 license = "Apache V2"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.10"
+python = ">=3.7,<3.10"
 torch = ">=1.6.0"
 h5py = "^3.4.0"
 numpy = "^1.21.2"
