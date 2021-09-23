@@ -36,11 +36,11 @@ COPY . /app/
 RUN poetry install --no-interaction --no-ansi --no-dev
 
 # ---- test -----
-FROM base_baal as test_baal
+FROM setup as test_baal
 
 WORKDIR /app/baal
 
 RUN poetry install --no-interaction --no-ansi
 
 # ---- release image ----
-FROM base_baal as release
+FROM setup as release
