@@ -23,7 +23,7 @@ from recommonmark.parser import CommonMarkParser
 
 pjoin = os.path.join
 parent_dir = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, os.path.abspath('./../src'))
+sys.path.insert(0, os.path.abspath('./../'))
 
 shutil.rmtree('notebooks', ignore_errors=True)
 shutil.copytree(pjoin(parent_dir, 'notebooks'), 'notebooks')
@@ -40,7 +40,7 @@ author = 'Parmida Atighehchian, Frédéric Branchaud-Charron, Jan Freyberg'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '1.3.2'
+release = '1.4.0'
 
 # -- General configuration ---------------------------------------------------
 
