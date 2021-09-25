@@ -9,3 +9,4 @@ sphinx-copybutton
 numpydoc
 recommonmark
 docutils==0.16
+Jinja2==2.11
