@@ -334,7 +334,7 @@ class ModelWrapper:
         hook = register_embedding_gradient_hooks(self.model, embedding_gradients, self.embedding_layer)
         output = self.model(data)
         model_preds = torch.argmax(output, 1)
-        loss = self.criterion(torch.from_numpy(np.vstack(embedding_gradients)), model_preds)
+        loss = self.criterion(torch.from_numpy(np.vstack(embedding_list)), model_preds)
         loss.backward()
         handle.remove()
         hook.remove()
