@@ -1,0 +1,65 @@
+[tool.poetry]
+name = "baal"
+version = "1.4.0"
+description = "Library to enable Bayesian active learning in your research or labeling work."
+authors = ["Parmida Atighehchian <parmida.atighehchian@servicenow.com>",
+           "Frederic Branchaud-Charron <frederic.branchaud-charron@servicenow.com>",
+           "Jan Freyberg <jan.freyberg@gmail.com>",
+           "Lorne Schell <lorne.schell@servicenow.com>",
+           "Rafael Pardina <rafael.pardinas@servicenow.com>"
+           ]
+license = "Apache V2"
+
+[tool.poetry.dependencies]
+python = ">=3.7,<3.10"
+torch = ">=1.6.0"
+h5py = "^3.4.0"
+numpy = "^1.21.2"
+matplotlib = "^3.4.3"
+Pillow = ">=6.2.0"
+tqdm = "^4.62.2"
+pytorch-lightning = ">=1.4.0"
+structlog = "^21.1.0"
+scikit-learn = "^0.24.2"
+scipy = "^1.7.1"
+
+# Vision
+torchvision = { version = ">=0.7.0", optional=true }
+
+# NLP
+transformers = {version = "^4.10.2", optional=true}
+datasets = {version = "^1.11.0", optional=true}
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+pytest-cov = "^2.12.1"
+torch-hypothesis = "0.2.0"
+hypothesis = "4.24.0"
+flake8 = "^3.9.2"
+pytest-mock = "^3.6.1"
+black = "^21.8b0"
+
+# Documentation
+Sphinx = ">2"
+sphinx-rtd-theme = "^0.5.2"
+asteroid-sphinx-theme = "^0.0.3"
+jupyter-sphinx = "^0.3.2"
+Pygments = ">=2.6.1"
+nbsphinx = "^0.8.7"
+sphinx-automodapi = "^0.13"
+sphinx-copybutton = "^0.4.0"
+numpydoc = "^1.1.0"
+docutils = "0.16"
+recommonmark = "^0.7.1"
+
+
+[tool.poetry.extras]
+vision = ["torchvision"]
+nlp = ["transformers", "datasets"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100

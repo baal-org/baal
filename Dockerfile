@@ -1,28 +1,46 @@
 ARG IMAGE_TAG
 
 # ------ Base -----
-FROM pytorch/pytorch:1.8.1-cuda11.1-cudnn8-devel as base_baal
+FROM pytorch/pytorch:1.9.0-cuda10.2-cudnn7-runtime as setup
+ARG ARTIFACTORY_LOGIN
+ARG ARTIFACTORY_TOKEN
 
-RUN pip install --upgrade pip
-COPY requirements.txt /app/baal/requirements.txt
-RUN pip install -r /app/baal/requirements.txt
-COPY . /app/baal
-WORKDIR /app/baal
-RUN pip install -e .[nlp] --no-use-pep517
+ENV PYTHONFAULTHANDLER=1 \
+  PYTHONUNBUFFERED=1 \
+  PYTHONHASHSEED=random \
+  PIP_NO_CACHE_DIR=off \
+  PIP_DISABLE_PIP_VERSION_CHECK=on \
+  PIP_DEFAULT_TIMEOUT=100 \
+  POETRY_VERSION=1.1.7 \
+  POETRY_HOME="/usr/local/poetry"
+
+# We need to remove PyYAML dist-util.
+RUN conda remove PyYAML -y
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python \
+    && ln -sf /usr/local/poetry/bin/poetry /usr/local/bin/poetry
+
+# Install dependencies.
+COPY poetry.lock pyproject.toml /app/
+
+WORKDIR /app
+RUN poetry config virtualenvs.create false && \
+ poetry install --no-interaction --no-ansi --no-root --no-dev
+
+# Install the project.
+COPY . /app/
+RUN poetry install --no-interaction --no-ansi --no-dev
 
 # ---- test -----
-# we need to install test dependencies before, so we cannot use 'base_baal' as base image
-FROM pytorch/pytorch:1.8.1-cuda11.1-cudnn8-devel as test_baal
+FROM setup as test_baal
 
 WORKDIR /app/baal
 
-COPY ./test-requirements.txt /app/baal/test-requirements.txt
-COPY ./requirements.txt /app/baal/requirements.txt
-
-RUN pip install -r /app/baal/test-requirements.txt
-RUN pip install -r /app/baal/requirements.txt
-COPY --from=base_baal /app/baal .
-RUN pip install -e .[nlp] --no-use-pep517
+RUN poetry install --no-interaction --no-ansi
 
 # ---- release image ----
-FROM base_baal as release
+FROM setup as release

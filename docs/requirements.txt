@@ -1,0 +1,12 @@
+sphinx>2
+sphinx_rtd_theme
+asteroid-sphinx-theme
+jupyter_sphinx
+Pygments>=2.6.1
+nbsphinx
+sphinx_automodapi
+sphinx-copybutton
+numpydoc
+recommonmark
+docutils==0.16
+Jinja2==2.11.3

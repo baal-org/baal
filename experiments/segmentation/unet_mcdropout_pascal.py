@@ -8,11 +8,11 @@ from torch import optim
 from torchvision.transforms import transforms
 from tqdm import tqdm
 
-from baal.active import get_heuristic, ActiveLearningLoop
+from baal import get_heuristic, ActiveLearningLoop
 from baal.bayesian.dropout import MCDropoutModule
-from baal.modelwrapper import ModelWrapper
-from baal.utils.metrics import ClassificationReport
-from baal.utils.transforms import PILToLongTensor
+from baal import ModelWrapper
+from baal import ClassificationReport
+from baal import PILToLongTensor
 from utils import pascal_voc_ids, active_pascal, add_dropout, FocalLoss
 
 try:

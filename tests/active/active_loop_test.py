@@ -1,9 +1,14 @@
+import os
+import pickle
+
 import numpy as np
 import pytest
 from torch.utils.data import Dataset
 
 from baal.active import ActiveLearningDataset, heuristics
 from baal.active.active_loop import ActiveLearningLoop
+
+pjoin = os.path.join
 
 
 class MyDataset(Dataset):
@@ -97,6 +102,28 @@ def test_sad(max_sample, expected):
     dataset.label_randomly(10)
     active_loop.step()
     assert len(dataset) == 10 + expected
+
+
+def test_file_saving(tmpdir):
+    tmpdir = str(tmpdir)
+    heur = heuristics.BALD()
+    ds = MyDataset()
+    dataset = ActiveLearningDataset(ds, make_unlabelled=lambda x: -1)
+    active_loop = ActiveLearningLoop(dataset,
+                                     get_probs_iter,
+                                     heur,
+                                     uncertainty_folder=tmpdir,
+                                     ndata_to_label=10,
+                                     dummy_param=1)
+    dataset.label_randomly(10)
+    _ = active_loop.step()
+    assert len(os.listdir(tmpdir)) == 1
+    file = pjoin(tmpdir, os.listdir(tmpdir)[0])
+    assert "pool=90" in file and "labelled=10" in file
+    data = pickle.load(open(file, 'rb'))
+    assert len(data['uncertainty']) == 90
+    # The diff between the current state and the step before is the newly labelled item.
+    assert (data['dataset']['labelled'] != dataset.labelled).sum() == 10
 
 
 if __name__ == '__main__':

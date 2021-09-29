@@ -15,8 +15,9 @@ from datasets import load_dataset
 from transformers import BertTokenizer, TrainingArguments
 from transformers import BertForSequenceClassification
 
-from baal.active import get_heuristic, active_huggingface_dataset, HuggingFaceDatasets
-from baal.active.active_loop import ActiveLearningLoop
+from baal import get_heuristic
+from baal import active_huggingface_dataset, HuggingFaceDatasets
+from baal import ActiveLearningLoop
 from baal.bayesian.dropout import patch_module
 from baal.transformers_trainer_wrapper import BaalTransformersTrainer
 

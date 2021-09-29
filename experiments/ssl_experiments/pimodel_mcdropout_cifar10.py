@@ -10,9 +10,9 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg16
 
-from baal.active import ActiveLearningDataset, get_heuristic
+from baal import ActiveLearningDataset, get_heuristic
 from baal.bayesian.dropout import patch_module
-from baal.utils.pytorch_lightning import ActiveLightningModule, BaalTrainer, ResetCallback
+from baal import ActiveLightningModule, BaalTrainer, ResetCallback
 
 
 class PIActiveLearningModel(ActiveLightningModule, PIModel):

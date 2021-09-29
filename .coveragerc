@@ -16,3 +16,4 @@ show_missing = True
 [run]
 source =
     baal
+data_file = coverage_reports/.coverage
