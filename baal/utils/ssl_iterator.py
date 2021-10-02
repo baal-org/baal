@@ -6,7 +6,7 @@ from baal.active import ActiveLearningDataset
 from torch.utils.data import DataLoader
 
 
-class AlternateIterator(DataLoader):
+class AlternateIterator:
     """
     Create an iterator that will alternate between two dataloaders.
 
@@ -152,6 +152,9 @@ class SemiSupervisedIterator(AlternateIterator):
 
         Returns:
             bool, if batch is labeled.
+
+        Raises:
+            ValueError if we can't process the batch type.
         """
         if isinstance(batch, dict):
             return batch[SemiSupervisedIterator.IS_LABELED_TAG]

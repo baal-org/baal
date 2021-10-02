@@ -91,6 +91,25 @@ class AbstractGPUHeuristic(ModelWrapper):
         scores[~torch.isfinite(scores)] = 0.0 if self.reversed else 10000
         return scores
 
+    def predict_on_dataset(
+        self,
+        dataset: Dataset,
+        batch_size: int,
+        iterations: int,
+        use_cuda: bool,
+        workers: int = 4,
+        collate_fn: Optional[Callable] = None,
+        half=False,
+        verbose=True,
+    ):
+        return (
+            super()
+            .predict_on_dataset(
+                dataset, batch_size, iterations, use_cuda, workers, collate_fn, half, verbose
+            )
+            .reshape([-1])
+        )
+
     def predict_on_batch(self, data, iterations=1, use_cuda=False):
         """Rank the predictions according to their uncertainties."""
         return self.get_uncertainties(self.model.predict_on_batch(data, iterations, cuda=use_cuda))
