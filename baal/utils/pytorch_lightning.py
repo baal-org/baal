@@ -6,15 +6,16 @@ from typing import Dict, Any, Optional
 import numpy as np
 import structlog
 import torch
+from pytorch_lightning import Trainer, Callback, LightningDataModule, LightningModule
+from pytorch_lightning.accelerators import GPUAccelerator
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+
 from baal.active import ActiveLearningDataset
 from baal.active.heuristics import heuristics
 from baal.modelwrapper import mc_inference
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
-from pytorch_lightning import Trainer, Callback, LightningDataModule, LightningModule
-from pytorch_lightning.accelerators import GPUAccelerator
-from torch.utils.data import DataLoader
-from tqdm import tqdm
 
 log = structlog.get_logger("PL testing")
 
@@ -25,7 +26,7 @@ class BaaLDataModule(LightningDataModule):
         self.active_dataset = active_dataset
         self.batch_size = batch_size
 
-    def pool_dataloader(self):
+    def pool_dataloader(self) -> DataLoader:
         """Create Dataloader for the pool of unlabelled examples."""
         return DataLoader(
             self.active_dataset.pool, batch_size=self.batch_size, num_workers=4, shuffle=False
@@ -37,9 +38,8 @@ class BaaLDataModule(LightningDataModule):
         else:
             log.warning("'active_dataset' not in checkpoint!")
 
-    def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> Dict:
+    def on_save_checkpoint(self, checkpoint: Dict[str, Any]):
         checkpoint["active_dataset"] = self.active_dataset.state_dict()
-        return checkpoint
 
 
 class ActiveLightningModule(LightningModule):
@@ -47,7 +47,7 @@ class ActiveLightningModule(LightningModule):
     active learning.
     """
 
-    def pool_dataloader(self):
+    def pool_dataloader(self) -> DataLoader:
         """DataLoader for the pool. Must be defined if you do not use a DataModule"""
         raise NotImplementedError
 
@@ -128,7 +128,9 @@ class BaalTrainer(Trainer):
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
 
-    def predict_on_dataset_generator(self, model=None, dataloader=None, *args, **kwargs):
+    def predict_on_dataset_generator(
+        self, model=None, dataloader: Optional[DataLoader] = None, *args, **kwargs
+    ):
         """Predict on the pool loader.
 
         Args:
@@ -174,7 +176,7 @@ class BaalTrainer(Trainer):
         """
         # High to low
         if datamodule is None:
-            pool_dataloader = self.lightning_module.pool_dataloader()
+            pool_dataloader = self.lightning_module.pool_dataloader()  # type: ignore
         else:
             pool_dataloader = datamodule.pool_dataloader()
         model = model if model is not None else self.lightning_module

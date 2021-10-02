@@ -17,9 +17,10 @@ def get_metric(
     Returns:
         Metrics object.
     """
-    return {
+    metric: metrics.Metrics = {
         "loss": metrics.Loss,
         "accuracy": metrics.Accuracy,
         "precision": metrics.Precision,
         "classification_report": metrics.ClassificationReport,
     }[name](num_classes=num_classes, average=average, **kwargs)
+    return metric

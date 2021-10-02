@@ -19,7 +19,7 @@ def transpose_and_flatten(input):
     return input
 
 
-class Metrics(object):
+class Metrics:
     """
     metric is an abstract class.
     Args:
@@ -351,7 +351,8 @@ class Accuracy(Metrics):
             )
 
     def calculate_result(self) -> torch.Tensor:
-        return self.accuracy
+        acc: torch.Tensor = self.accuracy
+        return acc
 
 
 class Precision(Metrics):

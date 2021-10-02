@@ -1,7 +1,7 @@
 import warnings
 from copy import deepcopy
 from itertools import zip_longest
-from typing import Union, Optional, Callable, Tuple, List, Any
+from typing import Union, Optional, Callable, Tuple, List, Any, Dict
 
 import numpy as np
 import torch
@@ -32,22 +32,20 @@ class ActiveLearningDataset(torchdata.Dataset):
     def __init__(
         self,
         dataset: torchdata.Dataset,
-        labelled: Union[np.ndarray, torch.Tensor] = None,
+        labelled: Optional[np.ndarray] = None,
         make_unlabelled: Callable = _identity,
         random_state=None,
         pool_specifics: Optional[dict] = None,
     ) -> None:
         self._dataset = dataset
         if labelled is not None:
-            if isinstance(labelled, torch.Tensor):
-                labelled = labelled.numpy()
-            self.labelled = labelled.astype(bool)
+            self.labelled: np.ndarray = labelled.astype(bool)
         else:
             self.labelled = np.zeros(len(self._dataset), dtype=bool)
 
         if pool_specifics is None:
             pool_specifics = {}
-        self.pool_specifics = pool_specifics
+        self.pool_specifics: Dict[str, Any] = pool_specifics
 
         self.make_unlabelled = make_unlabelled
         # For example, FileDataset has a method 'label'. This is useful when we're in prod.
@@ -85,13 +83,13 @@ class ActiveLearningDataset(torchdata.Dataset):
                 )
         return False
 
-    def __getitem__(self, index: int) -> Tuple[torch.Tensor, ...]:
+    def __getitem__(self, index: int) -> Any:
         """Return stuff from the original dataset."""
         return self._dataset[self._labelled_to_oracle_index(index)]
 
     def __len__(self) -> int:
         """Return how many actual data / label pairs we have."""
-        return self.labelled.sum()
+        return int(self.labelled.sum())
 
     class ActiveIter:
         """Iterator over an ActiveLearningDataset."""
@@ -149,7 +147,7 @@ class ActiveLearningDataset(torchdata.Dataset):
     """
 
     def _labelled_to_oracle_index(self, index: int) -> int:
-        return self.labelled.nonzero()[0][index].squeeze().item()
+        return int(self.labelled.nonzero()[0][index].squeeze().item())
 
     def _pool_to_oracle_index(self, index: Union[int, List[int]]) -> List[int]:
         if isinstance(index, np.int64) or isinstance(index, int):
@@ -183,7 +181,7 @@ class ActiveLearningDataset(torchdata.Dataset):
         indexes = self._pool_to_oracle_index(index)
         for index, val in zip_longest(indexes, value, fillvalue=None):
             if self.can_label and val is not None:
-                self._dataset.label(index, val)
+                self._dataset.label(index, val)  # type: ignore
                 self.labelled[index] = 1
             elif self.can_label and val is None:
                 warnings.warn(
@@ -223,13 +221,13 @@ class ActiveLearningDataset(torchdata.Dataset):
 
     def is_labelled(self, idx: int) -> bool:
         """Check if a datapoint is labelled."""
-        return self.labelled[idx] == 1
+        return bool(self.labelled[idx].item() == 1)
 
-    def get_raw(self, idx: int) -> None:
+    def get_raw(self, idx: int) -> Any:
         """Get a datapoint from the underlying dataset."""
         return self._dataset[idx]
 
-    def state_dict(self):
+    def state_dict(self) -> Dict:
         """Return the state_dict, ie. the labelled map and random_state."""
         return {"labelled": self.labelled, "random_state": self.random_state}
 
@@ -250,10 +248,10 @@ class ActiveLearningPool(torchdata.Dataset):
     """
 
     def __init__(self, dataset: torchdata.Dataset, make_unlabelled: Callable = _identity) -> None:
-        self._dataset = dataset
+        self._dataset: torchdata.Dataset = dataset
         self.make_unlabelled = make_unlabelled
 
-    def __getitem__(self, index: int) -> Tuple[torch.Tensor, ...]:
+    def __getitem__(self, index: int) -> Any:
         # This datum is marked as unlabelled, so clear the label.
         return self.make_unlabelled(self._dataset[index])
 
@@ -262,7 +260,7 @@ class ActiveLearningPool(torchdata.Dataset):
         return len(self._dataset)
 
 
-class ActiveNumpyArray(ActiveLearningDataset):
+class ActiveNumpyArray:
     """
     Active dataset for numpy arrays. Useful when using sklearn.
 
@@ -277,16 +275,15 @@ class ActiveNumpyArray(ActiveLearningDataset):
     def __init__(
         self,
         dataset: Tuple[np.ndarray, np.ndarray],
-        labelled: Union[np.ndarray, torch.Tensor] = None,
+        labelled: Optional[np.ndarray] = None,
     ) -> None:
 
         if labelled is not None:
-            if isinstance(labelled, torch.Tensor):
-                labelled = labelled.numpy()
             labelled = labelled.astype(bool)
         else:
             labelled = np.zeros(len(dataset[0]), dtype=bool)
-        super().__init__(dataset, labelled=labelled)
+        self._dataset: Tuple[np.ndarray, np.ndarray] = dataset
+        self.labelled: np.ndarray = labelled
 
     @property
     def pool(self):
@@ -298,7 +295,7 @@ class ActiveNumpyArray(ActiveLearningDataset):
         """Return the labelled portion of the dataset."""
         return self._dataset[0][self.labelled], self._dataset[1][self.labelled]
 
-    def get_raw(self, idx: int) -> None:
+    def get_raw(self, idx: int) -> Any:
         return self._dataset[0][idx], self._dataset[1][idx]
 
     def __iter__(self):
