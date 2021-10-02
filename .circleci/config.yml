@@ -57,13 +57,13 @@ jobs:
       - run:
           name: "test import"
           command: |
-            python -c "import baal"
-            python -c "import baal.active.dataset"
-            python -c "import baal.active.heuristic"
-            python -c "import baal.active.active_loop"
-            python -c "import baal.bayesian"
-            python -c "import baal.calibration"
-            python -c "import baal.modelwrapper"
+            poetry run python -c "import baal"
+            poetry run python -c "import baal.active.dataset"
+            poetry run python -c "import baal.active.heuristic"
+            poetry run python -c "import baal.active.active_loop"
+            poetry run python -c "import baal.bayesian"
+            poetry run python -c "import baal.calibration"
+            poetry run python -c "import baal.modelwrapper"
 
   fossa:
     docker:
