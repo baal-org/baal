@@ -51,7 +51,7 @@ def classification_task(tmpdir):
 def test_bald_gpu(classification_task):
     torch.manual_seed(1337)
     model, test_set = classification_task
-    wrap = BALDGPUWrapper(model)
+    wrap = BALDGPUWrapper(model, criterion=None)
 
     out = wrap.predict_on_dataset(test_set, 4, 10, False, 4)
     assert out.shape[0] == len(test_set)

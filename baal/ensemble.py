@@ -1,8 +1,8 @@
 from copy import deepcopy
-from typing import Dict, List
+from typing import Dict, List, OrderedDict
 
 import torch
-from torch import nn
+from torch import nn, Tensor
 
 from baal import ModelWrapper
 from baal.modelwrapper import _stack_preds
@@ -60,7 +60,9 @@ class EnsembleModelWrapper(ModelWrapper):
         return ensemble_prediction(model=self.model, data=data, weights=self._weights, cuda=cuda)
 
 
-def ensemble_prediction(data: torch.Tensor, model: nn.Module, weights: List[Dict], cuda: bool):
+def ensemble_prediction(
+    data: torch.Tensor, model: nn.Module, weights: List[OrderedDict[str, Tensor]], cuda: bool
+):
     """
     Get the model's prediction on a batch.
 

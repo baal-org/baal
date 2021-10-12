@@ -29,18 +29,18 @@ def to_cuda(data):
 
 @to_cuda.register(torch.Tensor)
 @to_cuda.register(torch.nn.Module)
-def _(data):
+def _to_cuda_modules(data):
     return data.cuda()
 
 
 @to_cuda.register
-def _(data: Mapping):
+def _to_cuda_mapping(data: Mapping):
     # use the type of the object to create a new one:
-    return type(data)([(key, to_cuda(val)) for key, val in data.items()])
+    return type(data)([(key, to_cuda(val)) for key, val in data.items()])  # type: ignore
 
 
 @to_cuda.register
-def _(data: Sequence):
+def _to_cuda_sequence(data: Sequence):
     """
     Move an object to CUDA.
 
@@ -64,4 +64,4 @@ def _(data: Sequence):
         # Special case
         return data
     else:
-        return type(data)(to_cuda(item) for item in data)
+        return type(data)(to_cuda(item) for item in data)  # type: ignore

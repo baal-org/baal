@@ -58,9 +58,15 @@ class AbstractGPUHeuristic(ModelWrapper):
     """
 
     def __init__(
-        self, model: ModelWrapper, shuffle_prop=0.0, threshold=None, reverse=False, reduction="none"
+        self,
+        model: ModelWrapper,
+        criterion,
+        shuffle_prop=0.0,
+        threshold=None,
+        reverse=False,
+        reduction="none",
     ):
-        self.model = model
+        super().__init__(model, criterion)
         self.shuffle_prop = shuffle_prop
         self.threshold = threshold
         self.reversed = reverse
@@ -85,10 +91,6 @@ class AbstractGPUHeuristic(ModelWrapper):
         scores[~torch.isfinite(scores)] = 0.0 if self.reversed else 10000
         return scores
 
-    def predict_on_batch(self, data, iterations, use_cuda=False):
-        """Rank the predictions according to their uncertainties."""
-        return self.get_uncertainties(self.model.predict_on_batch(data, iterations, cuda=use_cuda))
-
     def predict_on_dataset(
         self,
         dataset: Dataset,
@@ -98,41 +100,19 @@ class AbstractGPUHeuristic(ModelWrapper):
         workers: int = 4,
         collate_fn: Optional[Callable] = None,
         half=False,
+        verbose=True,
     ):
-        """
-        Use the model to predict on a dataset `iterations` time.
-
-        Args:
-            dataset (Dataset): Dataset to predict on.
-            batch_size (int):  Batch size to use during prediction.
-            iterations (int): Number of iterations per sample.
-            use_cuda (bool): Use CUDA or not.
-            workers (int): Number of workers to use.
-            collate_fn (Optional[Callable]): The collate function to use.
-            half (bool): if True use half precision
-
-        Notes:
-            The "batch" is made of `batch_size` * `iterations` samples.
-
-        Returns:
-            Array [n_samples, n_outputs, ..., n_iterations].
-        """
-        preds = list(
-            self.predict_on_dataset_generator(
-                dataset=dataset,
-                batch_size=batch_size,
-                iterations=iterations,
-                use_cuda=use_cuda,
-                workers=workers,
-                collate_fn=collate_fn,
-                half=half,
+        return (
+            super()
+            .predict_on_dataset(
+                dataset, batch_size, iterations, use_cuda, workers, collate_fn, half, verbose
             )
+            .reshape([-1])
         )
 
-        if len(preds) > 0 and not isinstance(preds[0], Sequence):
-            # Is an Array or a Tensor
-            return np.concatenate(preds)
-        return [np.concatenate(pr) for pr in zip(*preds)]
+    def predict_on_batch(self, data, iterations=1, use_cuda=False):
+        """Rank the predictions according to their uncertainties."""
+        return self.get_uncertainties(self.model.predict_on_batch(data, iterations, cuda=use_cuda))
 
 
 class BALDGPUWrapper(AbstractGPUHeuristic):
@@ -141,9 +121,16 @@ class BALDGPUWrapper(AbstractGPUHeuristic):
         https://arxiv.org/abs/1703.02910
     """
 
-    def __init__(self, model: ModelWrapper, shuffle_prop=0.0, threshold=None, reduction="none"):
+    def __init__(
+        self, model: ModelWrapper, criterion, shuffle_prop=0.0, threshold=None, reduction="none"
+    ):
         super().__init__(
-            model, shuffle_prop=shuffle_prop, threshold=threshold, reverse=True, reduction=reduction
+            model,
+            criterion=criterion,
+            shuffle_prop=shuffle_prop,
+            threshold=threshold,
+            reverse=True,
+            reduction=reduction,
         )
 
     @requireprobs

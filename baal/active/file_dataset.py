@@ -1,6 +1,6 @@
 import random
 import warnings
-from typing import Any, Callable, Optional, List
+from typing import Any, Callable, Optional, List, Sequence
 
 import numpy as np
 import torch
@@ -36,17 +36,18 @@ class FileDataset(Dataset):
     def __init__(
         self,
         files: List[str],
-        lbls: List[Any] = None,
+        lbls: Optional[List[Any]] = None,
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
         image_load_fn: Optional[Callable] = None,
         seed=None,
     ):
         self.files = files
-        self.lbls = lbls
 
-        if self.lbls is None:
+        if lbls is None:
             self.lbls = [-1] * len(self.files)
+        else:
+            self.lbls = lbls
 
         self.transform = transform
         self.target_transform = target_transform
