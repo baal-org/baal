@@ -1,9 +1,6 @@
 # flake8: noqa F841
 """
 Note - This is a copied from the another internal repo.
-Repo:   eai-document-classifier
-Commit: 4010de791b9de9da8c0014d74e3c2b89cf738398
-Path:   service/utils/log_configuration.py
 Also inspired by https://gist.github.com/tboquet/588955d846c03de66b87c8bca0fb99cb
 """
 import collections
@@ -12,7 +9,7 @@ import os
 import threading
 
 import structlog
-from structlog.dev import ConsoleRenderer, _has_colorama
+from structlog.dev import ConsoleRenderer
 from structlog.processors import StackInfoRenderer, TimeStamper, format_exc_info
 from structlog.stdlib import add_log_level
 
@@ -98,9 +95,7 @@ def order_keys(logger, method_name, event_dict):
 
 class BetterConsoleRenderer:
     def __init__(self):
-        self._worse_console_renderer = ConsoleRenderer(
-            colors=_has_colorama, level_styles=_level_styles()
-        )
+        self._worse_console_renderer = ConsoleRenderer(level_styles=_level_styles())
 
     def __call__(self, logger, log_method, event_dict):
         pid = event_dict.pop("pid_thread", None)
