@@ -53,7 +53,7 @@ class ActiveDatasetTest(unittest.TestCase):
         assert len(dummy_dataset) == len(self.dataset)
         assert len(dummy_dataset.pool) == len(self.dataset.pool)
 
-        dummy_lbl = torch.from_numpy(self.dataset.labelled.astype(np.float32))
+        dummy_lbl = self.dataset.labelled.astype(np.float32)
         dummy_dataset = ActiveLearningDataset(MyDataset(), labelled=dummy_lbl, make_unlabelled=lambda x: (x[0], -1))
         assert len(dummy_dataset) == len(self.dataset)
         assert len(dummy_dataset.pool) == len(self.dataset.pool)

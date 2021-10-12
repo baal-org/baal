@@ -51,6 +51,7 @@ sphinx-copybutton = "^0.4.0"
 numpydoc = "^1.1.0"
 docutils = "0.16"
 recommonmark = "^0.7.1"
+mypy = "^0.910"
 
 
 [tool.poetry.extras]
