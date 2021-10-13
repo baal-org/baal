@@ -1,3 +1,4 @@
+import torch
 import argparse
 import os
 
@@ -60,7 +61,7 @@ def get_data_module(heuristic, data_path):
 def get_model(dm):
     loss_fn = nn.CrossEntropyLoss()
     head = nn.Sequential(
-        nn.Linear(512 * 7 * 7, 4096),
+        nn.Linear(512, 4096),
         nn.ReLU(True),
         nn.Dropout(),
         nn.Linear(4096, 4096),
@@ -77,17 +78,18 @@ def get_model(dm):
                             optimizer_kwargs={"lr": 0.001,
                                               "momentum": 0.9,
                                               "weight_decay": 0},
-                            learning_rate=1,
+                            learning_rate=0.001,
                             # we don't use learning rate here since it is initialized in the optimizer.
                             serializer=Probabilities(), )
     return model
 
 
 def main(args):
+    gpus = 1 if torch.cuda.is_available() else 0
     active_dm = get_data_module(args.heuristic, args.data_path)
     model = get_model(active_dm.labelled)
     logger = TensorBoardLogger(os.path.join(args.ckpt_path, "tensorboard"), name="flash-example-cifar")
-    trainer = flash.Trainer(max_epochs=2500,
+    trainer = flash.Trainer(gpus=gpus, max_epochs=2500,
                             default_root_dir=args.ckpt_path, logger=logger)
     active_learning_loop = ActiveLearningLoop(label_epoch_frequency=40,
                                               inference_iteration=20)
