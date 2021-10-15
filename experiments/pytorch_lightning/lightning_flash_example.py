@@ -48,13 +48,14 @@ def get_data_module(heuristic, data_path):
     dm = DataModule_.from_datasets(train_dataset=train_set,
                                    test_dataset=test_set,
                                    train_transform=train_transforms,
-                                   val_transform=test_transforms,
-                                   test_transform=test_transforms)
+                                   test_transform=test_transforms,
+                                   batch_size=64,)
     active_dm = ActiveLearningDataModule(dm,
                                          heuristic=get_heuristic(heuristic),
                                          initial_num_labels=1024,
                                          query_size=100,
-                                         val_split=0.1)
+                                         val_split=0.01)
+    assert active_dm.has_test, "No test set?"
     return active_dm
 
 
@@ -88,9 +89,9 @@ def main(args):
     gpus = 1 if torch.cuda.is_available() else 0
     active_dm = get_data_module(args.heuristic, args.data_path)
     model = get_model(active_dm.labelled)
-    logger = TensorBoardLogger(os.path.join(args.ckpt_path, "tensorboard"), name="flash-example-cifar")
+    logger = TensorBoardLogger(os.path.join(args.ckpt_path, "tensorboard"), name=f"flash-example-cifar-{args.heuristic}")
     trainer = flash.Trainer(gpus=gpus, max_epochs=2500,
-                            default_root_dir=args.ckpt_path, logger=logger)
+                            default_root_dir=args.ckpt_path, logger=logger, limit_val_batches=0,)
     active_learning_loop = ActiveLearningLoop(label_epoch_frequency=40,
                                               inference_iteration=20)
     active_learning_loop.connect(trainer.fit_loop)
