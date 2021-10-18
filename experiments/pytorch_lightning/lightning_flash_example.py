@@ -57,7 +57,7 @@ def get_data_module(heuristic, data_path):
     active_dm = ActiveLearningDataModule(dm,
                                          heuristic=get_heuristic(heuristic),
                                          initial_num_labels=1024,
-                                         query_size=100,
+                                         query_size=250,
                                          val_split=0.01)
     assert active_dm.has_test, "No test set?"
     return active_dm
@@ -144,7 +144,7 @@ def main(args):
                                                 inference_iteration=20)
     active_learning_loop.connect(trainer.fit_loop)
     trainer.fit_loop = active_learning_loop
-    trainer.finetune(model, datamodule=active_dm, strategy="freeze")
+    trainer.finetune(model, datamodule=active_dm, strategy="no_freeze")
 
 
 def parse_args():
