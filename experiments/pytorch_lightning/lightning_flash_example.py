@@ -140,7 +140,7 @@ def main(args):
                                name=f"flash-example-cifar-{args.heuristic}")
     trainer = flash.Trainer(gpus=gpus, max_epochs=2500,
                             default_root_dir=args.ckpt_path, logger=logger, limit_val_batches=0, )
-    active_learning_loop = MyActiveLearningLoop(label_epoch_frequency=40,
+    active_learning_loop = MyActiveLearningLoop(label_epoch_frequency=10,
                                                 inference_iteration=20)
     active_learning_loop.connect(trainer.fit_loop)
     trainer.fit_loop = active_learning_loop
