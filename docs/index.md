@@ -68,6 +68,7 @@ For support, we have several ways to help you:
     :maxdepth: 2
 
     Background literature <literature/index>
+    Cheat Sheet <user_guide/baal_cheatsheet>
 ```
    
 ## Indices and tables

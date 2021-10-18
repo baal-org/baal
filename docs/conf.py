@@ -68,7 +68,8 @@ extensions = [
 
 # We need to mock these packages to compile without deps.
 autodoc_mock_imports = ["PIL", "tqdm", "structlog", "torch", "torchvision", "numpy", "sklearn",
-                        "scipy", "baal.utils.cuda_utils", "transformers", "pytorch_lightning"]
+                        "scipy", "baal.utils.cuda_utils", "transformers", "pytorch_lightning",
+                        "datasets"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -81,7 +82,7 @@ source_parsers = {
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-source_suffix = ['.rst', '.md', '.ipynb']
+# source_suffix = ['.rst', '.md', '.ipynb']
 
 # The master toctree document.
 master_doc = 'index'
