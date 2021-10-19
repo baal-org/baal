@@ -1,14 +1,14 @@
-from typing import Any
-
-import torch
 import argparse
 import os
+from typing import Any, List
 
+import torch
 import torch.backends
+import numpy as np
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.trainer.states import TrainerFn, TrainerStatus, RunningStage
+from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from torch import nn
-from torch.utils.data import Subset
 from torchvision import datasets
 from torchvision.transforms import transforms
 
@@ -39,6 +39,19 @@ test_transforms = transforms.Compose([transforms.Resize((IMG_SIZE, IMG_SIZE)),
                                                            (0.2023, 0.1994, 0.2010))])
 
 
+class MyActiveLearningDataModule(ActiveLearningDataModule):
+    def label(self, probabilities: List[torch.Tensor] = None, indices=None):
+        if probabilities is not None and indices:
+            raise MisconfigurationException(
+                "The `probabilities` and `indices` are mutually exclusive, pass only of one them."
+            )
+        if probabilities is not None:
+            uncertainties = self.heuristic.get_uncertainties(torch.cat(probabilities, dim=0))
+            indices = np.argsort(uncertainties)
+            if self._dataset is not None:
+                self._dataset.label(indices[-self.query_size:])
+
+
 class DataModule_(ImageClassificationData):
 
     @property
@@ -54,11 +67,11 @@ def get_data_module(heuristic, data_path):
                                    train_transform=train_transforms,
                                    test_transform=test_transforms,
                                    batch_size=64, )
-    active_dm = ActiveLearningDataModule(dm,
-                                         heuristic=get_heuristic(heuristic),
-                                         initial_num_labels=1024,
-                                         query_size=250,
-                                         val_split=0.01)
+    active_dm = MyActiveLearningDataModule(dm,
+                                           heuristic=get_heuristic(heuristic),
+                                           initial_num_labels=1024,
+                                           query_size=250,
+                                           val_split=0.01)
     assert active_dm.has_test, "No test set?"
     return active_dm
 
@@ -82,7 +95,7 @@ def get_model(dm):
                             optimizer=torch.optim.SGD,
                             optimizer_kwargs={"lr": 0.001,
                                               "momentum": 0.9,
-                                              "weight_decay": 0},
+                                              "weight_decay": 5e-4},
                             learning_rate=0.001,
                             # we don't use learning rate here since it is initialized in the optimizer.
                             serializer=Probabilities(), )
