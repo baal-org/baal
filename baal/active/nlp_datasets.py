@@ -54,6 +54,10 @@ class HuggingFaceDatasets(Dataset):
         )
         return tokenized["input_ids"], tokenized["attention_mask"]
 
+    def label(self,idx,value):
+        #print(self.targets,idx)
+        self.targets[idx] = value
+
     def __len__(self):
         return len(self.texts)
 
