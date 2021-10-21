@@ -5,7 +5,6 @@ from typing import List
 import torch
 from packaging.version import parse as parse_version
 
-torch_version = parse_version(torch.__version__)
 
 Sequence = List[str]
 
@@ -53,6 +52,7 @@ class WeightDropConv2d(torch.nn.Conv2d):
         kwargs = {k: v for k, v in kwargs.items() if k in wanted}
         super().__init__(**kwargs)
         self._weight_dropout = weight_dropout
+        self._torch_version = parse_version(torch.__version__)
 
     def forward(self, input):
         kwargs = {
@@ -61,7 +61,7 @@ class WeightDropConv2d(torch.nn.Conv2d):
                 self.weight, p=self._weight_dropout, training=True
             ),
         }
-        if torch_version >= parse_version("1.8.0"):
+        if self._torch_version >= parse_version("1.8.0"):
             # Bias was added as a required argument in this version.
             kwargs["bias"] = self.bias
         return self._conv_forward(**kwargs)
