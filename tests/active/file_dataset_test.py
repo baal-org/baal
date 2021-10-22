@@ -36,8 +36,7 @@ class FileDatasetTest(unittest.TestCase):
         self.dataset = FileDataset(self.paths, self.lbls, transform=self.transform)
         self.lbls = self.generate_labels(len(self.paths), 10)
         self.dataset = FileDataset(self.paths, self.lbls, transform=self.transform)
-        self.active = ActiveLearningDataset(self.dataset, labelled=torch.from_numpy(
-            (np.array(self.lbls) != -1).astype(np.uint8)), pool_specifics={'transform': testtransform})
+        self.active = ActiveLearningDataset(self.dataset, labelled=(np.array(self.lbls) != -1), pool_specifics={'transform': testtransform})
 
     def generate_labels(self, n, init_lbls):
         lbls = [-1] * n

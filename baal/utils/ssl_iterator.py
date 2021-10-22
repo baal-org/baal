@@ -1,5 +1,5 @@
 from itertools import cycle
-from typing import Optional, Union, Dict, Sequence
+from typing import Optional, Union, Dict, Sequence, Tuple
 
 import numpy as np
 from baal.active import ActiveLearningDataset
@@ -21,7 +21,7 @@ class AlternateIterator:
     def __init__(
         self,
         dl_1: DataLoader,
-        dl_2: DataLoader,
+        dl_2: Optional[DataLoader],
         num_steps: Optional[int] = None,
         p: Optional[float] = None,
     ):
@@ -35,9 +35,10 @@ class AlternateIterator:
             self.len_dl2 = len(dl_2)
         else:
             p = 1
+            self.len_dl2 = 2
 
-        self.num_steps = num_steps or (self.len_dl1 + self.len_dl2)
-        self.p = None if p is None else [p, 1 - p]
+        self.num_steps: Optional[int] = num_steps or (self.len_dl1 + self.len_dl2)
+        self.p: Optional[Tuple[float, float]] = None if p is None else (p, 1 - p)
         self._iter_idx = None
 
     def _make_index(self):
@@ -94,9 +95,9 @@ class SemiSupervisedIterator(AlternateIterator):
         batch_size: int,
         num_steps: Optional[int] = None,
         p: Optional[float] = None,
-        shuffle: Optional[bool] = False,
-        num_workers: Optional[int] = 0,
-        drop_last: Optional[bool] = False,
+        shuffle: bool = False,
+        num_workers: int = 0,
+        drop_last: bool = False,
     ):
         self.al_dataset = al_dataset
         active_dl = DataLoader(
@@ -108,7 +109,7 @@ class SemiSupervisedIterator(AlternateIterator):
         )
 
         if len(al_dataset.pool) > 0:
-            pool_dl = DataLoader(
+            pool_dl: DataLoader = DataLoader(
                 al_dataset.pool,
                 batch_size=batch_size,
                 shuffle=shuffle,
@@ -151,12 +152,17 @@ class SemiSupervisedIterator(AlternateIterator):
 
         Returns:
             bool, if batch is labeled.
+
+        Raises:
+            ValueError if we can't process the batch type.
         """
         if isinstance(batch, dict):
             return batch[SemiSupervisedIterator.IS_LABELED_TAG]
         elif isinstance(batch, tuple):
             item, idx = batch
             return idx == 0
+        else:
+            raise ValueError(f"Unknown type: {type(batch)}")
 
     @staticmethod
     def get_batch(batch: Union[Dict, Sequence]):

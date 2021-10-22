@@ -21,7 +21,7 @@ def get_heuristic(
     Returns:
         AbstractHeuristic object.
     """
-    return {
+    heuristic: heuristics.AbstractHeuristic = {
         "random": heuristics.Random,
         "certainty": heuristics.Certainty,
         "entropy": heuristics.Entropy,
@@ -31,3 +31,4 @@ def get_heuristic(
         "precomputed": heuristics.Precomputed,
         "batch_bald": heuristics.BatchBALD,
     }[name](shuffle_prop=shuffle_prop, reduction=reduction, **kwargs)
+    return heuristic

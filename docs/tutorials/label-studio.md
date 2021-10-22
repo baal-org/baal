@@ -23,7 +23,7 @@ Support:
 
 To install BaaL, you will need to add `baal` in the [generated `Dockerfile`](https://github.com/heartexlabs/label-studio-ml-backend/blob/master/label_studio_ml/default_configs/Dockerfile).
 
-```dockerfile=
+```dockerfile
 # Dockerfile
 RUN pip install --no-cache \
                 -r requirements.txt \
@@ -48,7 +48,7 @@ The overall changes are pretty minor, so we will go step by step, specifying the
 
 The simplest way of doing Bayesian uncertainty estimation in active learning is MC-Dropout (Gal and Ghahramani, 2015) which requires Dropout layers. To use this, we use VGG-16 instead of the default ResNet-18.
 
-```python=
+```python
 from baal.bayesian.dropout import patch_module
 # ImageClassifier.__init__
 self.model = models.vgg16(pretrained=True)

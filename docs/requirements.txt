@@ -3,7 +3,7 @@ sphinx_rtd_theme
 asteroid-sphinx-theme
 jupyter_sphinx
 Pygments>=2.6.1
-nbsphinx
+nbsphinx==0.8.6
 sphinx_automodapi
 sphinx-copybutton
 numpydoc

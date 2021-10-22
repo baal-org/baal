@@ -1,7 +1,9 @@
 import copy
 import warnings
+from typing import Optional
 
 import torch
+from torch import nn
 from torch.nn import functional as F
 from torch.nn.modules.dropout import _DropoutNd
 
@@ -117,12 +119,11 @@ def _patch_dropout_layers(module: torch.nn.Module) -> bool:
     """
     changed = False
     for name, child in module.named_children():
+        new_module: Optional[nn.Module] = None
         if isinstance(child, torch.nn.Dropout):
             new_module = Dropout(p=child.p, inplace=child.inplace)
         elif isinstance(child, torch.nn.Dropout2d):
             new_module = Dropout2d(p=child.p, inplace=child.inplace)
-        else:
-            new_module = None
 
         if new_module is not None:
             changed = True
@@ -144,4 +145,6 @@ class MCDropoutModule(torch.nn.Module):
         super().__init__()
         self.parent_module = module
         _patch_dropout_layers(self.parent_module)
-        self.forward = self.parent_module.forward
+
+    def forward(self, *args, **kwargs):
+        return self.parent_module(*args, **kwargs)
