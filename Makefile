@@ -1,6 +1,6 @@
 .PHONY: lint
 lint: check-mypy-error-count
-	poetry run flake8 baal
+	poetry run flake8 baal experiments
 
 .PHONY: test
 test: lint
@@ -8,7 +8,7 @@ test: lint
 
 .PHONY: format
 format:
-	poetry run black baal
+	poetry run black baal experiments
 
 .PHONY: requirements.txt
 requirements.txt: poetry.lock

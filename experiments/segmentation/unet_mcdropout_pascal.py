@@ -18,7 +18,7 @@ from utils import pascal_voc_ids, active_pascal, add_dropout, FocalLoss
 try:
     import segmentation_models_pytorch as smp
 except ImportError:
-    raise Exception('This example requires `smp`.\n pip install segmentation_models_pytorch')
+    raise Exception("This example requires `smp`.\n pip install segmentation_models_pytorch")
 
 import torch
 import torch.nn.functional as F
@@ -53,19 +53,35 @@ def get_datasets(initial_pool, path):
     IM_SIZE = 224
     # TODO add better data augmentation scheme.
     transform = transforms.Compose(
-        [transforms.Resize(512), transforms.CenterCrop(IM_SIZE), transforms.ToTensor(),
-         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
+        [
+            transforms.Resize(512),
+            transforms.CenterCrop(IM_SIZE),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]
+    )
     test_transform = transforms.Compose(
-        [transforms.Resize(512), transforms.CenterCrop(IM_SIZE), transforms.ToTensor(),
-         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), ])
+        [
+            transforms.Resize(512),
+            transforms.CenterCrop(IM_SIZE),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]
+    )
 
     target_transform = transforms.Compose(
-        [transforms.Resize(512, interpolation=Image.NEAREST), transforms.CenterCrop(IM_SIZE),
-         PILToLongTensor(pascal_voc_ids)])
-    active_set, test_set = active_pascal(path=path,
-                                         transform=transform,
-                                         test_transform=test_transform,
-                                         target_transform=target_transform)
+        [
+            transforms.Resize(512, interpolation=Image.NEAREST),
+            transforms.CenterCrop(IM_SIZE),
+            PILToLongTensor(pascal_voc_ids),
+        ]
+    )
+    active_set, test_set = active_pascal(
+        path=path,
+        transform=transform,
+        test_transform=test_transform,
+        target_transform=target_transform,
+    )
     active_set.label_randomly(initial_pool)
     return active_set, test_set
 
@@ -77,18 +93,18 @@ def main():
     hyperparams = vars(args)
     pprint(hyperparams)
 
-    active_set, test_set = get_datasets(hyperparams['initial_pool'], hyperparams['data_path'])
+    active_set, test_set = get_datasets(hyperparams["initial_pool"], hyperparams["data_path"])
 
     # We will use the FocalLoss
     criterion = FocalLoss(gamma=2, alpha=0.25)
 
     # Our model is a simple Unet
     model = smp.Unet(
-        encoder_name='resnext50_32x4d',
+        encoder_name="resnext50_32x4d",
         encoder_depth=5,
-        encoder_weights='imagenet',
+        encoder_weights="imagenet",
         decoder_use_batchnorm=False,
-        classes=len(pascal_voc_ids)
+        classes=len(pascal_voc_ids),
     )
     # Add a Dropout layerto use MC-Dropout
     add_dropout(model, classes=len(pascal_voc_ids), activation=None)
@@ -107,44 +123,46 @@ def main():
 
     # Add metrics
     model = ModelWrapper(model, criterion)
-    model.add_metric('cls_report', lambda: ClassificationReport(len(pascal_voc_ids)))
+    model.add_metric("cls_report", lambda: ClassificationReport(len(pascal_voc_ids)))
 
     # Which heuristic you want to use?
     # We will use our custom reduction function.
-    heuristic = get_heuristic(hyperparams['heuristic'], reduction=mean_regions)
+    heuristic = get_heuristic(hyperparams["heuristic"], reduction=mean_regions)
 
     # The ALLoop is in charge of predicting the uncertainty and
-    loop = ActiveLearningLoop(active_set,
-                              model.predict_on_dataset_generator,
-                              heuristic=heuristic,
-                              ndata_to_label=hyperparams['n_data_to_label'],
-                              # Instead of predicting on the entire pool, only a subset is used
-                              max_sample=1000,
-                              batch_size=batch_size,
-                              iterations=hyperparams["iterations"],
-                              use_cuda=use_cuda
-                              )
+    loop = ActiveLearningLoop(
+        active_set,
+        model.predict_on_dataset_generator,
+        heuristic=heuristic,
+        ndata_to_label=hyperparams["n_data_to_label"],
+        # Instead of predicting on the entire pool, only a subset is used
+        max_sample=1000,
+        batch_size=batch_size,
+        iterations=hyperparams["iterations"],
+        use_cuda=use_cuda,
+    )
     acc = []
     for epoch in tqdm(range(args.al_step)):
         # Following Gal et al. 2016, we reset the weights.
         model.load_state_dict(initial_weights)
         # Train 50 epochs before sampling.
-        model.train_on_dataset(active_set, optimizer, batch_size, hyperparams['learning_epoch'],
-                               use_cuda)
+        model.train_on_dataset(
+            active_set, optimizer, batch_size, hyperparams["learning_epoch"], use_cuda
+        )
 
         # Validation!
         model.test_on_dataset(test_set, batch_size, use_cuda)
         should_continue = loop.step()
         metrics = model.metrics
 
-        val_loss = metrics['test_loss'].value
+        val_loss = metrics["test_loss"].value
         logs = {
             "val": val_loss,
             "epoch": epoch,
-            "train": metrics['train_loss'].value,
+            "train": metrics["train_loss"].value,
             "labeled_data": active_set.labelled,
             "Next Training set size": len(active_set),
-            'cls_report': metrics['test_cls_report'].value,
+            "cls_report": metrics["test_cls_report"].value,
         }
         pprint(logs)
         acc.append(logs)
