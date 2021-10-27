@@ -24,9 +24,10 @@ def register_embedding_list_hook(
     model: Any, embeddings_list: List[np.ndarray], layer_name: str
 ) -> Any:
     def forward_hook(module, inputs, output):
-        embeddings_list.append(output.detach().cpu().clone().numpy())
+        embeddings_list.append(output)
 
     embedding_layer = find_last_embedding_layer(model, layer_name)
+    print(embedding_layer)
     handle = embedding_layer.register_forward_hook(forward_hook)
     return handle
 
@@ -35,8 +36,8 @@ def register_embedding_gradient_hooks(
     model: Any, embeddings_gradients: List[np.ndarray], layer_name: str
 ) -> Any:
     def hook_layers(module, grad_in, grad_out):
-        embeddings_gradients.append(grad_out[0].detach().cpu().clone().numpy())
+        embeddings_gradients.append(grad_out)
 
     embedding_layer = find_last_embedding_layer(model, layer_name)
-    hook = embedding_layer.register_backward_hook(hook_layers)
+    hook = embedding_layer.register_full_backward_hook(hook_layers)
     return hook

@@ -30,5 +30,6 @@ def get_heuristic(
         "variance": heuristics.Variance,
         "precomputed": heuristics.Precomputed,
         "batch_bald": heuristics.BatchBALD,
+        "badge": heuristics.BADGE,
     }[name](shuffle_prop=shuffle_prop, reduction=reduction, **kwargs)
     return heuristic

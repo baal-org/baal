@@ -148,6 +148,7 @@ class ModelWrapper:
             for data, target in DataLoader(
                 dataset, batch_size, True, num_workers=workers, collate_fn=collate_fn
             ):
+                target = target.squeeze()
                 _ = self.train_on_batch(data, target, optimizer, use_cuda, regularizer)
             history.append(self.metrics["train_loss"].value)
 
@@ -360,19 +361,31 @@ class ModelWrapper:
 
         """
         if cuda:
-            data, target = to_cuda(data)
+            # no targets are here! we use this function in inference.
+            data = to_cuda(data)
         optimizer.zero_grad()
         embedding_list = []
         embedding_gradients = []
         handle = register_embedding_list_hook(self.model, embedding_list, self.embedding_layer)
+        # [embd(device=cuda, requires_grad=True) for embd in embedding_list]
         hook = register_embedding_gradient_hooks(self.model, embedding_gradients, self.embedding_layer)
         output = self.model(data)
         model_preds = torch.argmax(output, 1)
-        loss = self.criterion(torch.from_numpy(np.vstack(embedding_list)), model_preds)
+
+        # # print("before", embedding_list)
+        # # prep embedding list
+        embedding_list = torch.cat(embedding_list)
+        # embedding_list.requires_grad = True
+        # if cuda
+        #     embedding_list = to_cuda(embedding_list)
+
+        # print("embedding after", embedding_list)
+        loss = self.criterion(embedding_list, model_preds)
         loss.backward()
+        print("gradient after", embedding_gradients)
         handle.remove()
         hook.remove()
-        return np.vstack(embedding_gradients)
+        return embedding_gradients
 
     def train_on_batch(self, data, target, optimizer, cuda=False,
                        regularizer: Optional[Callable] = None):
@@ -435,6 +448,8 @@ class ModelWrapper:
                 lambda p: p.mean(-1),
                 self.predict_on_batch(data, iterations=average_predictions, cuda=cuda),
             )
+
+            target = target.squeeze()
             loss = self.criterion(preds, target)
             self._update_metrics(preds, target, loss, "test")
             return loss

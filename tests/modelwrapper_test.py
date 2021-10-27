@@ -8,7 +8,7 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 
-from baal.modelwrapper import ModelWrapper, mc_inference
+from baal.modelwrapper import ModelWrapper, mc_inference, embeddings_grad_on_batch
 from baal.utils.metrics import ClassificationReport
 
 
