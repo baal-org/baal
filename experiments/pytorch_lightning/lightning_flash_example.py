@@ -70,7 +70,8 @@ def get_data_module(heuristic, data_path):
         test_dataset=test_set,
         train_transform=train_transforms,
         test_transform=test_transforms,
-        # Do not forget to set `predict_transform`, this is what we will use for uncertainty estimation!
+        # Do not forget to set `predict_transform`,
+        # this is what we will use for uncertainty estimation!
         predict_transform=test_transforms,
         batch_size=64,
     )
@@ -139,8 +140,13 @@ def main(args):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--heuristic", default="bald", type=str, choices=["bald", "random", "entropy"],
-                        help="Which heuristic to select.")
+    parser.add_argument(
+        "--heuristic",
+        default="bald",
+        type=str,
+        choices=["bald", "random", "entropy"],
+        help="Which heuristic to select.",
+    )
     parser.add_argument("--data_path", default="/data", type=str, help="Where to find the dataset.")
     parser.add_argument("--ckpt_path", default="/ckpt", type=str, help="Where to save checkpoints")
     parser.add_argument("--seed", default=2021, type=int, help="Random seed of the experiment")
