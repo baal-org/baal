@@ -14,6 +14,7 @@ from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from torch import nn
 from torchvision import datasets
 from torchvision.transforms import transforms
+from functools import partial
 
 try:
     import flash
@@ -55,19 +56,6 @@ test_transforms = transforms.Compose(
 )
 
 
-class MyActiveLearningDataModule(ActiveLearningDataModule):
-    def label(self, probabilities: List[torch.Tensor] = None, indices=None):
-        if probabilities is not None and indices:
-            raise MisconfigurationException(
-                "The `probabilities` and `indices` are mutually exclusive, pass only of one them."
-            )
-        if probabilities is not None:
-            uncertainties = self.heuristic.get_uncertainties(torch.cat(probabilities, dim=0))
-            indices = np.argsort(uncertainties)
-            if self._dataset is not None:
-                self._dataset.label(indices[-self.query_size :])
-
-
 class DataModule_(ImageClassificationData):
     @property
     def num_classes(self):
@@ -82,10 +70,11 @@ def get_data_module(heuristic, data_path):
         test_dataset=test_set,
         train_transform=train_transforms,
         test_transform=test_transforms,
+        # Do not forget to set `predict_transform`, this is what we will use for uncertainty estimation!
         predict_transform=test_transforms,
         batch_size=64,
     )
-    active_dm = MyActiveLearningDataModule(
+    active_dm = ActiveLearningDataModule(
         dm,
         heuristic=get_heuristic(heuristic),
         initial_num_labels=1024,
@@ -114,76 +103,24 @@ def get_model(dm):
         backbone="vgg16",
         pretrained=True,
         loss_fn=loss_fn,
-        optimizer=torch.optim.SGD,
-        optimizer_kwargs={"lr": LR, "momentum": 0.9, "weight_decay": 5e-4},
+        optimizer=partial(torch.optim.SGD, momentum=0.9, weight_decay=5e-4),
         learning_rate=LR,
-        serializer=Logits(),
+        serializer=Logits(),  # Note the serializer to Logits to be able to estimate uncertainty.
     )
     return model
-
-
-class MyActiveLearningLoop(ActiveLearningLoop):
-    def advance(self, *args: Any, **kwargs: Any) -> None:
-        self.progress.increment_started()
-        if len(self.trainer.datamodule._dataset) > 15000:
-            raise StopIteration
-
-        if self.trainer.datamodule.has_labelled_data:
-            log.info("Training!")
-            self.fit_loop.run()
-
-        if self.trainer.datamodule.has_test:
-            self._reset_testing()
-            log.info("Testing!")
-            metrics = self.trainer.test_loop.run()[0]
-            self.trainer.logger.log_metrics(metrics, step=self.trainer.global_step)
-
-        if self.trainer.datamodule.has_unlabelled_data:
-            self._reset_predicting()
-            log.info("Predicting!")
-            probabilities = self.trainer.predict_loop.run()
-            self.trainer.datamodule.label(probabilities=probabilities)
-        else:
-            raise StopIteration
-
-        self._reset_fitting()
-
-        self.progress.increment_processed()
-
-    def on_run_start(self, *args: Any, **kwargs: Any) -> None:
-        super().on_run_start(*args, **kwargs)
-        self.trainer.test_loop._return_predictions = True
-
-    def _reset_fitting(self):
-        super()._reset_fitting()
-        self.fit_loop.epoch_progress = Progress()
-
-    def _reset_testing(self):
-        self.trainer.state.fn = TrainerFn.TESTING
-        self.trainer.state.status = TrainerStatus.RUNNING
-        self.trainer.testing = True
-        self.trainer.lightning_module.on_test_dataloader()
-        self.trainer.accelerator.connect(self._lightning_module)
-
-    def on_advance_start(self, *args: Any, **kwargs: Any) -> None:
-        if self.trainer.datamodule.has_labelled_data:
-            self._reset_dataloader_for_stage(RunningStage.TRAINING)
-            # self._reset_dataloader_for_stage(RunningStage.VALIDATING)
-            self._reset_dataloader_for_stage(RunningStage.TESTING)
-        if self.trainer.datamodule.has_unlabelled_data:
-            self._reset_dataloader_for_stage(RunningStage.PREDICTING)
-        self.progress.increment_ready()
 
 
 def main(args):
     seed_everything(args.seed)
     gpus = 1 if torch.cuda.is_available() else 0
-    active_dm = get_data_module(args.heuristic, args.data_path)
-    model = get_model(active_dm.labelled)
+    active_dm: ActiveLearningDataModule = get_data_module(args.heuristic, args.data_path)
+    model: ImageClassifier = get_model(active_dm.labelled)
     logger = TensorBoardLogger(
         os.path.join(args.ckpt_path, "tensorboard"),
         name=f"flash-example-cifar-{args.heuristic}-{args.seed}",
     )
+    # We use Flash trainer without validation set.
+    # In practice, using a validation set is risky because we overfit often.
     trainer = flash.Trainer(
         gpus=gpus,
         max_epochs=2500,
@@ -191,18 +128,22 @@ def main(args):
         logger=logger,
         limit_val_batches=0,
     )
-    active_learning_loop = MyActiveLearningLoop(label_epoch_frequency=20, inference_iteration=20)
+
+    # We will train for 20 epochs before doing 20 MC-Dropout iterations to estimate uncertainty.
+    active_learning_loop = ActiveLearningLoop(label_epoch_frequency=20, inference_iteration=20)
     active_learning_loop.connect(trainer.fit_loop)
     trainer.fit_loop = active_learning_loop
+    # We do not freeze the backbone, this gives better performance.
     trainer.finetune(model, datamodule=active_dm, strategy="no_freeze")
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--heuristic", default="bald", type=str)
-    parser.add_argument("--data_path", default="/data", type=str)
-    parser.add_argument("--ckpt_path", default="/ckpt", type=str)
-    parser.add_argument("--seed", default=2021, type=int)
+    parser.add_argument("--heuristic", default="bald", type=str, choices=["bald", "random", "entropy"],
+                        help="Which heuristic to select.")
+    parser.add_argument("--data_path", default="/data", type=str, help="Where to find the dataset.")
+    parser.add_argument("--ckpt_path", default="/ckpt", type=str, help="Where to save checkpoints")
+    parser.add_argument("--seed", default=2021, type=int, help="Random seed of the experiment")
     return parser.parse_args()
 
 
