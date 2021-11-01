@@ -18,7 +18,7 @@ ENV PYTHONFAULTHANDLER=1 \
 RUN conda remove PyYAML -y
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y curl && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y curl git && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python \

@@ -6,4 +6,6 @@ cifar-10-batches-py/
 .gitignore
 .ipynb_checkpoint
 __pycache__
+docs
+*.pkl
 

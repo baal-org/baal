@@ -22,11 +22,11 @@ from baal import SSLModule
 
 import torch.multiprocessing
 
-torch.multiprocessing.set_sharing_strategy('file_system')
+torch.multiprocessing.set_sharing_strategy("file_system")
 
 
 class GaussianNoise(nn.Module):
-    """ Add random gaussian noise to images."""
+    """Add random gaussian noise to images."""
 
     def __init__(self, std=0.05):
         super(GaussianNoise, self).__init__()
@@ -72,12 +72,17 @@ class RandomTranslation(nn.Module):
 
 
 class PIModel(SSLModule):
-    train_transform = transforms.Compose([transforms.RandomHorizontalFlip(),
-                                          transforms.RandomRotation(30),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize(3 * [0.5], 3 * [0.5])])
-    test_transform = transforms.Compose([transforms.ToTensor(),
-                                         transforms.Normalize(3 * [0.5], 3 * [0.5])])
+    train_transform = transforms.Compose(
+        [
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(30),
+            transforms.ToTensor(),
+            transforms.Normalize(3 * [0.5], 3 * [0.5]),
+        ]
+    )
+    test_transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize(3 * [0.5], 3 * [0.5])]
+    )
 
     def __init__(self, active_dataset: ActiveLearningDataset, network: nn.Module, **kwargs):
         super().__init__(active_dataset, **kwargs)
@@ -86,7 +91,7 @@ class PIModel(SSLModule):
 
         # Maximum unsupervised loss weight as defined in the paper.
         M = len(self.active_dataset)
-        N = (len(self.active_dataset) + len(self.active_dataset.pool))
+        N = len(self.active_dataset) + len(self.active_dataset.pool)
         self.max_unsupervised_weight = self.hparams.w_max * M / N
 
         self.criterion = nn.CrossEntropyLoss()
@@ -118,7 +123,7 @@ class PIModel(SSLModule):
 
         accuracy = (y == z.argmax(-1)).float().sum() / len(x)
 
-        logs = {'criterion_loss': supervised_loss, 'accuracy': accuracy}
+        logs = {"criterion_loss": supervised_loss, "accuracy": accuracy}
 
         if not self.hparams.baseline:
             with torch.no_grad():
@@ -128,18 +133,25 @@ class PIModel(SSLModule):
             unsupervised_weight = self.max_unsupervised_weight * self.rampup_value()
             loss = supervised_loss + unsupervised_weight * unsupervised_loss
 
-            logs.update({'supervised_consistency_loss': unsupervised_loss,
-                         'unsupervised_weight': unsupervised_weight})
+            logs.update(
+                {
+                    "supervised_consistency_loss": unsupervised_loss,
+                    "unsupervised_weight": unsupervised_weight,
+                }
+            )
 
         else:
             loss = supervised_loss
 
-        logs.update({'supervised_loss': loss,
-                     'rampup_value': self.rampup_value(),
-                     'learning_rate': self.current_lr
-                     })
+        logs.update(
+            {
+                "supervised_loss": loss,
+                "rampup_value": self.rampup_value(),
+                "learning_rate": self.current_lr,
+            }
+        )
 
-        return {'loss': loss, 'log': logs}
+        return {"loss": loss, "log": logs}
 
     def unsupervised_training_step(self, batch, *args) -> Dict:
         x, _ = batch
@@ -152,10 +164,9 @@ class PIModel(SSLModule):
         unsupervised_weight = self.max_unsupervised_weight * self.rampup_value()
         loss = unsupervised_weight * unsupervised_loss
 
-        logs = {'unsupervised_consistency_loss': unsupervised_loss,
-                'unsupervised_loss': loss}
+        logs = {"unsupervised_consistency_loss": unsupervised_loss, "unsupervised_loss": loss}
 
-        return {'loss': loss, 'log': logs}
+        return {"loss": loss, "log": logs}
 
     def rampup_value(self):
         if self.current_epoch <= self.hparams.rampup_stop - 1:
@@ -172,8 +183,9 @@ class PIModel(SSLModule):
             return 0
 
     def configure_optimizers(self):
-        return torch.optim.SGD(self.parameters(), lr=self.hparams.lr, momentum=0.9,
-                               weight_decay=1e-4)
+        return torch.optim.SGD(
+            self.parameters(), lr=self.hparams.lr, momentum=0.9, weight_decay=1e-4
+        )
 
     def test_val_step(self, batch: int, prefix: str) -> Dict[str, Tensor]:
         x, y = batch
@@ -182,27 +194,31 @@ class PIModel(SSLModule):
         loss_val = self.criterion(y_hat, y)
         accuracy = (y == y_hat.argmax(-1)).float().sum() / len(x)
 
-        output = {'{}_loss'.format(prefix): loss_val, '{}_accuracy'.format(prefix): accuracy}
+        output = {"{}_loss".format(prefix): loss_val, "{}_accuracy".format(prefix): accuracy}
 
         return output
 
     def validation_step(self, batch, batch_idx) -> Dict[str, Tensor]:
-        return self.test_val_step(batch, prefix='val')
+        return self.test_val_step(batch, prefix="val")
 
     def test_step(self, batch, batch_idx) -> Dict[str, Tensor]:
-        return self.test_val_step(batch, prefix='test')
+        return self.test_val_step(batch, prefix="test")
 
     def val_dataloader(self):
-        ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform,
-                     download=True)
-        return DataLoader(ds, self.hparams.batch_size,
-                          shuffle=False, num_workers=self.hparams.workers)
+        ds = CIFAR10(
+            root=self.hparams.data_root, train=False, transform=self.test_transform, download=True
+        )
+        return DataLoader(
+            ds, self.hparams.batch_size, shuffle=False, num_workers=self.hparams.workers
+        )
 
     def test_dataloader(self):
-        ds = CIFAR10(root=self.hparams.data_root, train=False, transform=self.test_transform,
-                     download=True)
-        return DataLoader(ds, self.hparams.batch_size,
-                          shuffle=False, num_workers=self.hparams.workers)
+        ds = CIFAR10(
+            root=self.hparams.data_root, train=False, transform=self.test_transform, download=True
+        )
+        return DataLoader(
+            ds, self.hparams.batch_size, shuffle=False, num_workers=self.hparams.workers
+        )
 
     def epoch_end(self, outputs):
         avg_metrics = {}
@@ -211,9 +227,9 @@ class PIModel(SSLModule):
                 avg_metrics[key] = torch.stack([x[key] for x in outputs]).mean()
 
         output = {}
-        output['progress_bar'] = avg_metrics
-        output['log'] = avg_metrics
-        output['log']['step'] = self.current_epoch
+        output["progress_bar"] = avg_metrics
+        output["log"] = avg_metrics
+        output["log"]["step"] = self.current_epoch
 
         return output
 
@@ -235,27 +251,30 @@ class PIModel(SSLModule):
             argparser with added arguments
         """
         parser = super(PIModel, PIModel).add_model_specific_args(parent_parser)
-        parser.add_argument('--baseline', action='store_true')
-        parser.add_argument('--rampup_stop', default=80)
-        parser.add_argument('--epochs', default=300, type=int)
-        parser.add_argument('--batch-size', default=100, type=int, help='batch size')
-        parser.add_argument('--lr', default=0.003, type=float, help='Max learning rate', dest='lr')
-        parser.add_argument('--w_max', default=100, type=float,
-                            help='Maximum unsupervised weight, default=100 for CIFAR10 as '
-                                 'described in paper')
-        parser.add_argument('--no_augmentations', action='store_true')
+        parser.add_argument("--baseline", action="store_true")
+        parser.add_argument("--rampup_stop", default=80)
+        parser.add_argument("--epochs", default=300, type=int)
+        parser.add_argument("--batch-size", default=100, type=int, help="batch size")
+        parser.add_argument("--lr", default=0.003, type=float, help="Max learning rate", dest="lr")
+        parser.add_argument(
+            "--w_max",
+            default=100,
+            type=float,
+            help="Maximum unsupervised weight, default=100 for CIFAR10 as " "described in paper",
+        )
+        parser.add_argument("--no_augmentations", action="store_true")
         return parser
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from pytorch_lightning import Trainer, seed_everything
     from argparse import ArgumentParser
 
     args = ArgumentParser(add_help=False)
-    args.add_argument('--data-root', default='./', type=str, help='Where to download the data')
-    args.add_argument('--gpus', default=torch.cuda.device_count(), type=int)
-    args.add_argument('--num_labeled', default=5000, type=int)
-    args.add_argument('--seed', default=None, type=int)
+    args.add_argument("--data-root", default="./", type=str, help="Where to download the data")
+    args.add_argument("--gpus", default=torch.cuda.device_count(), type=int)
+    args.add_argument("--num_labeled", default=5000, type=int)
+    args.add_argument("--seed", default=None, type=int)
     args = PIModel.add_model_specific_args(args)
     params = args.parse_args()
 
@@ -263,7 +282,8 @@ if __name__ == '__main__':
 
     active_set = ActiveLearningDataset(
         CIFAR10(params.data_root, train=True, transform=PIModel.train_transform, download=True),
-        pool_specifics={'transform': PIModel.test_transform})
+        pool_specifics={"transform": PIModel.test_transform},
+    )
     active_set.label_randomly(params.num_labeled)
 
     print("Active set length: {}".format(len(active_set)))
@@ -271,15 +291,19 @@ if __name__ == '__main__':
 
     net = vgg11(pretrained=False, num_classes=10)
 
-    weights = load_state_dict_from_url('https://download.pytorch.org/models/vgg11-bbd30ac9.pth')
-    weights = {k: v for k, v in weights.items() if 'classifier.6' not in k}
+    weights = load_state_dict_from_url("https://download.pytorch.org/models/vgg11-bbd30ac9.pth")
+    weights = {k: v for k, v in weights.items() if "classifier.6" not in k}
     net.load_state_dict(weights, strict=False)
 
     system = PIModel(network=net, active_dataset=active_set, hparams=params)
 
-    trainer = Trainer(num_sanity_val_steps=0, max_epochs=params.epochs,
-                      early_stop_callback=False, gpus=params.gpus)
+    trainer = Trainer(
+        num_sanity_val_steps=0,
+        max_epochs=params.epochs,
+        early_stop_callback=False,
+        gpus=params.gpus,
+    )
 
     trainer.fit(system)
 
-    trainer.test(ckpt_path='best')
+    trainer.test(ckpt_path="best")

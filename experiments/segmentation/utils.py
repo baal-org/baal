@@ -11,37 +11,39 @@ from torchvision.transforms import transforms
 
 from baal import ActiveLearningDataset
 
-pascal_voc_ids = np.array([
-    [0, 0, 0],
-    [128, 0, 0],
-    [0, 128, 0],
-    [128, 128, 0],
-    [0, 0, 128],
-    [128, 0, 128],
-    [0, 128, 128],
-    [128, 128, 128],
-    [64, 0, 0],
-    [192, 0, 0],
-    [64, 128, 0],
-    [192, 128, 0],
-    [64, 0, 128],
-    [192, 0, 128],
-    [64, 128, 128],
-    [192, 128, 128],
-    [0, 64, 0],
-    [128, 64, 0],
-    [0, 192, 0],
-    [128, 192, 0],
-    [0, 64, 128],
-])
+pascal_voc_ids = np.array(
+    [
+        [0, 0, 0],
+        [128, 0, 0],
+        [0, 128, 0],
+        [128, 128, 0],
+        [0, 0, 128],
+        [128, 0, 128],
+        [0, 128, 128],
+        [128, 128, 128],
+        [64, 0, 0],
+        [192, 0, 0],
+        [64, 128, 0],
+        [192, 128, 0],
+        [64, 0, 128],
+        [192, 0, 128],
+        [64, 128, 128],
+        [192, 128, 128],
+        [0, 64, 0],
+        [128, 64, 0],
+        [0, 192, 0],
+        [128, 192, 0],
+        [0, 64, 128],
+    ]
+)
 
 
 def active_pascal(
-        path="/tmp",
-        *args,
-        transform=transforms.ToTensor(),
-        test_transform=transforms.ToTensor(),
-        **kwargs,
+    path="/tmp",
+    *args,
+    transform=transforms.ToTensor(),
+    test_transform=transforms.ToTensor(),
+    **kwargs,
 ):
     """Get active Pascal-VOC 2102 datasets.
     Arguments:
@@ -55,35 +57,43 @@ def active_pascal(
     """
 
     return (
-        ActiveLearningDataset(datasets.VOCSegmentation(
-            path, image_set='train', transform=transform, download=False, *args, **kwargs
-        )),
-        datasets.VOCSegmentation(path, image_set='val', transform=test_transform, download=False,
-                                 *args, **kwargs),
+        ActiveLearningDataset(
+            datasets.VOCSegmentation(
+                path, image_set="train", transform=transform, download=False, *args, **kwargs
+            )
+        ),
+        datasets.VOCSegmentation(
+            path, image_set="val", transform=test_transform, download=False, *args, **kwargs
+        ),
     )
 
 
 class SegmentationHead(nn.Sequential):
-
     def __init__(self, in_channels, out_channels, kernel_size=3, activation=None, upsampling=1):
         dropout = nn.Dropout2d(0.5)
-        conv2d = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
-                           padding=kernel_size // 2)
-        upsampling = nn.UpsamplingBilinear2d(
-            scale_factor=upsampling) if upsampling > 1 else nn.Identity()
+        conv2d = nn.Conv2d(
+            in_channels, out_channels, kernel_size=kernel_size, padding=kernel_size // 2
+        )
+        upsampling = (
+            nn.UpsamplingBilinear2d(scale_factor=upsampling) if upsampling > 1 else nn.Identity()
+        )
         activation = Activation(activation)
         super().__init__(dropout, conv2d, upsampling, activation)
 
 
-def add_dropout(model: smp.Unet, decoder_channels: List[int] = (256, 128, 64, 32, 16),
-                classes=1, activation=None):
+def add_dropout(
+    model: smp.Unet,
+    decoder_channels: List[int] = (256, 128, 64, 32, 16),
+    classes=1,
+    activation=None,
+):
     seg_head = SegmentationHead(
         in_channels=decoder_channels[-1],
         out_channels=classes,
         activation=activation,
         kernel_size=3,
     )
-    model.add_module('segmentation_head', seg_head)
+    model.add_module("segmentation_head", seg_head)
     model.initialize()
 
 
@@ -98,8 +108,10 @@ class FocalLoss(nn.Module):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
-        if isinstance(alpha, (float, int)): self.alpha = torch.Tensor([alpha, 1 - alpha])
-        if isinstance(alpha, list): self.alpha = torch.Tensor(alpha)
+        if isinstance(alpha, (float, int)):
+            self.alpha = torch.Tensor([alpha, 1 - alpha])
+        if isinstance(alpha, list):
+            self.alpha = torch.Tensor(alpha)
         self.size_average = size_average
 
     def forward(self, input, target):
