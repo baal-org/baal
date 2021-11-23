@@ -37,7 +37,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            make test
+            make test bandit
   test-import:
     docker:
       # specify the version you desire here

@@ -41,7 +41,7 @@ class ActiveLearningLoop:
         self.heuristic = heuristic
         self.dataset = dataset
         self.max_sample = max_sample
-        self.uncertainty_folder = uncertainty_folder
+        self.uncertainty_folder = uncertainty_folder or "/tmp"
         self.kwargs = kwargs
 
     def step(self, pool=None) -> bool:
