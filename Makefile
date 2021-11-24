@@ -28,3 +28,14 @@ check-mypy-error-count:
 		echo mypy error count $(MYPY_INFO) is more than $(MYPY_ERROR_COUNT); \
 		false; \
 	fi
+
+SRC_FOLDER    ?= ./baal
+REPORT_FOLDER ?= ./reports
+
+./reports/security/bandit/:
+		@mkdir -p ./reports/security/bandit/
+
+bandit: ./reports/security/bandit/ ## SECURITY - Run bandit
+		poetry run bandit ${SRC_FOLDER}/* -r -x "*.pyi,*/_generated/*,*__pycache__*" -v -ll -f json > ${REPORT_FOLDER}/security/bandit/index.json
+
+.PHONY: bandit
