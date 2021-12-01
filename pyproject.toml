@@ -21,7 +21,6 @@ numpy = "^1.21.2"
 matplotlib = "^3.4.3"
 Pillow = ">=6.2.0"
 tqdm = "^4.62.2"
-pytorch-lightning = ">=1.4.0"
 structlog = "^21.1.0"
 scikit-learn = "^0.24.2"
 scipy = "^1.7.1"
@@ -32,7 +31,6 @@ torchvision = { version = ">=0.7.0", optional=true }
 # NLP
 transformers = {version = "^4.10.2", optional=true}
 datasets = {version = "^1.11.0", optional=true}
-lightning-flash = {git = "https://github.com/PyTorchLightning/lightning-flash.git", extras = ["image"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -58,6 +56,8 @@ recommonmark = "^0.7.1"
 mypy = "^0.910"
 bandit = "^1.7.1"
 
+# Lightning
+lightning-flash = {git = "https://github.com/PyTorchLightning/lightning-flash.git", extras = ["image"]}
 
 [tool.poetry.extras]
 vision = ["torchvision"]

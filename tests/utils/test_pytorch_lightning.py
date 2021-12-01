@@ -133,7 +133,7 @@ def test_pl_step(monkeypatch, a_data_module, a_pl_module, hparams):
     active_set = a_data_module.active_dataset
     trainer = BaalTrainer(dataset=active_set,
                           max_epochs=3, default_root_dir='/tmp',
-                          ndata_to_label=hparams['query_size'])
+                          query_size=hparams['query_size'])
     # Give everything.
 
     before = len(active_set)

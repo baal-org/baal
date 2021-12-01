@@ -12,8 +12,8 @@ from torchvision.models import vgg16
 from torchvision.transforms import transforms
 from tqdm import tqdm
 
-from baal import get_heuristic, ActiveLearningDataset
-from baal import ActiveLearningLoop
+from baal.active import get_heuristic, ActiveLearningDataset
+from baal.active.active_loop import ActiveLearningLoop
 from baal.bayesian.dropout import patch_module
 from baal import ModelWrapper
 
@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument("--epoch", default=100, type=int)
     parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--initial_pool", default=1000, type=int)
-    parser.add_argument("--n_data_to_label", default=100, type=int)
+    parser.add_argument("--query_size", default=100, type=int)
     parser.add_argument("--lr", default=0.001)
     parser.add_argument("--heuristic", default="bald", type=str)
     parser.add_argument("--iterations", default=20, type=int)
@@ -107,7 +107,7 @@ def main():
         active_set,
         model.predict_on_dataset,
         heuristic,
-        hyperparams.get("n_data_to_label", 1),
+        hyperparams.get("query_size", 1),
         batch_size=10,
         iterations=hyperparams["iterations"],
         use_cuda=use_cuda,

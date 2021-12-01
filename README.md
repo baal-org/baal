@@ -96,7 +96,7 @@ model = ModelWrapper(model, your_criterion)
 active_loop = ActiveLearningLoop(dataset,
                                  get_probabilities=model.predict_on_dataset,
                                  heuristic=heuristics.BALD(shuffle_prop=0.1),
-                                 ndata_to_label=NDATA_TO_LABEL)
+                                 query_size=NDATA_TO_LABEL)
 for al_step in range(N_ALSTEP):
     model.train_on_dataset(dataset, optimizer, BATCH_SIZE, use_cuda=use_cuda)
     if not active_loop.step():

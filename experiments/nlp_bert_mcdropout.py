@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--initial_pool", default=1000, type=int)
     parser.add_argument("--model", default="bert-base-uncased", type=str)
-    parser.add_argument("--n_data_to_label", default=100, type=int)
+    parser.add_argument("--query_size", default=100, type=int)
     parser.add_argument("--heuristic", default="bald", type=str)
     parser.add_argument("--iterations", default=20, type=int)
     parser.add_argument("--shuffle_prop", default=0.05, type=float)
@@ -112,7 +112,7 @@ def main():
         active_set,
         model.predict_on_dataset,
         heuristic,
-        hyperparams.get("n_data_to_label", 1),
+        hyperparams.get("query_size", 1),
         iterations=hyperparams["iterations"],
     )
 

@@ -39,7 +39,7 @@ def parse_args():
     parser.add_argument("--al_step", default=200, type=int)
     parser.add_argument("--batch_size", default=8, type=int)
     parser.add_argument("--initial_pool", default=40, type=int)
-    parser.add_argument("--n_data_to_label", default=20, type=int)
+    parser.add_argument("--query_size", default=20, type=int)
     parser.add_argument("--lr", default=0.001)
     parser.add_argument("--heuristic", default="random", type=str)
     parser.add_argument("--reduce", default="sum", type=str)
@@ -134,7 +134,7 @@ def main():
         active_set,
         model.predict_on_dataset_generator,
         heuristic=heuristic,
-        ndata_to_label=hyperparams["n_data_to_label"],
+        query_size=hyperparams["query_size"],
         # Instead of predicting on the entire pool, only a subset is used
         max_sample=1000,
         batch_size=batch_size,
