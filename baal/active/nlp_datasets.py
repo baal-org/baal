@@ -54,8 +54,13 @@ class HuggingFaceDatasets(Dataset):
         )
         return tokenized["input_ids"], tokenized["attention_mask"]
 
-    def label(self,idx,value):
-        #print(self.targets,idx)
+    def label(self, idx: int, value: int):
+        """Label the item.
+
+        Args:
+            idx: index to label
+            value: Value to label the index.
+        """
         self.targets[idx] = value
 
     def __len__(self):
