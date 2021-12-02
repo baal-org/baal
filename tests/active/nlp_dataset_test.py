@@ -3,15 +3,17 @@ import pytest
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 from baal.active.nlp_datasets import HuggingFaceDatasets
+import datasets
 
 
 class MyDataset(Dataset):
     def __init__(self):
-        self.dataset = {'sentence': [],
-                        'label': []}
-        for i in range(10):
-            self.dataset['sentence'].append(f'this is test number {i}')
-            self.dataset['label'].append('POS' if (i % 2) == 0 else 'NEG')
+        self.dataset = datasets.Dataset.from_dict({'sentence': [f'this is test number {i}' for i in range(10)],
+                                                   'label': ['POS' if (i % 2) == 0 else 'NEG' for i in range(10)]},
+                                                  features=datasets.Features({'sentence': datasets.Value('string'),
+                                                                              'label': datasets.ClassLabel(2,
+                                                                                                           names=['NEG',
+                                                                                                                  'POS'])}))
 
     def __len__(self):
         return 10
@@ -20,7 +22,7 @@ class MyDataset(Dataset):
 
         if isinstance(item, int):
             return {'sentence': self.dataset['sentence'][item],
-                    'label': self.dataset['label'][item] }
+                    'label': self.dataset['label'][item]}
         elif isinstance(item, str):
             return self.dataset[item]
 
@@ -48,8 +50,13 @@ class HuggingFaceDatasetsTest(unittest.TestCase):
         assert self.dataset_with_tokenizer[0]['inputs'] == 'this is test number 0'
         assert self.dataset_with_tokenizer[0]['label'] == 1
         assert self.dataset_with_tokenizer.input_ids.shape[1] <= 128
-        assert len(self.dataset_with_tokenizer[0]['attention_mask']) ==\
+        assert len(self.dataset_with_tokenizer[0]['attention_mask']) == \
                len(self.dataset_with_tokenizer[0]['input_ids'])
+
+    def test_label(self):
+        prev_label = self.dataset[2]['label'].item()
+        self.dataset.label(2, (prev_label + 1) % 2)
+        assert self.dataset[2]['label'].item() == ((prev_label - 1) % 2)
 
 
 if __name__ == '__main__':
