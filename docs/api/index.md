@@ -1,54 +1,29 @@
 # API Reference
 
-## ModelWrapper
-
 ```eval_rst
-.. autoclass:: baal.ModelWrapper
-    :members:
-```
+.. toctree::
+    :caption: API Definition
+    :maxdepth: 1
 
-## Active learning functionality
-
-```eval_rst
-.. autoclass:: baal.active.ActiveLearningDataset
-    :members:
-
-.. autoclass:: baal.active.ActiveLearningLoop
-    :members:
-
-.. autoclass:: baal.active.FileDataset
-    :members:
-```
-
-## Calibration Wrapper
-
-```eval_rst
-.. autoclass:: baal.calibration.DirichletCalibrator
-    :members:
-```
-
-## Heuristics
-
-```eval_rst
-.. autoclass:: baal.active.heuristics.AbstractHeuristic
-    :members:
-
-.. autoclass:: baal.active.heuristics.BALD
-
-.. autoclass:: baal.active.heuristics.Random
-
-.. autoclass:: baal.active.heuristics.Entropy
-```
+    baal.modelwrapper.ModelWrapper <./modelwrapper>
+    baal.bayesian <./bayesian>
+    baal.active <./dataset_management>
+    baal.active.heuristics <./heuristics>
+    baal.calibration <./calibration>
+    baal.utils <./utils>
     
-## Pytorch Lightning Compatibility
-
- ```eval_rst
-.. autoclass:: baal.utils.pytorch_lightning.ResetCallback
-    :members: on_train_start
-
-.. autoclass:: baal.utils.pytorch_lightning.BaalTrainer
-    :members: predict_on_dataset, predict_on_dataset_generator
-
-.. autoclass:: baal.utils.pytorch_lightning.BaaLDataModule
-    :members: pool_dataloader
+.. toctree::
+    :caption: Compatibility
+    :maxdepth: 1
+    
+    baal.utils.pytorch_lightning <./compatibility/pytorch-lightning>
+    baal.transformers_trainer_wrapper <./compatibility/huggingface>
+    
 ```
+
+
+
+
+
+
+    

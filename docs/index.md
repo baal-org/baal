@@ -25,7 +25,7 @@ For support, we have several ways to help you:
 
 * Our [FAQ](faq.md)
 * Submit an issue on Github [here](https://github.com/ElementAI/baal/issues/new/choose)
-* Join our [Gitter](https://gitter.im/eai-baal/community#)!
+* Join our [Slack](https://join.slack.com/t/baal-world/shared_invite/zt-z0izhn4y-Jt6Zu5dZaV2rsAS9sdISfg)!
 
 ```eval_rst
 .. toctree::
@@ -68,6 +68,7 @@ For support, we have several ways to help you:
     :maxdepth: 2
 
     Background literature <literature/index>
+    Cheat Sheet <user_guide/baal_cheatsheet>
 ```
    
 ## Indices and tables

@@ -1,5 +1,6 @@
 # Bayesian Active Learning (BaaL)
-[![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal)  [![Documentation Status](https://readthedocs.org/projects/baal/badge/?version=latest)](https://baal.readthedocs.io/en/latest/?badge=latest) [![Gitter](https://badges.gitter.im/eai-baal/community.svg)](https://gitter.im/eai-baal/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal)  [![Documentation Status](https://readthedocs.org/projects/baal/badge/?version=latest)](https://baal.readthedocs.io/en/latest/?badge=latest) [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/baal-world/shared_invite/zt-z0izhn4y-Jt6Zu5dZaV2rsAS9sdISfg)
+[![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/Elementai/baal/blob/master/LICENSE)
 ---
 
 <p align="left">

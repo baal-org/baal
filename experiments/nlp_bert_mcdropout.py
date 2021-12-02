@@ -1,5 +1,3 @@
-import sys
-sys.path.append("/app/baal")
 import argparse
 import random
 from copy import deepcopy
@@ -36,8 +34,9 @@ def parse_args():
     parser.add_argument("--heuristic", default="bald", type=str)
     parser.add_argument("--iterations", default=20, type=int)
     parser.add_argument("--shuffle_prop", default=0.05, type=float)
-    parser.add_argument('--learning_epoch', default=20, type=int)
+    parser.add_argument("--learning_epoch", default=20, type=int)
     return parser.parse_args()
+
 
 def get_datasets(initial_pool, tokenizer):
 
@@ -45,8 +44,8 @@ def get_datasets(initial_pool, tokenizer):
     # HuggingFace datasets. You can always create a custom wrapper for
     # custom datasets.
     datasets = load_dataset("glue", "sst2")
-    raw_train_set = datasets['train']
-    raw_valid_set = datasets['validation']
+    raw_train_set = datasets["train"]
+    raw_valid_set = datasets["validation"]
 
     active_set = active_huggingface_dataset(raw_train_set, tokenizer)
     valid_set = HuggingFaceDatasets(raw_valid_set, tokenizer)
@@ -54,6 +53,7 @@ def get_datasets(initial_pool, tokenizer):
     # We start labeling randomly.
     active_set.label_randomly(initial_pool)
     return active_set, valid_set
+
 
 def main():
     args = parse_args()
@@ -66,18 +66,17 @@ def main():
 
     hyperparams = vars(args)
 
-    heuristic = get_heuristic(hyperparams['heuristic'],
-                              hyperparams['shuffle_prop'])
+    heuristic = get_heuristic(hyperparams["heuristic"], hyperparams["shuffle_prop"])
 
     model = BertForSequenceClassification.from_pretrained(
-        pretrained_model_name_or_path=hyperparams["model"])
-    tokenizer = BertTokenizer.from_pretrained(
-        pretrained_model_name_or_path=hyperparams["model"])
+        pretrained_model_name_or_path=hyperparams["model"]
+    )
+    tokenizer = BertTokenizer.from_pretrained(pretrained_model_name_or_path=hyperparams["model"])
 
     # In this example we use tokenizer once only in the beginning since it would
     # make the whole process faster. However, it is also possible to input tokenizer
     # in trainer.
-    active_set, test_set = get_datasets(hyperparams['initial_pool'], tokenizer)
+    active_set, test_set = get_datasets(hyperparams["initial_pool"], tokenizer)
 
     # change dropout layer to MCDropout
     model = patch_module(model)
@@ -88,30 +87,34 @@ def main():
     init_weights = deepcopy(model.state_dict())
 
     training_args = TrainingArguments(
-        output_dir='/app/baal/results',  # output directory
-        num_train_epochs=hyperparams['learning_epoch'],  # total # of training epochs
+        output_dir="/app/baal/results",  # output directory
+        num_train_epochs=hyperparams["learning_epoch"],  # total # of training epochs
         per_device_train_batch_size=16,  # batch size per device during training
         per_device_eval_batch_size=64,  # batch size for evaluation
         weight_decay=0.01,  # strength of weight decay
-        logging_dir='/app/baal/logs',  # directory for storing logs
+        logging_dir="/app/baal/logs",  # directory for storing logs
     )
 
     # We wrap the huggingface Trainer to create an Active Learning Trainer
-    model = BaalTransformersTrainer(model=model,
-                                    args=training_args,
-                                    train_dataset=active_set,
-                                    eval_dataset=test_set,
-                                    tokenizer=None)
+    model = BaalTransformersTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=active_set,
+        eval_dataset=test_set,
+        tokenizer=None,
+    )
 
     logs = {}
-    logs['epoch'] = 0
+    logs["epoch"] = 0
 
     # In this case, nlp data is fast to process and we do NoT need to use a smaller batch_size
-    active_loop = ActiveLearningLoop(active_set,
-                                     model.predict_on_dataset,
-                                     heuristic,
-                                     hyperparams.get('n_data_to_label', 1),
-                                     iterations=hyperparams['iterations'])
+    active_loop = ActiveLearningLoop(
+        active_set,
+        model.predict_on_dataset,
+        heuristic,
+        hyperparams.get("n_data_to_label", 1),
+        iterations=hyperparams["iterations"],
+    )
 
     for epoch in tqdm(range(args.epoch)):
         # we use the default setup of HuggingFace for training (ex: epoch=1).
@@ -130,9 +133,11 @@ def main():
         model.lr_scheduler = None
         if not should_continue:
             break
-        active_logs = {"epoch": epoch,
-                       "labeled_data": active_set._labelled,
-                       "Next Training set size": len(active_set)}
+        active_logs = {
+            "epoch": epoch,
+            "labeled_data": active_set._labelled,
+            "Next Training set size": len(active_set),
+        }
 
         logs = {**eval_metrics, **active_logs}
         print(logs)
