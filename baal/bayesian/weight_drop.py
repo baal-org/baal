@@ -116,7 +116,7 @@ def _patch_layers(module: torch.nn.Module, layers: Sequence, weight_dropout: flo
             child.p = 0
 
         # Recursively apply to child.
-        changed = changed or _patch_layers(child, layers, weight_dropout)
+        changed |= _patch_layers(child, layers, weight_dropout)
     return changed
 
 
