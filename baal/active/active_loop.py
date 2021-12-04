@@ -26,6 +26,7 @@ class ActiveLearningLoop:
         query_size (int): Number of sample to label per step.
         max_sample (int): Limit the number of sample used (-1 is no limit).
         uncertainty_folder (Optional[str]): If provided, will store uncertainties on disk.
+        ndata_to_label (int): DEPRECATED, please use `query_size`.
         **kwargs: Parameters forwarded to `get_probabilities`.
     """
 
