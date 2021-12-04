@@ -72,15 +72,14 @@ def segmentation_task(tmpdir):
                           nn.ConvTranspose2d(64, 10, 3, 1)
                           )
     model = ModelWrapper(model, nn.CrossEntropyLoss())
-    test = datasets.CIFAR10(tmpdir, train=False, download=True, transform=transforms.ToTensor())
+    test = SimpleDataset()
     return model, test
 
 
-@pytest.mark.skipif('CIRCLECI' in os.environ, reason="Doesn't fit on CIRCLECI")
 def test_bald_gpu_seg(segmentation_task):
     torch.manual_seed(1337)
     model, test_set = segmentation_task
-    wrap = BALDGPUWrapper(model, reduction='sum')
+    wrap = BALDGPUWrapper(model, criterion=None, reduction='sum')
 
     out = wrap.predict_on_dataset(test_set, 4, 10, False, 4)
     assert out.shape[0] == len(test_set)

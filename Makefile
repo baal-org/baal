@@ -12,7 +12,7 @@ format:
 
 .PHONY: requirements.txt
 requirements.txt: poetry.lock
-	poetry export --without-hashes -f requirements.txt > requirements.txt
+	poetry export --no-dev --without-hashes -f requirements.txt > requirements.txt
 
 .PHONY: mypy
 mypy:

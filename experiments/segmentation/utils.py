@@ -45,7 +45,7 @@ def active_pascal(
     test_transform=transforms.ToTensor(),
     **kwargs,
 ):
-    """Get active Pascal-VOC 2102 datasets.
+    """Get active Pascal-VOC 2102 dataset.
     Arguments:
         path : str
             The root folder for the Pascal dataset

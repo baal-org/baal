@@ -61,25 +61,32 @@ class ActiveDatasetTest(unittest.TestCase):
     def test_pool(self):
         self.dataset._dataset.label = unittest.mock.MagicMock()
         labels_initial = self.dataset.n_labelled
+
+        # Test that we can label without value for research
         self.dataset.can_label = False
         self.dataset.label(0, value=np.arange(1, 10))
         self.dataset._dataset.label.assert_not_called()
         labels_next_1 = self.dataset.n_labelled
         assert labels_next_1 == labels_initial + 1
+
+        # Test that a warning is raised if we dont supply a label.
         self.dataset.can_label = True
-        self.dataset.label(np.arange(0, 9))
+        with warnings.catch_warnings(record=True) as w:
+            self.dataset.label(np.arange(0, 9))
+            assert len(w) == 1 and "The dataset is able to label data, but no label was provided." in str(w[0].message)
         self.dataset._dataset.label.assert_not_called()
-        labels_next_2 = self.dataset.n_labelled
-        assert labels_next_1 == labels_next_2
-        self.dataset.label(np.arange(0, 9), value=np.arange(1, 10))
-        assert self.dataset._dataset.label.called_once_with(np.arange(1, 10))
+        assert self.dataset.n_labelled == labels_next_1
+
+        with pytest.raises(ValueError, match="same length"):
+            self.dataset.label(np.arange(0, 9), value=np.arange(1, 10))
+
         # cleanup
         del self.dataset._dataset.label
         self.dataset.can_label = False
 
         pool = self.dataset.pool
-        assert np.equal([i for i in pool], [(i, -1) for i in np.arange(2, 100)]).all()
-        assert np.equal([i for i in self.dataset], [(i, i) for i in np.arange(2)]).all()
+        assert np.equal([i for i in pool], [(i, -1) for i in np.arange(labels_next_1, 100)]).all()
+        assert np.equal([i for i in self.dataset], [(i, i) for i in np.arange(labels_next_1)]).all()
 
     def test_get_raw(self):
         # check that get_raw returns the same thing regardless of labelling
@@ -171,36 +178,6 @@ class ActiveDatasetTest(unittest.TestCase):
         assert dataset_1.n_labelled == 100
 
 
-def test_numpydataset():
-    x, y = load_iris(return_X_y=True)
-    init_len = len(x)
-    dataset = ActiveNumpyArray((x, y))
-    assert len(dataset) == 0 == dataset.n_labelled
-    assert dataset.n_unlabelled == init_len
-
-    dataset.label_randomly(10)
-    assert len(dataset) == 10 == dataset.n_labelled
-    assert dataset.n_unlabelled == init_len - 10
-
-    xi, yi = dataset.dataset
-    assert len(xi) == 10
-
-    xp, yp = dataset.pool
-    assert len(xp) == init_len - 10
-
-    dataset.label(list(range(10)))
-    assert len(dataset) == 20
-
-    l = np.array([1] * 10 + [0] * (init_len - 10))
-    dataset = ActiveNumpyArray((x, y), labelled=l)
-    assert len(dataset) == 10
-
-    assert [a == b for a, b in zip(dataset.get_raw(-1), (x[-1], y[-1]))]
-    assert [a == b for a, b in zip(dataset.get_raw(0), (x[0], y[0]))]
-
-    assert (next(iter(dataset))[0] == dataset[0][0]).all()
-
-
 def test_arrowds():
     dataset = HFdata.load_dataset('glue', 'sst2')['test']
     dataset = ActiveLearningDataset(dataset)
@@ -244,6 +221,19 @@ def test_warning_raised_on_deprecation():
         _ = al._labelled
         assert len(w) == 1
         assert w[0].category is DeprecationWarning
+
+
+def test_labelled_map():
+    ds = ActiveLearningDataset(MyDataset())
+    assert ds.current_al_step == 0
+    ds.label_randomly(10)
+    assert ds.current_al_step == 1
+    ds.label_randomly(10)
+    assert ds.labelled_map.max() == 2 and np.equal(ds.labelled, ds.labelled_map > 0).all()
+
+    st = ds.state_dict()
+    ds2 = ActiveLearningDataset(MyDataset(), labelled=st["labelled"])
+    assert ds2.current_al_step == ds.current_al_step
 
 
 if __name__ == '__main__':

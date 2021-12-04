@@ -40,7 +40,7 @@ def test_integration():
     al_dataset.label_randomly(10)
 
     use_cuda = False
-    model = vgg.vgg16(pretrained=False,
+    model = vgg.vgg11(pretrained=False,
                       num_classes=10)
 
     criterion = nn.CrossEntropyLoss()
@@ -57,7 +57,7 @@ def test_integration():
                                      heuristic=heuristics.BALD(),
                                      query_size=10,
                                      batch_size=10,
-                                     iterations=10,
+                                     iterations=2,
                                      use_cuda=use_cuda,
                                      workers=4)
 
@@ -66,7 +66,7 @@ def test_integration():
     for step in range(num_steps):
         old_param = list(map(lambda x: x.clone(), model.model.parameters()))
         model.train_on_dataset(al_dataset, optimizer=optimizer, batch_size=10,
-                               epoch=5, use_cuda=use_cuda, workers=2)
+                               epoch=1, use_cuda=use_cuda, workers=2)
         model.test_on_dataset(cifar10_test, batch_size=10, use_cuda=use_cuda,
                               workers=2)
 

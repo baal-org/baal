@@ -2,7 +2,7 @@ import unittest
 import pytest
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer
-from baal.active.nlp_datasets import HuggingFaceDatasets
+from baal.active.dataset.nlp_datasets import HuggingFaceDatasets
 import datasets
 
 

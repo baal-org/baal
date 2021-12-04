@@ -1,76 +1,17 @@
 import warnings
 from copy import deepcopy
 from itertools import zip_longest
-from typing import Union, Optional, Callable, Tuple, List, Any, Dict
+from typing import Union, Optional, Callable, Any, Dict
 
 import numpy as np
-import torch
 import torch.utils.data as torchdata
 from sklearn.utils import check_random_state
+
+from baal.active.dataset.base import SplittedDataset
 
 
 def _identity(x):
     return x
-
-
-class SplittedDataset(torchdata.Dataset):
-    """Abstract class for Dataset that can be splitted."""
-
-    labelled: np.ndarray
-    random_state: np.random.RandomState
-    label: Callable
-
-    def is_labelled(self, idx: int) -> bool:
-        """Check if a datapoint is labelled."""
-        return bool(self.labelled[idx].item() == 1)
-
-    def __len__(self) -> int:
-        """Return how many actual data / label pairs we have."""
-        return int(self.labelled.sum())
-
-    @property
-    def n_unlabelled(self):
-        """The number of unlabelled data points."""
-        return (~self.labelled).sum()
-
-    @property
-    def n_labelled(self):
-        """The number of labelled data points."""
-        return self.labelled.sum()
-
-    def label_randomly(self, n: int = 1) -> None:
-        """
-        Label `n` data-points randomly.
-
-        Args:
-            n (int): Number of samples to label.
-        """
-        for i in range(n):
-            """Making multiple call to self.n_unlabelled is inefficient, but
-            self.label changes the available length and it may lead to
-            IndexError if not done this way."""
-            self.label(self.random_state.choice(self.n_unlabelled, 1).item())
-
-    """ This returns one or zero, if it is labelled or not, no index is returned.
-        """
-
-    def _labelled_to_oracle_index(self, index: int) -> int:
-        return int(self.labelled.nonzero()[0][index].squeeze().item())
-
-    def _pool_to_oracle_index(self, index: Union[int, List[int]]) -> List[int]:
-        if isinstance(index, np.int64) or isinstance(index, int):
-            index = [index]
-
-        lbl_nz = (~self.labelled).nonzero()[0]
-        return [int(lbl_nz[idx].squeeze().item()) for idx in index]
-
-    def _oracle_to_pool_index(self, index: Union[int, List[int]]) -> List[int]:
-        if isinstance(index, int):
-            index = [index]
-
-        # Pool indices are the unlabelled, starts at 0
-        lbl_cs = np.cumsum(~self.labelled) - 1
-        return [int(lbl_cs[idx].squeeze().item()) for idx in index]
 
 
 class ActiveLearningDataset(SplittedDataset):
@@ -78,8 +19,8 @@ class ActiveLearningDataset(SplittedDataset):
 
     Args:
         dataset: The baseline dataset.
-        labelled: An array that acts as a boolean mask which is True for every
-            data point that is labelled, and False for every data point that is not
+        labelled: An array that acts as a mask which is greater than 1 for every
+            data point that is labelled, and 0 for every data point that is not
             labelled.
         make_unlabelled: The function that returns an
             unlabelled version of a datum so that it can still be used in the DataLoader.
@@ -97,10 +38,11 @@ class ActiveLearningDataset(SplittedDataset):
         pool_specifics: Optional[dict] = None,
     ) -> None:
         self._dataset = dataset
+        # The labelled_map keeps track of the step at which an item as been labelled.
         if labelled is not None:
-            self.labelled: np.ndarray = labelled.astype(bool)
+            self.labelled_map: np.ndarray = labelled.astype(int)
         else:
-            self.labelled = np.zeros(len(self._dataset), dtype=bool)
+            self.labelled_map = np.zeros(len(self._dataset), dtype=int)
 
         if pool_specifics is None:
             pool_specifics = {}
@@ -118,6 +60,18 @@ class ActiveLearningDataset(SplittedDataset):
             "_labelled as been renamed labelled. Please update your script.", DeprecationWarning
         )
         return self.labelled
+
+    @property
+    def current_al_step(self) -> int:
+        """Get the current active learning step."""
+        return int(self.labelled_map.max())
+
+    @property
+    def labelled(self):
+        """An array that acts as a boolean mask which is True for every
+        data point that is labelled, and False for every data point that is not
+        labelled."""
+        return self.labelled_map.astype(bool)
 
     def check_dataset_can_label(self):
         """Check if a dataset can be labelled.
@@ -202,11 +156,17 @@ class ActiveLearningDataset(SplittedDataset):
             index = [index]
         if not isinstance(value, (list, tuple)):
             value = [value]
+        if value[0] is not None and len(index) != len(value):
+            raise ValueError(
+                "Expected `index` and `value` to be of same length when `value` is provided."
+                f"Got index={len(index)} and value={len(value)}"
+            )
         indexes = self._pool_to_oracle_index(index)
+        active_step = self.current_al_step + 1
         for index, val in zip_longest(indexes, value, fillvalue=None):
             if self.can_label and val is not None:
                 self._dataset.label(index, val)  # type: ignore
-                self.labelled[index] = 1
+                self.labelled[index] = active_step
             elif self.can_label and val is None:
                 warnings.warn(
                     """The dataset is able to label data, but no label was provided.
@@ -217,7 +177,7 @@ class ActiveLearningDataset(SplittedDataset):
                     UserWarning,
                 )
             elif not self.can_label:
-                self.labelled[index] = 1
+                self.labelled_map[index] = active_step
                 if val is not None:
                     warnings.warn(
                         "We will consider the original label of this datasample : {}, {}.".format(
@@ -228,7 +188,7 @@ class ActiveLearningDataset(SplittedDataset):
 
     def reset_labeled(self):
         """Reset the label map."""
-        self.labelled = np.zeros(len(self._dataset), dtype=np.bool)
+        self.labelled_map = np.zeros(len(self._dataset), dtype=np.bool)
 
     def get_raw(self, idx: int) -> Any:
         """Get a datapoint from the underlying dataset."""
@@ -236,11 +196,11 @@ class ActiveLearningDataset(SplittedDataset):
 
     def state_dict(self) -> Dict:
         """Return the state_dict, ie. the labelled map and random_state."""
-        return {"labelled": self.labelled, "random_state": self.random_state}
+        return {"labelled": self.labelled_map, "random_state": self.random_state}
 
     def load_state_dict(self, state_dict):
         """Load the labelled map and random_state with give state_dict."""
-        self.labelled = state_dict["labelled"]
+        self.labelled_map = state_dict["labelled"]
         self.random_state = state_dict["random_state"]
 
 
@@ -265,66 +225,3 @@ class ActiveLearningPool(torchdata.Dataset):
     def __len__(self) -> int:
         """Return how many actual data / label pairs we have."""
         return len(self._dataset)
-
-
-class ActiveNumpyArray(SplittedDataset):
-    """
-    Active dataset for numpy arrays. Useful when using sklearn.
-
-    Args:
-        dataset (Tuple[ndarray, ndarray]): [Train x, train y], The dataset.
-        labelled (Union[np.ndarray, torch.Tensor]):
-            An array/tensor that acts as a boolean mask which is True for every
-            data point that is labelled, and False for every data point that is not
-            labelled.
-    """
-
-    def __init__(
-        self,
-        dataset: Tuple[np.ndarray, np.ndarray],
-        labelled: Optional[np.ndarray] = None,
-    ) -> None:
-        self.random_state = np.random.RandomState()
-        if labelled is not None:
-            labelled = labelled.astype(bool)
-        else:
-            labelled = np.zeros(len(dataset[0]), dtype=bool)
-        self._dataset: Tuple[np.ndarray, np.ndarray] = dataset
-        self.labelled: np.ndarray = labelled
-
-    @property
-    def pool(self):
-        """Return the unlabelled portion of the dataset."""
-        return self._dataset[0][~self.labelled], self._dataset[1][~self.labelled]
-
-    @property
-    def dataset(self):
-        """Return the labelled portion of the dataset."""
-        return self._dataset[0][self.labelled], self._dataset[1][self.labelled]
-
-    def get_raw(self, idx: int) -> Any:
-        return self._dataset[0][idx], self._dataset[1][idx]
-
-    def __iter__(self):
-        return zip(*self._dataset)
-
-    def __getitem__(self, item):
-        return self._dataset[0][item], self._dataset[1][item]
-
-    def label(self, index: Union[list, int], value: Optional[Any] = None) -> None:
-        """
-        Label data points.
-        The index should be relative to the pool, not the overall data.
-
-        Args:
-            index (Union[list,int]): one or many indices to label.
-            value (Optional[Any]): The label value. If not provided, no modification
-                                    to the underlying dataset is done.
-        """
-        if isinstance(index, int):
-            index = [index]
-        if not isinstance(value, (list, tuple)):
-            value = [value]
-        indexes = self._pool_to_oracle_index(index)
-        for index, val in zip_longest(indexes, value, fillvalue=None):
-            self.labelled[index] = 1

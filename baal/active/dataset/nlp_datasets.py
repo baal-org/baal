@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import torch
 from datasets import Dataset as HFDataset
@@ -8,7 +10,7 @@ from baal.active import ActiveLearningDataset
 
 class HuggingFaceDatasets(Dataset):
     """
-    Support for `huggingface.datasets`: (https://github.com/huggingface/datasets).
+    Support for `huggingface.dataset`: (https://github.com/huggingface/datasets).
     The purpose of this wrapper is to separate the labels from the rest of the sample information
     and make the dataset ready to be used by `baal.active.ActiveLearningDataset`.
 
@@ -31,7 +33,7 @@ class HuggingFaceDatasets(Dataset):
     ):
         self.dataset = dataset
         self.targets, self.texts = self.dataset[target_key], self.dataset[input_key]
-        self.targets_list = np.unique(self.targets).tolist()
+        self.targets_list: List = np.unique(self.targets).tolist()
         self.input_ids, self.attention_masks = (
             self._tokenize(tokenizer, max_seq_len) if tokenizer else ([], [])
         )
@@ -88,7 +90,7 @@ def active_huggingface_dataset(
     **kwargs
 ):
     """
-    Wrapping huggingface.datasets with baal.active.ActiveLearningDataset.
+    Wrapping huggingface.dataset with baal.active.ActiveLearningDataset.
 
     Args:
         dataset (torch.utils.data.Dataset): a dataset provided by huggingface.
