@@ -12,7 +12,7 @@ format:
 
 .PHONY: requirements.txt
 requirements.txt: poetry.lock
-	poetry export --no-dev --without-hashes -f requirements.txt > requirements.txt
+	poetry export --without-hashes -f requirements.txt > requirements.txt
 
 .PHONY: mypy
 mypy:
@@ -21,7 +21,7 @@ mypy:
 
 .PHONY: check-mypy-error-count
 check-mypy-error-count: MYPY_INFO = $(shell expr `poetry run mypy baal | grep ": error" | wc -l`)
-check-mypy-error-count: MYPY_ERROR_COUNT = 16
+check-mypy-error-count: MYPY_ERROR_COUNT = 9
 
 check-mypy-error-count:
 	@if [ ${MYPY_INFO} -gt ${MYPY_ERROR_COUNT} ]; then \

@@ -2,18 +2,14 @@ import pickle
 import unittest
 import unittest.mock
 import warnings
-from typing import Sequence
 
+import datasets as HFdata
 import numpy as np
 import pytest
-import torch
-import datasets as HFdata
 import torch.utils.data as torchdata
-from sklearn.datasets import load_iris
 from torchvision.transforms import Lambda
 
 from baal.active import ActiveLearningDataset
-from baal.active.dataset import ActiveNumpyArray
 
 
 class MyDataset(torchdata.Dataset):
@@ -234,6 +230,17 @@ def test_labelled_map():
     st = ds.state_dict()
     ds2 = ActiveLearningDataset(MyDataset(), labelled=st["labelled"])
     assert ds2.current_al_step == ds.current_al_step
+
+
+def test_last_active_step():
+    ds = ActiveLearningDataset(MyDataset(), last_active_steps=1)
+    assert len(ds) == 0
+    ds.label_randomly(10)
+    assert len(ds) == 10
+    ds.label_randomly(10)
+    # We only iterate over the items labelled at step 2.
+    assert len(ds) == 10
+    assert all(ds.labelled_map[x] == 2 for x, _ in ds)
 
 
 if __name__ == '__main__':

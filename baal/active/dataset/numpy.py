@@ -16,20 +16,17 @@ class ActiveNumpyArray(SplittedDataset):
             An array/tensor that acts as a boolean mask which is True for every
             data point that is labelled, and False for every data point that is not
             labelled.
+        random_state: Random seed for the ActiveLearningDataset
     """
 
     def __init__(
         self,
         dataset: Tuple[np.ndarray, np.ndarray],
         labelled: Optional[np.ndarray] = None,
+        random_state: Any = None,
     ) -> None:
-        self.random_state = np.random.RandomState()
-        if labelled is not None:
-            labelled = labelled.astype(bool)
-        else:
-            labelled = np.zeros(len(dataset[0]), dtype=bool)
         self._dataset: Tuple[np.ndarray, np.ndarray] = dataset
-        self.labelled: np.ndarray = labelled
+        super().__init__(labelled=labelled, random_state=random_state, last_active_steps=-1)
 
     @property
     def pool(self):
@@ -47,8 +44,9 @@ class ActiveNumpyArray(SplittedDataset):
     def __iter__(self):
         return zip(*self._dataset)
 
-    def __getitem__(self, item):
-        return self._dataset[0][item], self._dataset[1][item]
+    def __getitem__(self, index):
+        index = self.get_indices_for_active_step()[index]
+        return self._dataset[0][index], self._dataset[1][index]
 
     def label(self, index: Union[list, int], value: Optional[Any] = None) -> None:
         """

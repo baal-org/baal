@@ -107,9 +107,9 @@ class SemiSupervisedIterator(AlternateIterator):
             num_workers=num_workers,
             drop_last=drop_last,
         )
-
+        pool_dl: Optional[DataLoader] = None
         if len(al_dataset.pool) > 0:
-            pool_dl: DataLoader = DataLoader(
+            pool_dl = DataLoader(
                 al_dataset.pool,
                 batch_size=batch_size,
                 shuffle=shuffle,
@@ -126,7 +126,6 @@ class SemiSupervisedIterator(AlternateIterator):
                     # Show all labeled data + unlabeled data.
                     num_steps = int(len(active_dl) + len(active_dl) * (1 - p) / p)
         else:
-            pool_dl = None
             p = 1
 
         if p == 1:

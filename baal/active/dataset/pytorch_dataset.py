@@ -27,6 +27,8 @@ class ActiveLearningDataset(SplittedDataset):
         random_state: Set the random seed for label_randomly().
         pool_specifics: Attributes to set when creating the pool.
                                          Useful to remove data augmentation.
+        last_active_steps: If specified, will iterate over the last active steps
+                            instead of the full dataset. Useful when doing partial finetuning.
     """
 
     def __init__(
@@ -36,13 +38,9 @@ class ActiveLearningDataset(SplittedDataset):
         make_unlabelled: Callable = _identity,
         random_state=None,
         pool_specifics: Optional[dict] = None,
+        last_active_steps: int = -1,
     ) -> None:
         self._dataset = dataset
-        # The labelled_map keeps track of the step at which an item as been labelled.
-        if labelled is not None:
-            self.labelled_map: np.ndarray = labelled.astype(int)
-        else:
-            self.labelled_map = np.zeros(len(self._dataset), dtype=int)
 
         if pool_specifics is None:
             pool_specifics = {}
@@ -51,27 +49,9 @@ class ActiveLearningDataset(SplittedDataset):
         self.make_unlabelled = make_unlabelled
         # For example, FileDataset has a method 'label'. This is useful when we're in prod.
         self.can_label = self.check_dataset_can_label()
-
-        self.random_state = check_random_state(random_state)
-
-    @property
-    def _labelled(self):
-        warnings.warn(
-            "_labelled as been renamed labelled. Please update your script.", DeprecationWarning
+        super().__init__(
+            labelled=labelled, random_state=random_state, last_active_steps=last_active_steps
         )
-        return self.labelled
-
-    @property
-    def current_al_step(self) -> int:
-        """Get the current active learning step."""
-        return int(self.labelled_map.max())
-
-    @property
-    def labelled(self):
-        """An array that acts as a boolean mask which is True for every
-        data point that is labelled, and False for every data point that is not
-        labelled."""
-        return self.labelled_map.astype(bool)
 
     def check_dataset_can_label(self):
         """Check if a dataset can be labelled.
@@ -97,8 +77,9 @@ class ActiveLearningDataset(SplittedDataset):
         return False
 
     def __getitem__(self, index: int) -> Any:
-        """Return stuff from the original dataset."""
-        return self._dataset[self._labelled_to_oracle_index(index)]
+        """Return items from the original dataset based on the labelled index."""
+        index = self.get_indices_for_active_step()[index]
+        return self._dataset[index]
 
     class ActiveIter:
         """Iterator over an ActiveLearningDataset."""
@@ -151,6 +132,9 @@ class ActiveLearningDataset(SplittedDataset):
             index: one or many indices to label.
             value: The label value. If not provided, no modification
                                     to the underlying dataset is done.
+
+        Raises:
+            ValueError if the indices do not match the values.
         """
         if isinstance(index, int):
             index = [index]
@@ -165,7 +149,7 @@ class ActiveLearningDataset(SplittedDataset):
         active_step = self.current_al_step + 1
         for index, val in zip_longest(indexes, value, fillvalue=None):
             if self.can_label and val is not None:
-                self._dataset.label(index, val)  # type: ignore
+                self._dataset.label(index, val)
                 self.labelled[index] = active_step
             elif self.can_label and val is None:
                 warnings.warn(
