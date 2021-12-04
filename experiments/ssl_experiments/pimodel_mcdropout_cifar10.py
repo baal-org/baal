@@ -100,7 +100,7 @@ if __name__ == "__main__":
         callbacks=[ResetCallback(copy.deepcopy(model.state_dict()))],
         dataset=active_set,
         heuristic=heuristic,
-        ndata_to_label=params.query_size,
+        query_size=params.query_size,
     )
 
     AL_STEPS = 2000

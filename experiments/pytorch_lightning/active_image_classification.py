@@ -153,7 +153,7 @@ def main():
         max_epochs=args.training_duration,
         logger=logger,
         heuristic=heuristic,
-        ndata_to_label=args.query_size,
+        query_size=args.query_size,
     )
 
     AL_STEPS = 100

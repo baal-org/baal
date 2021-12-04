@@ -1,5 +1,6 @@
 import sys
 import types
+import warnings
 from collections.abc import Sequence
 from typing import Dict, Any, Optional
 
@@ -18,6 +19,12 @@ from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
 
 log = structlog.get_logger("PL testing")
+
+warnings.warn(
+    "baal.utils.pytorch_lightning is deprecated. BaaL is now integrated into Lightning Flash!"
+    " Please see experiments/pytorch_lightning/lightning_flash_example.py for a new tutorial!",
+    DeprecationWarning,
+)
 
 
 class BaaLDataModule(LightningDataModule):
@@ -99,7 +106,7 @@ class BaalTrainer(Trainer):
     Args:
         dataset (ActiveLearningDataset): Dataset with some sample already labelled.
         heuristic (Heuristic): Heuristic from baal.active.heuristics.
-        ndata_to_label (int): Number of sample to label per step.
+        query_size (int): Number of sample to label per step.
         max_sample (int): Limit the number of sample used (-1 is no limit).
         **kwargs: Parameters forwarded to `get_probabilities`
             and to pytorch_ligthning Trainer.__init__
@@ -109,12 +116,12 @@ class BaalTrainer(Trainer):
         self,
         dataset: ActiveLearningDataset,
         heuristic: heuristics.AbstractHeuristic = heuristics.Random(),
-        ndata_to_label: int = 1,
+        query_size: int = 1,
         **kwargs
     ) -> None:
 
         super().__init__(**kwargs)
-        self.ndata_to_label = ndata_to_label
+        self.query_size = query_size
         self.heuristic = heuristic
         self.dataset = dataset
         self.kwargs = kwargs
@@ -194,6 +201,6 @@ class BaalTrainer(Trainer):
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
                 if len(to_label) > 0:
-                    self.dataset.label(to_label[: self.ndata_to_label])
+                    self.dataset.label(to_label[: self.query_size])
                     return True
         return False

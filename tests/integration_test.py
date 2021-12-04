@@ -55,7 +55,7 @@ def test_integration():
     active_loop = ActiveLearningLoop(al_dataset,
                                      model.predict_on_dataset,
                                      heuristic=heuristics.BALD(),
-                                     ndata_to_label=10,
+                                     query_size=10,
                                      batch_size=10,
                                      iterations=10,
                                      use_cuda=use_cuda,

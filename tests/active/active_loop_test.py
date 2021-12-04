@@ -55,7 +55,7 @@ def test_should_stop(heur):
     active_loop = ActiveLearningLoop(dataset,
                                      get_probs,
                                      heur,
-                                     ndata_to_label=10,
+                                     query_size=10,
                                      dummy_param=1)
     dataset.label_randomly(10)
     step = 0
@@ -77,7 +77,7 @@ def test_should_stop_iter(heur):
     active_loop = ActiveLearningLoop(dataset,
                                      get_probs_iter,
                                      heur,
-                                     ndata_to_label=10,
+                                     query_size=10,
                                      dummy_param=1)
     dataset.label_randomly(10)
     step = 0
@@ -97,7 +97,7 @@ def test_sad(max_sample, expected):
                                      get_probs_iter,
                                      heuristics.Random(),
                                      max_sample=max_sample,
-                                     ndata_to_label=10,
+                                     query_size=10,
                                      dummy_param=1)
     dataset.label_randomly(10)
     active_loop.step()
@@ -113,7 +113,7 @@ def test_file_saving(tmpdir):
                                      get_probs_iter,
                                      heur,
                                      uncertainty_folder=tmpdir,
-                                     ndata_to_label=10,
+                                     query_size=10,
                                      dummy_param=1)
     dataset.label_randomly(10)
     _ = active_loop.step()
