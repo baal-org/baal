@@ -139,7 +139,7 @@ def _patch_dropout_layers(module: torch.nn.Module) -> bool:
             module.add_module(name, new_module)
 
         # recursively apply to child
-        changed = changed or _patch_dropout_layers(child)
+        changed |= _patch_dropout_layers(child)
     return changed
 
 
