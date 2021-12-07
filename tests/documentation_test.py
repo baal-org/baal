@@ -52,7 +52,7 @@ def handle_function(name, member):
         raise ValueError("{} function doesn't have any documentation".format(str(member)),
                          member.__module__, inspect.getmodule(member).__file__)
 
-    args = list(filter(lambda k: k is not 'self', inspect.signature(member).parameters.keys()))
+    args = list(filter(lambda k: k != 'self', inspect.signature(member).parameters.keys()))
     assert_function_style(name, member, doc, args)
     assert_args_presence(args, doc, member, name)
     assert_doc_style(name, member, doc, args)

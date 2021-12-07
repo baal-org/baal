@@ -44,7 +44,7 @@ al_loop = ActiveLearningLoop(
     dataset=al_dataset,
     get_probabilities=wrapper.predict_on_dataset,
     heuristic=bald,
-    ndata_to_label=100,  # We will label 100 examples per step.
+    query_size=100,  # We will label 100 examples per step.
     # KWARGS for predict_on_dataset
     iterations=20,  # 20 sampling for MC-Dropout
     batch_size=32,

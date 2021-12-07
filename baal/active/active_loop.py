@@ -1,14 +1,17 @@
 import os
 import pickle
 import types
+import warnings
 from typing import Callable
 
 import numpy as np
+import structlog
 import torch.utils.data as torchdata
 
 from . import heuristics
 from .dataset import ActiveLearningDataset
 
+log = structlog.get_logger(__name__)
 pjoin = os.path.join
 
 
@@ -20,9 +23,10 @@ class ActiveLearningLoop:
         get_probabilities (Function): Dataset -> **kwargs ->
                                         ndarray [n_samples, n_outputs, n_iterations].
         heuristic (Heuristic): Heuristic from baal.active.heuristics.
-        ndata_to_label (int): Number of sample to label per step.
+        query_size (int): Number of sample to label per step.
         max_sample (int): Limit the number of sample used (-1 is no limit).
         uncertainty_folder (Optional[str]): If provided, will store uncertainties on disk.
+        ndata_to_label (int): DEPRECATED, please use `query_size`.
         **kwargs: Parameters forwarded to `get_probabilities`.
     """
 
@@ -31,12 +35,18 @@ class ActiveLearningLoop:
         dataset: ActiveLearningDataset,
         get_probabilities: Callable,
         heuristic: heuristics.AbstractHeuristic = heuristics.Random(),
-        ndata_to_label: int = 1,
+        query_size: int = 1,
         max_sample=-1,
         uncertainty_folder=None,
+        ndata_to_label=None,
         **kwargs,
     ) -> None:
-        self.ndata_to_label = ndata_to_label
+        if ndata_to_label is not None:
+            warnings.warn(
+                "`ndata_to_label` is deprecated, please use `query_size`.", DeprecationWarning
+            )
+            query_size = ndata_to_label
+        self.query_size = query_size
         self.get_probabilities = get_probabilities
         self.heuristic = heuristic
         self.dataset = dataset
@@ -88,6 +98,6 @@ class ActiveLearningLoop:
                         open(pjoin(self.uncertainty_folder, uncertainty_name), "wb"),
                     )
                 if len(to_label) > 0:
-                    self.dataset.label(to_label[: self.ndata_to_label])
+                    self.dataset.label(to_label[: self.query_size])
                     return True
         return False
