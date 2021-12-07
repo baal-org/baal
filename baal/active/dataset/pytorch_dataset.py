@@ -42,6 +42,12 @@ class ActiveLearningDataset(SplittedDataset):
     ) -> None:
         self._dataset = dataset
 
+        # The labelled_map keeps track of the step at which an item as been labelled.
+        if labelled is not None:
+            labelled_map: np.ndarray = labelled.astype(int)
+        else:
+            labelled_map = np.zeros(len(self._dataset), dtype=int)
+
         if pool_specifics is None:
             pool_specifics = {}
         self.pool_specifics: Dict[str, Any] = pool_specifics
@@ -50,7 +56,7 @@ class ActiveLearningDataset(SplittedDataset):
         # For example, FileDataset has a method 'label'. This is useful when we're in prod.
         self.can_label = self.check_dataset_can_label()
         super().__init__(
-            labelled=labelled, random_state=random_state, last_active_steps=last_active_steps
+            labelled=labelled_map, random_state=random_state, last_active_steps=last_active_steps
         )
 
     def check_dataset_can_label(self):

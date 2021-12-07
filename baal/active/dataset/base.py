@@ -1,5 +1,5 @@
 import warnings
-from typing import Union, List, Optional, Any
+from typing import Union, List, Optional, Any, Iterable, Sized
 
 import numpy as np
 from sklearn.utils import check_random_state
@@ -20,15 +20,11 @@ class SplittedDataset(torchdata.Dataset):
 
     def __init__(
         self,
-        labelled: Optional[np.ndarray] = None,
+        labelled,
         random_state=None,
         last_active_steps: int = -1,
     ) -> None:
-        # The labelled_map keeps track of the step at which an item as been labelled.
-        if labelled is not None:
-            self.labelled_map: np.ndarray = labelled.astype(int)
-        else:
-            self.labelled_map = np.zeros(len(self._dataset), dtype=int)
+        self.labelled_map = labelled
         self.random_state = check_random_state(random_state)
         if last_active_steps == 0 or last_active_steps < -1:
             raise ValueError("last_active_steps must be > 0 or -1 when disabled.")

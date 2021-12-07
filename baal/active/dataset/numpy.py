@@ -25,8 +25,13 @@ class ActiveNumpyArray(SplittedDataset):
         labelled: Optional[np.ndarray] = None,
         random_state: Any = None,
     ) -> None:
-        self._dataset: Tuple[np.ndarray, np.ndarray] = dataset
-        super().__init__(labelled=labelled, random_state=random_state, last_active_steps=-1)
+        self._dataset = dataset
+        # The labelled_map keeps track of the step at which an item as been labelled.
+        if labelled is not None:
+            labelled_map: np.ndarray = labelled.astype(int)
+        else:
+            labelled_map = np.zeros(len(self._dataset[0]), dtype=int)
+        super().__init__(labelled=labelled_map, random_state=random_state, last_active_steps=-1)
 
     @property
     def pool(self):
@@ -64,4 +69,4 @@ class ActiveNumpyArray(SplittedDataset):
             value = [value]
         indexes = self._pool_to_oracle_index(index)
         for index, val in zip_longest(indexes, value, fillvalue=None):
-            self.labelled[index] = 1
+            self.labelled_map[index] = 1
