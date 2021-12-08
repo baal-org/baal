@@ -176,7 +176,7 @@ class ActiveLearningDataset(SplittedDataset):
                         UserWarning,
                     )
 
-    def reset_labeled(self):
+    def reset_labelled(self):
         """Reset the label map."""
         self.labelled_map = np.zeros(len(self._dataset), dtype=np.bool)
 

@@ -10,7 +10,7 @@ from baal.active import ActiveLearningDataset
 
 class HuggingFaceDatasets(Dataset):
     """
-    Support for `huggingface.dataset`: (https://github.com/huggingface/datasets).
+    Support for `huggingface.datasets`: (https://github.com/huggingface/datasets).
     The purpose of this wrapper is to separate the labels from the rest of the sample information
     and make the dataset ready to be used by `baal.active.ActiveLearningDataset`.
 
@@ -90,7 +90,7 @@ def active_huggingface_dataset(
     **kwargs
 ):
     """
-    Wrapping huggingface.dataset with baal.active.ActiveLearningDataset.
+    Wrapping huggingface.datasets with baal.active.ActiveLearningDataset.
 
     Args:
         dataset (torch.utils.data.Dataset): a dataset provided by huggingface.

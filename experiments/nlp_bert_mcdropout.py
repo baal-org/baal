@@ -7,7 +7,7 @@ import torch.backends
 from tqdm import tqdm
 
 # These packages are optional and not needed for BaaL main package.
-# You can have access to `dataset` and `transformers` if you install
+# You can have access to `datasets` and `transformers` if you install
 # BaaL with --dev setup.
 from datasets import load_dataset
 from transformers import BertTokenizer, TrainingArguments
@@ -41,8 +41,8 @@ def parse_args():
 def get_datasets(initial_pool, tokenizer):
 
     # To be able to support most cases, we have provided support for
-    # HuggingFace dataset. You can always create a custom wrapper for
-    # custom dataset.
+    # HuggingFace datasets. You can always create a custom wrapper for
+    # custom datasets.
     datasets = load_dataset("glue", "sst2")
     raw_train_set = datasets["train"]
     raw_valid_set = datasets["validation"]
