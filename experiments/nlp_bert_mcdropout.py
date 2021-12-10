@@ -135,7 +135,7 @@ def main():
             break
         active_logs = {
             "epoch": epoch,
-            "labeled_data": active_set._labelled,
+            "labeled_data": active_set.labelled_map,
             "Next Training set size": len(active_set),
         }
 

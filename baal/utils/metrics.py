@@ -436,8 +436,8 @@ class ClassificationReport(Metrics):
             output = output.argmax(1)  # 1 is always our class axis.
 
         self.class_data += confusion_matrix(
-            target.reshape([-1]).astype(np.int),
-            output.reshape([-1]).astype(np.int),
+            target.reshape([-1]).astype(int),
+            output.reshape([-1]).astype(int),
             labels=np.arange(self.class_data.shape[0]),
         )
 

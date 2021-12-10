@@ -66,7 +66,7 @@ def _make_fake_dist(means, stds, dims=10):
         dist = np.zeros([dims])
         for i in range(n_trials):
             dist[
-                np.round(np.clip(np.random.normal(m, std, 1), 0, dims - 1)).astype(np.int).item()
+                np.round(np.clip(np.random.normal(m, std, 1), 0, dims - 1)).astype(int).item()
             ] += 1
         distributions.append(dist / n_trials)
     return np.array(distributions)

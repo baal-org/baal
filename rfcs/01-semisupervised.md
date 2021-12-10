@@ -47,7 +47,7 @@ with signature:
 class ActiveLearningDataset:
     def iter_alternate(self, defined_length, p_pool):
         """
-        Alternate between a labelled and unlabelled datasets.
+        Alternate between a labelled and unlabelled dataset.
         Args:
             defined_length (int): How many steps should the iterator hold.
             p_pool (float): Probability of choosing a sample from pool.

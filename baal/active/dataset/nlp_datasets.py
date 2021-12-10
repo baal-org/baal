@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import torch
 from datasets import Dataset as HFDataset
@@ -31,7 +33,7 @@ class HuggingFaceDatasets(Dataset):
     ):
         self.dataset = dataset
         self.targets, self.texts = self.dataset[target_key], self.dataset[input_key]
-        self.targets_list = np.unique(self.targets).tolist()
+        self.targets_list: List = np.unique(self.targets).tolist()
         self.input_ids, self.attention_masks = (
             self._tokenize(tokenizer, max_seq_len) if tokenizer else ([], [])
         )
