@@ -40,7 +40,8 @@ To use BaaL with [HuggingFace](https://huggingface.co/) Trainers : `pip install 
 * [Synbols: Probing Learning Algorithms with Synthetic Datasets
 ](https://nips.cc/virtual/2020/public/poster_0169cf885f882efd795951253db5cdfb.html) (Lacoste et al. 2020)
 * [Can Active Learning Preemptively Mitigate Fairness Issues?
-](https://arxiv.org/pdf/2104.06879.pdf) (Branchaud-Charron et al, 2021)
+](https://arxiv.org/pdf/2104.06879.pdf) (Branchaud-Charron et al. 2021)
+* [Active learning with MaskAL reduces annotation effort for training Mask R-CNN](https://arxiv.org/abs/2112.06586) (Blok et al. 2021)
 
 
 # What is active learning?
