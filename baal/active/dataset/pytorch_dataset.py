@@ -1,7 +1,7 @@
 import warnings
 from copy import deepcopy
 from itertools import zip_longest
-from typing import Union, Optional, Callable, Any, Dict
+from typing import Union, Optional, Callable, Any, Dict, List
 
 import numpy as np
 import torch.utils.data as torchdata
@@ -32,13 +32,13 @@ class ActiveLearningDataset(SplittedDataset):
     """
 
     def __init__(
-        self,
-        dataset: torchdata.Dataset,
-        labelled: Optional[np.ndarray] = None,
-        make_unlabelled: Callable = _identity,
-        random_state=None,
-        pool_specifics: Optional[dict] = None,
-        last_active_steps: int = -1,
+            self,
+            dataset: torchdata.Dataset,
+            labelled: Optional[np.ndarray] = None,
+            make_unlabelled: Callable = _identity,
+            random_state=None,
+            pool_specifics: Optional[dict] = None,
+            last_active_steps: int = -1,
     ) -> None:
         self._dataset = dataset
 
@@ -143,20 +143,27 @@ class ActiveLearningDataset(SplittedDataset):
             ValueError if the indices do not match the values.
         """
         if isinstance(index, int):
-            index = [index]
-        if not isinstance(value, (list, tuple)):
-            value = [value]
-        if value[0] is not None and len(index) != len(value):
+            # We were provided only the index, we make a list.
+            index_lst = [index]
+            value_lst: List[Any] = [value]
+        else:
+            index_lst = index
+            if value is None:
+                value_lst = [value]
+            else:
+                value_lst = value
+
+        if value_lst[0] is not None and len(index_lst) != len(value_lst):
             raise ValueError(
                 "Expected `index` and `value` to be of same length when `value` is provided."
-                f"Got index={len(index)} and value={len(value)}"
+                f"Got index={len(index_lst)} and value={len(value_lst)}"
             )
-        indexes = self._pool_to_oracle_index(index)
+        indexes = self._pool_to_oracle_index(index_lst)
         active_step = self.current_al_step + 1
-        for index, val in zip_longest(indexes, value, fillvalue=None):
+        for idx, val in zip_longest(indexes, value_lst, fillvalue=None):
             if self.can_label and val is not None:
-                self._dataset.label(index, val)
-                self.labelled[index] = active_step
+                self._dataset.label(idx, val)
+                self.labelled_map[idx] = active_step
             elif self.can_label and val is None:
                 warnings.warn(
                     """The dataset is able to label data, but no label was provided.
@@ -166,12 +173,13 @@ class ActiveLearningDataset(SplittedDataset):
                                   """,
                     UserWarning,
                 )
-            elif not self.can_label:
-                self.labelled_map[index] = active_step
+            else:
+                # Regular research usecase.
+                self.labelled_map[idx] = active_step
                 if val is not None:
                     warnings.warn(
                         "We will consider the original label of this datasample : {}, {}.".format(
-                            self._dataset[index][0], self._dataset[index][1]
+                            self._dataset[idx][0], self._dataset[idx][1]
                         ),
                         UserWarning,
                     )

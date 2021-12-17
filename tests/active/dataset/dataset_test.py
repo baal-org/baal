@@ -74,7 +74,7 @@ class ActiveDatasetTest(unittest.TestCase):
         assert self.dataset.n_labelled == labels_next_1
 
         with pytest.raises(ValueError, match="same length"):
-            self.dataset.label(np.arange(0, 9), value=np.arange(1, 10))
+            self.dataset.label(np.arange(0, 9), value=np.arange(0, 10))
 
         # cleanup
         del self.dataset._dataset.label
