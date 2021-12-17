@@ -143,8 +143,8 @@ class ActiveLearningDataset(SplittedDataset):
             ValueError if the indices do not match the values.
         """
         if isinstance(index, int):
+            # We were provided only the index, we make a list.
             index = [index]
-        if not isinstance(value, (list, tuple)):
             value = [value]
         if value[0] is not None and len(index) != len(value):
             raise ValueError(
@@ -156,7 +156,7 @@ class ActiveLearningDataset(SplittedDataset):
         for index, val in zip_longest(indexes, value, fillvalue=None):
             if self.can_label and val is not None:
                 self._dataset.label(index, val)
-                self.labelled[index] = active_step
+                self.labelled_map[index] = active_step
             elif self.can_label and val is None:
                 warnings.warn(
                     """The dataset is able to label data, but no label was provided.
@@ -166,7 +166,8 @@ class ActiveLearningDataset(SplittedDataset):
                                   """,
                     UserWarning,
                 )
-            elif not self.can_label:
+            else:
+                # Regular research usecase.
                 self.labelled_map[index] = active_step
                 if val is not None:
                     warnings.warn(

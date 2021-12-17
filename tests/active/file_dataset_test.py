@@ -56,6 +56,19 @@ class FileDatasetTest(unittest.TestCase):
         self.dataset.label(actually_not_labelled[0], 1)
         assert sum([1 for i, j in enumerate(self.dataset.lbls) if j >= 0]) == 11
 
+    def test_active_labelling(self):
+        assert self.active.can_label
+        actually_not_labelled = [i for i, j in enumerate(self.lbls) if j < 0]
+        actually_labelled = [i for i, j in enumerate(self.lbls) if j >= 0]
+
+        init_length = len(self.active)
+        self.active.label(actually_not_labelled[0], 1)
+        assert len(self.active) == init_length + 1
+
+        with pytest.warns(UserWarning):
+            self.dataset.label(actually_labelled[0], None)
+        assert len(self.active) == init_length + 1
+
     def test_filedataset_segmentation(self):
         target_trans = Compose([default_image_load_fn,
                                 Resize(60), RandomRotation(90), ToTensor()])
