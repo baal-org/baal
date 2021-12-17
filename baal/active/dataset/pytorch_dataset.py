@@ -32,13 +32,13 @@ class ActiveLearningDataset(SplittedDataset):
     """
 
     def __init__(
-        self,
-        dataset: torchdata.Dataset,
-        labelled: Optional[np.ndarray] = None,
-        make_unlabelled: Callable = _identity,
-        random_state=None,
-        pool_specifics: Optional[dict] = None,
-        last_active_steps: int = -1,
+            self,
+            dataset: torchdata.Dataset,
+            labelled: Optional[np.ndarray] = None,
+            make_unlabelled: Callable = _identity,
+            random_state=None,
+            pool_specifics: Optional[dict] = None,
+            last_active_steps: int = -1,
     ) -> None:
         self._dataset = dataset
 
@@ -146,11 +146,12 @@ class ActiveLearningDataset(SplittedDataset):
             # We were provided only the index, we make a list.
             index_lst = [index]
             value_lst: List[Any] = [value]
-        elif value is None:
-            value_lst = [value]
         else:
             index_lst = index
-            value_lst = value
+            if value is None:
+                value_lst = [value]
+            else:
+                value_lst = value
 
         if value_lst[0] is not None and len(index_lst) != len(value_lst):
             raise ValueError(
