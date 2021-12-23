@@ -4228,9 +4228,9 @@ div[class^='highlight'] pre {
 
 .wy-side-nav-search {
   display: block;
-  width: 300px;
+  width: 100%;
   z-index: 200;
-  text-align: left;
+  text-align: center;
   display: block;
   color: #fcfcfc; }
 
@@ -4239,7 +4239,7 @@ div[class^='highlight'] pre {
   border-radius: 5px;
   padding: 6px 33px 6px 12px;
   border: none;
-  height: 28px;
+  height: auto;
   font-size: 14px;
   box-shadow: none; }
 
@@ -4254,7 +4254,7 @@ div[class^='highlight'] pre {
 
 .wy-side-nav-search > a, .wy-side-nav-search .wy-dropdown > a {
   color: black;
-  width: 30%;
+  width: 75%;
   font-size: 100%;
   font-weight: 600;
   display: inline-block;
@@ -4267,8 +4267,8 @@ div[class^='highlight'] pre {
 .wy-side-nav-search > a img.logo, .wy-side-nav-search .wy-dropdown > a img.logo {
   display: block;
   margin: 0;
-  height: auto;
-  width: auto;
+  height: 100%;
+  width: 100%;
   border-radius: 0;
   background: transparent; }
 
@@ -4954,11 +4954,11 @@ span[id*='MathJax-Span'] {
     padding: 0; }
 
 .wy-side-nav-search {
-  height: 90px;
+  height: auto;
   border-bottom: 1px solid #e1e4e5;
   padding-left: 20px;
   padding-right: 20px;
-  display: flex;
+  display: block;
   align-items: flex-start;
   margin-bottom: 20px; }
   @media (max-width: 767px) {
