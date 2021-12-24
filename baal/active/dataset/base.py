@@ -42,9 +42,10 @@ class SplittedDataset(torchdata.Dataset):
             min_labelled_step = 0
         else:
             min_labelled_step = max(0, self.current_al_step - self.last_active_steps)
-        indices = np.arange(len(self.labelled_map))
-        bool_mask = self.labelled_map > min_labelled_step
-        return indices[bool_mask]
+
+        # we need to work with lists since arrow dataset is not compatible with np.int types!
+        indices = [indx for indx, val in enumerate(self.labelled_map) if val > min_labelled_step]
+        return indices
 
     def is_labelled(self, idx: int) -> bool:
         """Check if a datapoint is labelled."""
