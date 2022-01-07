@@ -1,5 +1,5 @@
 import warnings
-from typing import Union, List, Optional, Any, Iterable, Sized
+from typing import Union, List, Optional, Any
 
 import numpy as np
 from sklearn.utils import check_random_state
@@ -30,21 +30,22 @@ class SplittedDataset(torchdata.Dataset):
             raise ValueError("last_active_steps must be > 0 or -1 when disabled.")
         self.last_active_steps = last_active_steps
 
-    def get_indices_for_active_step(self):
+    def get_indices_for_active_step(self) -> List[int]:
         """Returns the indices required for the active step.
 
         Returns the indices of the labelled items. Also takes into account self.last_active_step.
 
         Returns:
-            Array of the selected indices for training.
+            List of the selected indices for training.
         """
         if self.last_active_steps == -1:
             min_labelled_step = 0
         else:
             min_labelled_step = max(0, self.current_al_step - self.last_active_steps)
-        indices = np.arange(len(self.labelled_map))
-        bool_mask = self.labelled_map > min_labelled_step
-        return indices[bool_mask]
+
+        # we need to work with lists since arrow dataset is not compatible with np.int types!
+        indices = [indx for indx, val in enumerate(self.labelled_map) if val > min_labelled_step]
+        return indices
 
     def is_labelled(self, idx: int) -> bool:
         """Check if a datapoint is labelled."""

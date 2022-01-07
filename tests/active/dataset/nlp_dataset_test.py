@@ -2,6 +2,7 @@ import unittest
 import pytest
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer
+from baal.active.dataset import ActiveLearningDataset
 from baal.active.dataset.nlp_datasets import HuggingFaceDatasets
 import datasets
 
@@ -25,6 +26,31 @@ class MyDataset(Dataset):
                     'label': self.dataset['label'][item]}
         elif isinstance(item, str):
             return self.dataset[item]
+
+
+class ActiveArrowDatasetTest(unittest.TestCase):
+    def setUp(self):
+        dataset = datasets.Dataset.from_dict({'sentence': [f'this is test number {i}' for i in range(10)],
+                                              'label': ['POS' if (i % 2) == 0 else 'NEG' for i in range(10)]},
+                                             features=datasets.Features({'sentence': datasets.Value('string'),
+                                                                         'label': datasets.ClassLabel(2, names=['NEG',
+                                                                                                                'POS'])}))
+        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+
+        def preprocess(example):
+            results = tokenizer(example['sentence'], max_length=50,
+                                truncation=True, padding='max_length')
+            return results
+
+        tokenized_dataset = dataset.map(preprocess, batched=True)
+        self.active_dataset = ActiveLearningDataset(tokenized_dataset)
+
+    def test_dataset(self):
+        assert len(self.active_dataset) == 0
+        self.active_dataset.label_randomly(2)
+        assert len(self.active_dataset) == 2
+        print(self.active_dataset[0])
+        assert self.active_dataset[0]['sentence'] == 'this is test number 0'
 
 
 class HuggingFaceDatasetsTest(unittest.TestCase):
