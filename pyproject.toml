@@ -22,7 +22,7 @@ matplotlib = "^3.4.3"
 Pillow = ">=6.2.0"
 tqdm = "^4.62.2"
 structlog = "^21.1.0"
-scikit-learn = "^0.24.2"
+scikit-learn = "^1.0.0"
 scipy = "^1.7.1"
 
 # Vision

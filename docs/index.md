@@ -51,7 +51,7 @@ For support, we have several ways to help you:
     :caption: Compatibility with other libraries
     :maxdepth: 1
     
-    How to use with Pytorch Lightning <notebooks/compatibility/pytorch_lightning.ipynb>
+    How to use with Pytorch Lightning <https://devblog.pytorchlightning.ai/active-learning-made-simple-using-flash-and-baal-2216df6f872c>
     How to use with HuggingFace <notebooks/compatibility/nlp_classification.ipynb>
     How to use with Scikit-Learn <notebooks/compatibility/sklearn_tutorial.ipynb>
     
