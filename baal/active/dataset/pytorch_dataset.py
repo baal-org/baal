@@ -140,7 +140,8 @@ class ActiveLearningDataset(SplittedDataset):
                                     to the underlying dataset is done.
 
         Raises:
-            ValueError if the indices do not match the values.
+            ValueError if the indices do not match the values or
+             if no `value` is provided and `can_label` is True.
         """
         if isinstance(index, int):
             # We were provided only the index, we make a list.
@@ -165,13 +166,11 @@ class ActiveLearningDataset(SplittedDataset):
                 self._dataset.label(idx, val)
                 self.labelled_map[idx] = active_step
             elif self.can_label and val is None:
-                warnings.warn(
+                raise ValueError(
                     """The dataset is able to label data, but no label was provided.
-                                 The dataset will be unchanged from this action!
                                  If this is a research setting, please set the
                                   `ActiveLearningDataset.can_label` to `False`.
-                                  """,
-                    UserWarning,
+                                  """
                 )
             else:
                 # Regular research usecase.
