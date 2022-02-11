@@ -489,7 +489,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "fsspec"
-version = "2021.11.1"
+version = "2022.1.0"
 description = "File-system specification"
 category = "main"
 optional = false
@@ -740,7 +740,7 @@ test = ["pytest (!=5.3.4)", "pytest-cov", "flaky", "ipyparallel"]
 
 [[package]]
 name = "ipython"
-version = "7.31.0"
+version = "7.31.1"
 description = "IPython: Productive Interactive Computing"
 category = "dev"
 optional = false
@@ -837,7 +837,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "jsonargparse"
-version = "4.1.0"
+version = "4.1.4"
 description = "Parsing of command line options, yaml/jsonnet config files and/or environment variables based on argparse."
 category = "dev"
 optional = false
@@ -848,8 +848,8 @@ docstring-parser = {version = ">=0.7.3", optional = true, markers = "extra == \"
 PyYAML = ">=3.13"
 
 [package.extras]
-all = ["docstring-parser (>=0.7.3)", "jsonschema (>=3.2.0)", "jsonnet (>=0.13.0)", "validators (>=0.14.2)", "requests (>=2.18.4)", "fsspec (>=0.8.4)", "argcomplete (>=1.12.1)", "ruyaml (>=0.20.0)", "omegaconf (>=2.1.1)", "reconplogger (>=4.4.0)", "typing-extensions (>=3.10.0.0)", "dataclasses (>=0.8)"]
-argcomplete = ["argcomplete (>=1.12.1)"]
+all = ["docstring-parser (>=0.7.3)", "jsonschema (>=3.2.0)", "jsonnet (>=0.13.0)", "validators (>=0.14.2)", "requests (>=2.18.4)", "fsspec (>=0.8.4)", "argcomplete (>=2.0.0)", "ruyaml (>=0.20.0)", "omegaconf (>=2.1.1)", "reconplogger (>=4.4.0)", "typing-extensions (>=3.10.0.0)", "dataclasses (>=0.8)"]
+argcomplete = ["argcomplete (>=2.0.0)"]
 dataclasses = ["dataclasses (>=0.8)"]
 dev = ["coverage (>=4.5.1)", "responses (>=0.12.0)", "pylint (>=1.8.3)", "pycodestyle (>=2.5.0)", "mypy (>=0.701)", "bump2version (>=0.5.11)", "twine (>=3.1.1)"]
 doc = ["Sphinx (>=1.7.9)", "sphinx-rtd-theme (>=0.4.3)", "autodocsumm (>=0.1.10)", "sphinx-autodoc-typehints (>=1.11.1)"]
@@ -994,7 +994,7 @@ test = ["codecov (>=2.1)", "pytest (>=6.0)", "pytest-cov (>2.10)", "flake8", "ch
 
 [[package]]
 name = "lightning-flash"
-version = "0.7.0.dev0"
+version = "0.7.0rc0"
 description = "Flash is a framework for fast prototyping, finetuning, and solving most standard deep learning challenges"
 category = "dev"
 optional = false
@@ -1004,7 +1004,7 @@ develop = false
 [package.dependencies]
 click = ">=7.1.2"
 jsonargparse = {version = ">=3.17.0", extras = ["signatures"]}
-kornia = {version = ">=0.5.1,<0.5.4", optional = true, markers = "extra == \"image\""}
+kornia = {version = ">=0.5.1", optional = true, markers = "extra == \"image\""}
 lightning-bolts = {version = ">=0.3.3", optional = true, markers = "extra == \"image\""}
 numpy = "*"
 packaging = "*"
@@ -1012,7 +1012,7 @@ pandas = ">=1.1.0"
 Pillow = {version = ">=7.2", optional = true, markers = "extra == \"image\""}
 pyDeprecate = "*"
 pystiche = {version = ">=1.0.0,<2.0.0", optional = true, markers = "extra == \"image\""}
-pytorch-lightning = ">=1.4.0"
+pytorch-lightning = ">=1.3.6"
 segmentation-models-pytorch = {version = "*", optional = true, markers = "extra == \"image\""}
 timm = {version = ">=0.4.5", optional = true, markers = "extra == \"image\""}
 torch = ">=1.7.1"
@@ -1020,28 +1020,28 @@ torchmetrics = ">=0.5.0,<0.5.1 || >0.5.1"
 torchvision = {version = "*", optional = true, markers = "extra == \"image\""}
 
 [package.extras]
-all = ["filelock", "torchaudio", "pytorch-forecasting", "torchmetrics[text] (>=0.5.1)", "lightning-bolts (>=0.3.3)", "scikit-learn", "torchvision", "transformers (>=4.5)", "timm (>=0.4.5)", "pytorch-tabnet (==3.1)", "segmentation-models-pytorch", "datasets (>=1.8)", "transformers (>=4.13.0)", "pystiche (>=1.0.0,<2.0.0)", "datasets (>=1.16.1)", "librosa (>=0.8.1)", "sentence-transformers", "sentencepiece (>=0.1.95)", "Pillow (>=7.2)", "kornia (>=0.5.1,<0.5.4)", "pytorchvideo (==0.1.2)"]
-audio = ["librosa (>=0.8.1)", "torchaudio", "datasets (>=1.16.1)", "transformers (>=4.13.0)"]
-dev = ["filelock", "torchaudio", "pytest-flake8", "pytest-mock", "sphinx (>=4.0,<5.0)", "sphinx-copybutton (>=0.3)", "pre-commit", "check-manifest", "pytorch-forecasting", "sphinx-paramlinks (>=0.5.1)", "myst-parser (>=0.15)", "torchmetrics[text] (>=0.5.1)", "nbsphinx (>=0.8.5)", "lightning-bolts (>=0.3.3)", "flake8", "pandoc (>=1.0)", "isort", "scikit-learn", "coverage", "torchvision", "torch-optimizer", "pytest (>=5.0)", "transformers (>=4.5)", "timm (>=0.4.5)", "twine (==3.2)", "pytorch-tabnet (==3.1)", "segmentation-models-pytorch", "datasets (>=1.8)", "transformers (>=4.13.0)", "sphinxcontrib-fulltoc (>=1.0)", "pystiche (>=1.0.0,<2.0.0)", "sphinx-autodoc-typehints (>=1.0)", "datasets (>=1.16.1)", "codecov (>=2.1)", "sphinxcontrib-mockautodoc", "librosa (>=0.8.1)", "sentence-transformers", "sphinx-togglebutton (>=0.2)", "docutils (>=0.16)", "pytest-doctestplus", "sentencepiece (>=0.1.95)", "Pillow (>=7.2)", "ipython", "kornia (>=0.5.1,<0.5.4)", "pytorchvideo (==0.1.2)"]
-docs = ["sphinx-paramlinks (>=0.5.1)", "myst-parser (>=0.15)", "sphinx-togglebutton (>=0.2)", "nbsphinx (>=0.8.5)", "docutils (>=0.16)", "pandoc (>=1.0)", "sphinx (>=4.0,<5.0)", "sphinx-copybutton (>=0.3)", "sphinx-autodoc-typehints (>=1.0)", "sphinxcontrib-fulltoc (>=1.0)", "ipython", "sphinxcontrib-mockautodoc"]
-graph = ["torch-sparse", "torch-cluster", "torch-geometric (>=2.0.0)", "networkx", "torch-scatter"]
-image = ["torchvision", "lightning-bolts (>=0.3.3)", "timm (>=0.4.5)", "segmentation-models-pytorch", "pystiche (>=1.0.0,<2.0.0)", "Pillow (>=7.2)", "kornia (>=0.5.1,<0.5.4)"]
-image_extras = ["matplotlib", "learn2learn", "icevision (>=0.8)", "classy-vision", "vissl (>=0.1.5)", "baal", "lightning-bolts (>=0.3.3)", "albumentations", "effdet", "fastface", "torchvision", "fairscale", "timm (>=0.4.5)", "segmentation-models-pytorch", "fiftyone", "pystiche (>=1.0.0,<2.0.0)", "icedata", "structlog (==21.1.0)", "Pillow (>=7.2)", "kornia (>=0.5.1,<0.5.4)"]
-notebooks = ["jupyter-client", "nbconvert", "jupyter"]
-pointcloud = ["torchvision", "open3d (==0.13)", "torch (==1.7.1)", "tensorboard"]
-serve = ["torchvision", "tqdm", "numpy", "cytoolz", "pydantic (>1.8.1,<2.0.0)", "starlette (==0.14.2)", "uvicorn[standard] (>=0.12.0,<0.14.0)", "aiofiles", "graphviz", "pyyaml", "jinja2", "pillow", "fastapi (>=0.65.2,<0.66.0)", "importlib-metadata (>=0.12,<3)"]
-tabular = ["scikit-learn", "pytorch-tabnet (==3.1)", "pytorch-forecasting"]
-test = ["torch-optimizer", "pytest (>=5.0)", "twine (==3.2)", "flake8", "pytest-mock", "isort", "pre-commit", "check-manifest", "scikit-learn", "coverage", "pytest-doctestplus", "codecov (>=2.1)", "pytest-flake8"]
-text = ["filelock", "sentence-transformers", "torchmetrics[text] (>=0.5.1)", "transformers (>=4.5)", "datasets (>=1.8)", "sentencepiece (>=0.1.95)"]
-video = ["torchvision", "Pillow (>=7.2)", "kornia (>=0.5.1,<0.5.4)", "pytorchvideo (==0.1.2)"]
-video_extras = ["torchvision", "fiftyone", "Pillow (>=7.2)", "kornia (>=0.5.1,<0.5.4)", "pytorchvideo (==0.1.2)"]
-vision = ["torchvision", "lightning-bolts (>=0.3.3)", "timm (>=0.4.5)", "segmentation-models-pytorch", "pystiche (>=1.0.0,<2.0.0)", "Pillow (>=7.2)", "kornia (>=0.5.1,<0.5.4)", "pytorchvideo (==0.1.2)"]
+all = ["pytorch-forecasting (>=0.9.0)", "torchmetrics[text] (>=0.5.1)", "pytorchvideo (==0.1.2)", "timm (>=0.4.5)", "Pillow (>=7.2)", "pystiche (>=1.0.0,<2.0.0)", "pytorch-tabular (==0.7.0)", "transformers (>=4.5)", "librosa (>=0.8.1)", "filelock", "datasets (>=1.8)", "torchaudio", "scikit-learn", "lightning-bolts (>=0.3.3)", "kornia (>=0.5.1)", "sentencepiece (>=0.1.95)", "sentence-transformers", "transformers (>=4.13.0)", "datasets (>=1.16.1)", "torchvision", "segmentation-models-pytorch"]
+audio = ["torchaudio", "transformers (>=4.13.0)", "librosa (>=0.8.1)", "datasets (>=1.16.1)"]
+dev = ["myst-parser (>=0.15)", "pytorch-forecasting (>=0.9.0)", "torchmetrics[text] (>=0.5.1)", "ipython", "coverage", "sphinxcontrib-fulltoc (>=1.0)", "docutils (>=0.16)", "pytorchvideo (==0.1.2)", "pytest-flake8", "timm (>=0.4.5)", "Pillow (>=7.2)", "torch-optimizer", "sphinx-autodoc-typehints (>=1.0)", "pytest-rerunfailures (>=10.0)", "pytest-mock", "nbsphinx (>=0.8.5)", "pystiche (>=1.0.0,<2.0.0)", "pytorch-tabular (==0.7.0)", "sphinx-togglebutton (>=0.2)", "transformers (>=4.5)", "pre-commit", "sphinx (>=4.0,<5.0)", "librosa (>=0.8.1)", "pytest-doctestplus (>=0.9.0)", "filelock", "datasets (>=1.8)", "torchaudio", "scikit-learn", "lightning-bolts (>=0.3.3)", "kornia (>=0.5.1)", "check-manifest", "isort", "codecov (>=2.1)", "sentencepiece (>=0.1.95)", "flake8", "pandoc (>=1.0)", "sentence-transformers", "transformers (>=4.13.0)", "twine (==3.2)", "datasets (>=1.16.1)", "pytest (>=5.0,<7.0)", "sphinxcontrib-mockautodoc", "torchvision", "segmentation-models-pytorch", "sphinx-copybutton (>=0.3)", "sphinx-paramlinks (>=0.5.1)"]
+docs = ["myst-parser (>=0.15)", "ipython", "sphinxcontrib-fulltoc (>=1.0)", "sphinx (>=4.0,<5.0)", "docutils (>=0.16)", "sphinxcontrib-mockautodoc", "sphinx-paramlinks (>=0.5.1)", "sphinx-copybutton (>=0.3)", "pandoc (>=1.0)", "sphinx-autodoc-typehints (>=1.0)", "sphinx-togglebutton (>=0.2)", "nbsphinx (>=0.8.5)"]
+graph = ["torch-cluster", "networkx", "torch-geometric (>=2.0.0)", "torch-sparse", "torch-scatter"]
+image = ["pystiche (>=1.0.0,<2.0.0)", "kornia (>=0.5.1)", "timm (>=0.4.5)", "Pillow (>=7.2)", "torchvision", "segmentation-models-pytorch", "lightning-bolts (>=0.3.3)"]
+image_extras = ["timm (>=0.4.5)", "Pillow (>=7.2)", "matplotlib", "pystiche (>=1.0.0,<2.0.0)", "effdet", "fastface", "albumentations", "baal", "lightning-bolts (>=0.3.3)", "kornia (>=0.5.1)", "icedata", "classy-vision", "fiftyone", "icevision (>=0.8)", "structlog (==21.1.0)", "torchvision", "learn2learn", "segmentation-models-pytorch", "vissl (>=0.1.5)", "fairscale"]
+notebooks = ["jupyter", "jupyter-client", "nbconvert"]
+pointcloud = ["open3d (==0.13)", "tensorboard", "torchvision", "torch (==1.7.1)"]
+serve = ["pillow", "uvicorn[standard] (>=0.12.0,<0.14.0)", "jinja2", "cytoolz", "graphviz", "aiofiles", "torchvision", "starlette (==0.14.2)", "numpy", "fastapi (>=0.65.2,<0.66.0)", "pyyaml", "tqdm", "pydantic (>1.8.1,<2.0.0)", "importlib-metadata (>=0.12,<3)"]
+tabular = ["scikit-learn", "pytorch-forecasting (>=0.9.0)", "pytorch-tabular (==0.7.0)"]
+test = ["check-manifest", "twine (==3.2)", "coverage", "pre-commit", "isort", "pytest (>=5.0,<7.0)", "codecov (>=2.1)", "pytest-flake8", "pytest-doctestplus (>=0.9.0)", "torch-optimizer", "flake8", "scikit-learn", "pytest-rerunfailures (>=10.0)", "pytest-mock"]
+text = ["torchmetrics[text] (>=0.5.1)", "transformers (>=4.5)", "sentencepiece (>=0.1.95)", "filelock", "datasets (>=1.8)", "sentence-transformers"]
+video = ["Pillow (>=7.2)", "kornia (>=0.5.1)", "torchvision", "pytorchvideo (==0.1.2)"]
+video_extras = ["kornia (>=0.5.1)", "pytorchvideo (==0.1.2)", "Pillow (>=7.2)", "fiftyone", "torchvision"]
+vision = ["pystiche (>=1.0.0,<2.0.0)", "kornia (>=0.5.1)", "pytorchvideo (==0.1.2)", "timm (>=0.4.5)", "Pillow (>=7.2)", "torchvision", "segmentation-models-pytorch", "lightning-bolts (>=0.3.3)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/PyTorchLightning/lightning-flash.git"
 reference = "master"
-resolved_reference = "21a9d7f1093f83a80d7392e2946f98a69ffeedba"
+resolved_reference = "450902d713980e0edefcfd2d2a2a35eb875072d7"
 
 [[package]]
 name = "markdown"
@@ -2910,8 +2910,8 @@ frozenlist = [
     {file = "frozenlist-1.2.0.tar.gz", hash = "sha256:68201be60ac56aff972dc18085800b6ee07973c49103a8aba669dee3d71079de"},
 ]
 fsspec = [
-    {file = "fsspec-2021.11.1-py3-none-any.whl", hash = "sha256:bcb136caa37e1470dd8314a7d3917cb9b25dd9da44c10d36df556ab4ef038185"},
-    {file = "fsspec-2021.11.1.tar.gz", hash = "sha256:03683e606651d5e4bd9180525d57477bd5430e5dc68d2e459835dc14cecc3dd4"},
+    {file = "fsspec-2022.1.0-py3-none-any.whl", hash = "sha256:256e2be44e62430c9ca8dac2e480384b00a3c52aef4e2b0b7204163fdc861d37"},
+    {file = "fsspec-2022.1.0.tar.gz", hash = "sha256:0bdd519bbf4d8c9a1d893a50b5ebacc89acd0e1fe0045d2f7b0e0c1af5990edc"},
 ]
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
@@ -3030,8 +3030,8 @@ ipykernel = [
     {file = "ipykernel-6.6.1.tar.gz", hash = "sha256:91ff0058b45660aad4a68088041059c0d378cd53fc8aff60e5abc91bcc049353"},
 ]
 ipython = [
-    {file = "ipython-7.31.0-py3-none-any.whl", hash = "sha256:4c4234cdcc6b8f87c5b5c7af9899aa696ac5cfcf0e9f6d0688018bbee5c73bce"},
-    {file = "ipython-7.31.0.tar.gz", hash = "sha256:346c74db7312c41fa566d3be45d2e759a528dcc2994fe48aac1a03a70cd668a3"},
+    {file = "ipython-7.31.1-py3-none-any.whl", hash = "sha256:55df3e0bd0f94e715abd968bedd89d4e8a7bce4bf498fb123fed4f5398fea874"},
+    {file = "ipython-7.31.1.tar.gz", hash = "sha256:b5548ec5329a4bcf054a5deed5099b0f9622eb9ea51aaa7104d215fece201d8c"},
 ]
 ipython-genutils = [
     {file = "ipython_genutils-0.2.0-py2.py3-none-any.whl", hash = "sha256:72dd37233799e619666c9f639a9da83c34013a73e8bbc79a7a6348d93c61fab8"},
@@ -3054,8 +3054,8 @@ joblib = [
     {file = "joblib-1.1.0.tar.gz", hash = "sha256:4158fcecd13733f8be669be0683b96ebdbbd38d23559f54dca7205aea1bf1e35"},
 ]
 jsonargparse = [
-    {file = "jsonargparse-4.1.0-py3-none-any.whl", hash = "sha256:cfde78d3339ede9870141aaabf4341bd123183fa68ebc93e7b72c898882728c9"},
-    {file = "jsonargparse-4.1.0.tar.gz", hash = "sha256:46e974ad2f300d24cec20b4c70fe8ff545bcb1d645463dc2662b8dfdc5a12237"},
+    {file = "jsonargparse-4.1.4-py3-none-any.whl", hash = "sha256:322ad89c587bed36903f0db74f94fe58771cbd549f8c1f2c381d7a44b2a342d7"},
+    {file = "jsonargparse-4.1.4.tar.gz", hash = "sha256:ec17d4fe1cab006bdda13185b77d94e181e9c499634a58a3f2a95f545f8bc185"},
 ]
 jsonschema = [
     {file = "jsonschema-4.3.3-py3-none-any.whl", hash = "sha256:eb7a69801beb7325653aa8fd373abbf9ff8f85b536ab2812e5e8287b522fb6a2"},
@@ -3918,6 +3918,9 @@ scikit-learn = [
     {file = "scikit_learn-1.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:b54a62c6e318ddbfa7d22c383466d38d2ee770ebdb5ddb668d56a099f6eaf75f"},
 ]
 scipy = [
+    {file = "scipy-1.7.3-1-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:c9e04d7e9b03a8a6ac2045f7c5ef741be86727d8f49c45db45f244bdd2bcff17"},
+    {file = "scipy-1.7.3-1-cp38-cp38-macosx_12_0_arm64.whl", hash = "sha256:b0e0aeb061a1d7dcd2ed59ea57ee56c9b23dd60100825f98238c06ee5cc4467e"},
+    {file = "scipy-1.7.3-1-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:b78a35c5c74d336f42f44106174b9851c783184a85a3fe3e68857259b37b9ffb"},
     {file = "scipy-1.7.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:173308efba2270dcd61cd45a30dfded6ec0085b4b6eb33b5eb11ab443005e088"},
     {file = "scipy-1.7.3-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:21b66200cf44b1c3e86495e3a436fc7a26608f92b8d43d344457c54f1c024cbc"},
     {file = "scipy-1.7.3-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ceebc3c4f6a109777c0053dfa0282fddb8893eddfb0d598574acfb734a926168"},

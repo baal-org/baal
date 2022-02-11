@@ -67,9 +67,8 @@ class ActiveDatasetTest(unittest.TestCase):
 
         # Test that a warning is raised if we dont supply a label.
         self.dataset.can_label = True
-        with warnings.catch_warnings(record=True) as w:
+        with pytest.raises(ValueError, match="The dataset is able to label data, but no label was provided.") as w:
             self.dataset.label(np.arange(0, 9))
-            assert len(w) == 1 and "The dataset is able to label data, but no label was provided." in str(w[0].message)
         self.dataset._dataset.label.assert_not_called()
         assert self.dataset.n_labelled == labels_next_1
 
