@@ -32,13 +32,13 @@ class ActiveLearningDataset(SplittedDataset):
     """
 
     def __init__(
-            self,
-            dataset: torchdata.Dataset,
-            labelled: Optional[np.ndarray] = None,
-            make_unlabelled: Callable = _identity,
-            random_state=None,
-            pool_specifics: Optional[dict] = None,
-            last_active_steps: int = -1,
+        self,
+        dataset: torchdata.Dataset,
+        labelled: Optional[np.ndarray] = None,
+        make_unlabelled: Callable = _identity,
+        random_state=None,
+        pool_specifics: Optional[dict] = None,
+        last_active_steps: int = -1,
     ) -> None:
         self._dataset = dataset
 
