@@ -15,7 +15,7 @@ from structlog.stdlib import add_log_level
 
 
 def set_logger_config():
-    structlog.configure_once(
+    structlog.configure(
         processors=[
             structlog.stdlib.PositionalArgumentsFormatter(),
             StackInfoRenderer(),
