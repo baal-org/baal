@@ -1,5 +1,6 @@
 import os
 import pickle
+import warnings
 
 import numpy as np
 import pytest
@@ -125,6 +126,19 @@ def test_file_saving(tmpdir):
     # The diff between the current state and the step before is the newly labelled item.
     assert (data['dataset']['labelled'] != dataset.labelled).sum() == 10
 
+
+def test_deprecation():
+    heur = heuristics.BALD()
+    ds = MyDataset()
+    dataset = ActiveLearningDataset(ds, make_unlabelled=lambda x: -1)
+    with warnings.catch_warnings(record=True) as w:
+        active_loop = ActiveLearningLoop(dataset,
+                                         get_probs_iter,
+                                         heur,
+                                         ndata_to_label=10,
+                                         dummy_param=1)
+        assert issubclass(w[-1].category, DeprecationWarning)
+        assert "ndata_to_label" in str(w[-1].message)
 
 if __name__ == '__main__':
     pytest.main()

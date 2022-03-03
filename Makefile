@@ -4,7 +4,7 @@ lint: check-mypy-error-count
 
 .PHONY: test
 test: lint
-	poetry run pytest tests --cov=baal
+	poetry run pytest tests --cov=baal -n 2
 
 .PHONY: format
 format:

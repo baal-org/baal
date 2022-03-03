@@ -75,7 +75,7 @@ def make_animation_from_data(
     return frames
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     from sklearn.datasets import make_classification
     import imageio
 
