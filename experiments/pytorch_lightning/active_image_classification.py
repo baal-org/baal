@@ -1,5 +1,6 @@
 import copy
 import os
+import warnings
 from argparse import ArgumentParser
 
 import pytorch_lightning as pl
@@ -23,6 +24,12 @@ from baal.utils.pytorch_lightning import (
 )
 
 log = structlog.get_logger("PL testing")
+
+warnings.warn(
+    "baal.utils.pytorch_lightning is deprecated. BaaL is now integrated into Lightning Flash!"
+    " Please see experiments/pytorch_lightning/lightning_flash_example.py for a new tutorial!",
+    DeprecationWarning,
+)
 
 
 class Cifar10DataModule(BaaLDataModule):
@@ -50,7 +57,7 @@ class Cifar10DataModule(BaaLDataModule):
         return DataLoader(self.test_set, self.batch_size, shuffle=False, num_workers=4)
 
 
-class VGG16(LightningModule, ActiveLightningModule):
+class VGG16(ActiveLightningModule):
     def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters()
