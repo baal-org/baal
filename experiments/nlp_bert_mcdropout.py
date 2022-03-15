@@ -13,9 +13,9 @@ from datasets import load_dataset
 from transformers import BertTokenizer, TrainingArguments
 from transformers import BertForSequenceClassification
 
-from baal import get_heuristic
-from baal import active_huggingface_dataset, HuggingFaceDatasets
-from baal import ActiveLearningLoop
+from baal.active import get_heuristic
+from baal.active.active_loop import ActiveLearningLoop
+from baal.active.dataset.nlp_datasets import active_huggingface_dataset, HuggingFaceDatasets
 from baal.bayesian.dropout import patch_module
 from baal.transformers_trainer_wrapper import BaalTransformersTrainer
 
@@ -48,6 +48,7 @@ def get_datasets(initial_pool, tokenizer):
     raw_valid_set = datasets["validation"]
 
     active_set = active_huggingface_dataset(raw_train_set, tokenizer)
+    active_set.can_label = False
     valid_set = HuggingFaceDatasets(raw_valid_set, tokenizer)
 
     # We start labeling randomly.
