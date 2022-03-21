@@ -1,11 +1,22 @@
-# Bayesian Active Learning (BaaL)
-[![CircleCI](https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1)](https://circleci.com/gh/ElementAI/baal)  [![Documentation Status](https://readthedocs.org/projects/baal/badge/?version=latest)](https://baal.readthedocs.io/en/latest/?badge=latest) [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/baal-world/shared_invite/zt-z0izhn4y-Jt6Zu5dZaV2rsAS9sdISfg)
-[![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/Elementai/baal/blob/master/LICENSE)
----
-
-<p align="left">
+<p align="center">
   <img height=15% width=25% src="https://github.com/ElementAI/baal/blob/master/docs/_static/images/logo-transparent.png?raw=true">
+  <h1 align="center">Bayesian Active Learning (BaaL)
+   <br>
+  <a href="https://circleci.com/gh/ElementAI/baal">
+    <img alt="CircleCI" src="https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1"/>
+  </a>
+  <a href="https://baal.readthedocs.io/en/latest/?badge=latest">
+    <img alt="Documentation Status" src="https://readthedocs.org/projects/baal/badge/?version=latest"/>
+  </a>
+  <a href="https://join.slack.com/t/baal-world/shared_invite/zt-z0izhn4y-Jt6Zu5dZaV2rsAS9sdISfg">
+    <img alt="Slack" src="https://img.shields.io/badge/slack-chat-green.svg?logo=slack"/>
+  </a>
+  <a href="https://github.com/Elementai/baal/blob/master/LICENSE">
+    <img alt="Licence" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"/>
+  </a>
+  </h1>
 </p>
+
 
 BaaL is an active learning library developed at
 [ElementAI](https://www.elementai.com/). This repository contains techniques
