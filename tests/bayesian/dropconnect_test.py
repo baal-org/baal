@@ -3,7 +3,7 @@ import warnings
 import pytest
 import torch
 
-from baal.bayesian.weight_drop import patch_module, WeightDropLinear
+from baal.bayesian.weight_drop import patch_module, WeightDropLinear, MCDropoutConnectModule
 
 
 class SimpleModel(torch.nn.Module):
@@ -70,7 +70,21 @@ def test_patch_module_replaces_all_dropout_layers(inplace):
     # objects should be the same if inplace is True and not otherwise:
     assert (mc_test_module is test_module) == inplace
     assert not any(
-         module.p != 0 for module in mc_test_module.modules() if isinstance(module, torch.nn.Dropout)
+        module.p != 0 for module in mc_test_module.modules() if isinstance(module, torch.nn.Dropout)
+    )
+    assert any(
+        isinstance(module, WeightDropLinear)
+        for module in mc_test_module.modules()
+    )
+
+
+def test_mcdropconnect_replaces_all_dropout_layers_module():
+    test_module = SimpleModel()
+
+    mc_test_module = MCDropoutConnectModule(test_module, layers=['Conv2d', 'Linear', 'LSTM', 'GRU'])
+
+    assert not any(
+        module.p != 0 for module in mc_test_module.modules() if isinstance(module, torch.nn.Dropout)
     )
     assert any(
         isinstance(module, WeightDropLinear)

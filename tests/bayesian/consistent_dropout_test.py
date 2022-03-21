@@ -96,6 +96,16 @@ def test_module_class_replaces_dropout_layers(a_model_with_dropout):
             for _ in range(10)
         )
 
+    # Check that unpatch works
+    module = test_mc_module.unpatch()
+    module.eval()
+    with torch.no_grad():
+        assert all(
+            torch.allclose(module(dummy_input), module(dummy_input))
+            for _ in range(10)
+        )
+    assert not any(isinstance(mod, baal.bayesian.consistent_dropout.ConsistentDropout) for mod in module.modules())
+
 @pytest.mark.parametrize("inplace", (True, False))
 def test_patch_module_raise_warnings(inplace):
 
