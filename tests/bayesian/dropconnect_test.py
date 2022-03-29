@@ -91,6 +91,16 @@ def test_mcdropconnect_replaces_all_dropout_layers_module():
         for module in mc_test_module.modules()
     )
 
+    regular_module = mc_test_module.unpatch()
+    assert all(
+        module.p != 0 for module in regular_module.modules() if isinstance(module, torch.nn.Dropout)
+    )
+
+    assert not any(
+        isinstance(module, WeightDropLinear)
+        for module in regular_module.modules()
+    )
+
 
 if __name__ == '__main__':
     pytest.main()

@@ -1,8 +1,9 @@
 import copy
 import warnings
-from typing import List
-
+from typing import List, Optional, cast, Dict
+from baal.bayesian.common import replace_layers_in_module
 import torch
+from torch import nn
 from packaging.version import parse as parse_version
 
 
@@ -13,7 +14,16 @@ def get_weight_drop_module(name: str, weight_dropout, **kwargs):
     return {"Conv2d": WeightDropConv2d, "Linear": WeightDropLinear}[name](weight_dropout, **kwargs)
 
 
-class WeightDropLinear(torch.nn.Linear):
+class WeightDropMixin:
+    _kwargs: Dict
+
+    def unpatch(self):
+        new_module = self.__class__.__bases__[0](**self._kwargs)
+        new_module.load_state_dict(self.state_dict())
+        return new_module
+
+
+class WeightDropLinear(torch.nn.Linear, WeightDropMixin):
     """
     Thanks to PytorchNLP for the initial implementation
     # code from https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/nn/weight_drop.html
@@ -27,8 +37,8 @@ class WeightDropLinear(torch.nn.Linear):
 
     def __init__(self, weight_dropout=0.0, **kwargs):
         wanted = ["in_features", "out_features"]
-        kwargs = {k: v for k, v in kwargs.items() if k in wanted}
-        super().__init__(**kwargs)
+        self._kwargs = {k: v for k, v in kwargs.items() if k in wanted}
+        super().__init__(**self._kwargs)
         self._weight_dropout = weight_dropout
 
     def forward(self, input):
@@ -36,7 +46,7 @@ class WeightDropLinear(torch.nn.Linear):
         return torch.nn.functional.linear(input, w, self.bias)
 
 
-class WeightDropConv2d(torch.nn.Conv2d):
+class WeightDropConv2d(torch.nn.Conv2d, WeightDropMixin):
     """
     Reimplemmentation of WeightDrop for Conv2D. Thanks to PytorchNLP for the initial implementation
     of class WeightDropLinear. Their `License
@@ -49,8 +59,8 @@ class WeightDropConv2d(torch.nn.Conv2d):
 
     def __init__(self, weight_dropout=0.0, **kwargs):
         wanted = ["in_channels", "out_channels", "kernel_size", "dilation", "padding"]
-        kwargs = {k: v for k, v in kwargs.items() if k in wanted}
-        super().__init__(**kwargs)
+        self._kwargs = {k: v for k, v in kwargs.items() if k in wanted}
+        super().__init__(**self._kwargs)
         self._weight_dropout = weight_dropout
         self._torch_version = parse_version(torch.__version__)
 
@@ -88,36 +98,57 @@ def patch_module(
     """
     if not inplace:
         module = copy.deepcopy(module)
-    changed = _patch_layers(module, layers, weight_dropout)
+    changed = replace_layers_in_module(
+        module, _dropconnect_mapping_fn, layers=layers, weight_dropout=weight_dropout
+    )
     if not changed:
         warnings.warn("No layer was modified by patch_module!", UserWarning)
     return module
 
 
-def _patch_layers(module: torch.nn.Module, layers: Sequence, weight_dropout: float) -> bool:
+def unpatch_module(module: torch.nn.Module, inplace: bool = True) -> torch.nn.Module:
+    """Unpatch Dropconnect module to recover initial module.
+
+    Args:
+        module (torch.nn.Module):
+            The module in which you would like to replace dropout layers.
+        inplace (bool, optional):
+            Whether to modify the module in place or return a copy of the module.
+
+    Returns:
+        torch.nn.Module
+            The modified module, which is either the same object as you passed in
+            (if inplace = True) or a copy of that object.
     """
-    Recursively iterate over the children of a module and replace them if
-    they are in the layers list. This function operates in-place.
-    """
-    changed = False
-    for name, child in module.named_children():
-        new_module = None
-        for layer in layers:
-            if isinstance(child, getattr(torch.nn, layer)):
-                new_module = get_weight_drop_module(layer, weight_dropout, **child.__dict__)
-                break
+    if not inplace:
+        module = copy.deepcopy(module)
+    changed = replace_layers_in_module(module, _droconnect_unmapping_fn)
+    if not changed:
+        warnings.warn("No layer was modified by patch_module!", UserWarning)
+    return module
 
-        if new_module is not None:
-            changed = True
-            module.add_module(name, new_module)
 
-        # The dropout layer should be deactivated to use DropConnect.
-        if isinstance(child, torch.nn.Dropout):
-            child.p = 0
+def _dropconnect_mapping_fn(module: torch.nn.Module, layers, weight_dropout) -> Optional[nn.Module]:
+    new_module: Optional[nn.Module] = None
+    for layer in layers:
+        if isinstance(module, getattr(torch.nn, layer)):
+            new_module = get_weight_drop_module(layer, weight_dropout, **module.__dict__)
+            break
+    if isinstance(module, nn.Dropout):
+        module._baal_p: float = module.p  # type: ignore
+        module.p = 0.0
+    return new_module
 
-        # Recursively apply to child.
-        changed |= _patch_layers(child, layers, weight_dropout)
-    return changed
+
+def _droconnect_unmapping_fn(module: torch.nn.Module) -> Optional[nn.Module]:
+    new_module: Optional[nn.Module] = None
+    if isinstance(module, WeightDropMixin):
+        new_module = module.unpatch()
+
+    if isinstance(module, nn.Dropout):
+        module.p = module._baal_p  # type: ignore
+
+    return new_module
 
 
 class MCDropoutConnectModule(torch.nn.Module):
@@ -136,7 +167,10 @@ class MCDropoutConnectModule(torch.nn.Module):
     def __init__(self, module: torch.nn.Module, layers: Sequence, weight_dropout=0.0):
         super().__init__()
         self.parent_module = module
-        _patch_layers(self.parent_module, layers, weight_dropout)
+        patch_module(self.parent_module, layers, weight_dropout, inplace=True)
 
     def forward(self, x):
         return self.parent_module(x)
+
+    def unpatch(self) -> torch.nn.Module:
+        return unpatch_module(self.parent_module)
