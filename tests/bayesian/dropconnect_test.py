@@ -3,7 +3,7 @@ import warnings
 import pytest
 import torch
 
-from baal.bayesian.weight_drop import patch_module, WeightDropLinear, MCDropoutConnectModule
+from baal.bayesian.weight_drop import patch_module, WeightDropLinear, MCDropoutConnectModule, WeightDropConv2d
 
 
 class SimpleModel(torch.nn.Module):
@@ -78,10 +78,10 @@ def test_patch_module_replaces_all_dropout_layers(inplace):
     )
 
 
-def test_mcdropconnect_replaces_all_dropout_layers_module():
+def test_mcdropconnect_replaces_all_dropout_layers_module(is_deterministic):
     test_module = SimpleModel()
 
-    mc_test_module = MCDropoutConnectModule(test_module, layers=['Conv2d', 'Linear', 'LSTM', 'GRU'])
+    mc_test_module = MCDropoutConnectModule(test_module, layers=['Conv2d', 'Linear', 'LSTM', 'GRU'], weight_dropout=0.5)
 
     assert not any(
         module.p != 0 for module in mc_test_module.modules() if isinstance(module, torch.nn.Dropout)
@@ -90,16 +90,18 @@ def test_mcdropconnect_replaces_all_dropout_layers_module():
         isinstance(module, WeightDropLinear)
         for module in mc_test_module.modules()
     )
+    assert not is_deterministic(mc_test_module, (10, 3, 10, 10))
 
-    regular_module = mc_test_module.unpatch()
+    regular_module = mc_test_module.unpatch().eval()
     assert all(
         module.p != 0 for module in regular_module.modules() if isinstance(module, torch.nn.Dropout)
     )
 
     assert not any(
-        isinstance(module, WeightDropLinear)
+        isinstance(module, (WeightDropConv2d, WeightDropLinear))
         for module in regular_module.modules()
     )
+    assert is_deterministic(regular_module, (10, 3, 10, 10))
 
 
 if __name__ == '__main__':

@@ -87,7 +87,7 @@ def test_patch_module_raise_warnings(inplace):
         assert "No layer was modified by patch_module" in str(w[-1].message)
 
 
-def test_module_class_replaces_dropout_layers(a_model_with_dropout):
+def test_module_class_replaces_dropout_layers(a_model_with_dropout, is_deterministic):
     dummy_input = torch.randn(8, 10)
     test_mc_module = baal.bayesian.dropout.MCDropoutModule(a_model_with_dropout)
 
@@ -107,8 +107,9 @@ def test_module_class_replaces_dropout_layers(a_model_with_dropout):
 
 
     # Check that unpatch works
-    module = test_mc_module.unpatch()
+    module = test_mc_module.unpatch().eval()
     assert not any(isinstance(mod, baal.bayesian.dropout.Dropout) for mod in module.modules())
+    assert is_deterministic(module, (8, 10))
 
 
 
