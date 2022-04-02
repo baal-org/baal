@@ -7,7 +7,7 @@ from torch import nn
 from torch.nn import functional as F
 from torch.nn.modules.dropout import _DropoutNd
 
-from baal.bayesian.common import replace_layers_in_module
+from baal.bayesian.common import replace_layers_in_module, BayesianModule
 
 
 class ConsistentDropout(_DropoutNd):
@@ -163,19 +163,6 @@ def _consistent_dropout_unmapping_fn(module: torch.nn.Module) -> Optional[nn.Mod
     return new_module
 
 
-class MCConsistentDropoutModule(torch.nn.Module):
-    def __init__(self, module: torch.nn.Module):
-        """Create a module that with all dropout layers patched.
-
-        Args:
-            module (torch.nn.Module):
-                A fully specified neural network.
-        """
-        super().__init__()
-        self.parent_module = patch_module(module)
-
-    def forward(self, *args, **kwargs):
-        return self.parent_module.forward(*args, **kwargs)
-
-    def unpatch(self) -> torch.nn.Module:
-        return unpatch_module(self.parent_module)
+class MCConsistentDropoutModule(BayesianModule):
+    patching_function = patch_module
+    unpatch_function = unpatch_module

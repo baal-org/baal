@@ -7,7 +7,7 @@ from torch import nn
 from torch.nn import functional as F
 from torch.nn.modules.dropout import _DropoutNd
 
-from baal.bayesian.common import replace_layers_in_module
+from baal.bayesian.common import replace_layers_in_module, BayesianModule
 
 
 class Dropout(_DropoutNd):
@@ -148,19 +148,13 @@ def _dropout_unmapping_fn(module: torch.nn.Module) -> Optional[nn.Module]:
     return new_module
 
 
-class MCDropoutModule(torch.nn.Module):
-    def __init__(self, module: torch.nn.Module):
-        """Create a module that with all dropout layers patched.
+class MCDropoutModule(BayesianModule):
+    """Create a module that with all dropout layers patched.
 
-        Args:
-            module (torch.nn.Module):
-                A fully specified neural network.
-        """
-        super().__init__()
-        self.parent_module = patch_module(module)
+    Args:
+        module (torch.nn.Module):
+            A fully specified neural network.
+    """
 
-    def forward(self, *args, **kwargs):
-        return self.parent_module(*args, **kwargs)
-
-    def unpatch(self) -> torch.nn.Module:
-        return unpatch_module(self.parent_module)
+    patching_function = patch_module
+    unpatch_function = unpatch_module

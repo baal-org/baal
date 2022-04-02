@@ -18,7 +18,7 @@ def a_model_with_dropout():
         torch.nn.Sequential(
             torch.nn.Dropout(p=0.5),
             torch.nn.Linear(5, 2),
-        ))
+        )).eval()
 
 
 def test_1d_eval_remains_stochastic():
@@ -99,18 +99,18 @@ def test_module_class_replaces_dropout_layers(a_model_with_dropout, is_determini
         for module in a_model_with_dropout.modules()
     )
     torch.manual_seed(2019)
-    with torch.no_grad():
-        assert not all(
-            (test_mc_module(dummy_input) == test_mc_module(dummy_input)).all()
-            for _ in range(10)
-        )
-
+    assert not is_deterministic(test_mc_module, (8, 10))
 
     # Check that unpatch works
     module = test_mc_module.unpatch().eval()
     assert not any(isinstance(mod, baal.bayesian.dropout.Dropout) for mod in module.modules())
     assert is_deterministic(module, (8, 10))
 
+
+def test_context_manager(a_model_with_dropout, is_deterministic):
+    with baal.bayesian.dropout.MCDropoutModule(a_model_with_dropout) as model:
+        assert not is_deterministic(model.eval(), (8, 10))
+    assert is_deterministic(model.eval(), (8, 10))
 
 
 if __name__ == '__main__':

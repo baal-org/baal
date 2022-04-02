@@ -1,7 +1,7 @@
 import copy
 import warnings
 from typing import List, Optional, cast, Dict
-from baal.bayesian.common import replace_layers_in_module
+from baal.bayesian.common import replace_layers_in_module, BayesianModule
 import torch
 from torch import nn
 from packaging.version import parse as parse_version
@@ -151,7 +151,7 @@ def _droconnect_unmapping_fn(module: torch.nn.Module) -> Optional[nn.Module]:
     return new_module
 
 
-class MCDropoutConnectModule(torch.nn.Module):
+class MCDropoutConnectModule(BayesianModule):
     """Create a module that with all dropout layers patched.
     With MCDropoutConnectModule, it could be decided which type of modules to be
     replaced.
@@ -164,13 +164,5 @@ class MCDropoutConnectModule(torch.nn.Module):
         weight_dropout (float): The probability a weight will be dropped.
     """
 
-    def __init__(self, module: torch.nn.Module, layers: Sequence, weight_dropout=0.0):
-        super().__init__()
-        self.parent_module = module
-        patch_module(self.parent_module, layers, weight_dropout, inplace=True)
-
-    def forward(self, x):
-        return self.parent_module(x)
-
-    def unpatch(self) -> torch.nn.Module:
-        return unpatch_module(self.parent_module)
+    patching_function = patch_module
+    unpatch_function = unpatch_module

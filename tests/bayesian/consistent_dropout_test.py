@@ -19,7 +19,7 @@ def a_model_with_dropout():
             torch.nn.Linear(5, 5),
             torch.nn.Dropout(p=0.5),
             torch.nn.Linear(5, 2),
-        ))
+        )).eval()
 
 def test_1d_eval_is_not_stochastic(a_model_with_dropout):
     dummy_input = torch.randn(8, 10)

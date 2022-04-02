@@ -1,4 +1,6 @@
 from typing import Callable
+
+import torch
 from torch import nn
 
 
@@ -20,3 +22,25 @@ def replace_layers_in_module(module: nn.Module, mapping_fn: Callable, *args, **k
         # recursively apply to child
         changed |= replace_layers_in_module(child, mapping_fn, *args, **kwargs)
     return changed
+
+
+class BayesianModule(torch.nn.Module):
+    patching_function: Callable[..., torch.nn.Module]
+    unpatch_function: Callable[..., torch.nn.Module]
+
+    def __init__(self, module, *args, **kwargs):
+        super().__init__()
+        self.parent_module = self.__class__.patching_function(module, *args, **kwargs)
+
+    def forward(self, *args, **kwargs):
+        return self.parent_module(*args, **kwargs)
+
+    def unpatch(self) -> torch.nn.Module:
+        return self.__class__.unpatch_function(self.parent_module)
+
+    # Context Manager
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unpatch()
