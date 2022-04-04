@@ -80,7 +80,8 @@ class WeightDropConv2d(torch.nn.Conv2d, WeightDropMixin):
 def patch_module(
     module: torch.nn.Module, layers: Sequence, weight_dropout: float = 0.0, inplace: bool = True
 ) -> torch.nn.Module:
-    """Replace given layers with weight_drop module of that layer.
+    """
+    Replace given layers with weight_drop module of that layer.
 
     Args:
         module : torch.nn.Module
@@ -107,7 +108,8 @@ def patch_module(
 
 
 def unpatch_module(module: torch.nn.Module, inplace: bool = True) -> torch.nn.Module:
-    """Unpatch Dropconnect module to recover initial module.
+    """
+    Unpatch Dropconnect module to recover initial module.
 
     Args:
         module (torch.nn.Module):
