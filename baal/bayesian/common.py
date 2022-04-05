@@ -1,3 +1,5 @@
+import copy
+import warnings
 from typing import Callable
 
 import torch
@@ -44,3 +46,12 @@ class BayesianModule(torch.nn.Module):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.unpatch()
+
+
+def _patching_wrapper(module, inplace, patching_fn, *args, **kwargs):
+    if not inplace:
+        module = copy.deepcopy(module)
+    changed = replace_layers_in_module(module, patching_fn, *args, **kwargs)
+    if not changed:
+        warnings.warn("No layer was modified by patch_module!", UserWarning)
+    return module

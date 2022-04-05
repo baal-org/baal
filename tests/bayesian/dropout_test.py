@@ -21,7 +21,7 @@ def a_model_with_dropout():
         )).eval()
 
 
-def test_1d_eval_remains_stochastic():
+def test_1d_eval_remains_stochastic(is_deterministic):
     dummy_input = torch.randn(8, 10)
     test_module = torch.nn.Sequential(
         torch.nn.Linear(10, 5),
@@ -32,14 +32,10 @@ def test_1d_eval_remains_stochastic():
     test_module.eval()
     # NOTE: This is quite a stochastic test...
     torch.manual_seed(2019)
-    with torch.no_grad():
-        assert not all(
-            (test_module(dummy_input) == test_module(dummy_input)).all()
-            for _ in range(10)
-        )
+    assert not is_deterministic(test_module, (8, 10))
 
 
-def test_2d_eval_remains_stochastic():
+def test_2d_eval_remains_stochastic(is_deterministic):
     dummy_input = torch.randn(8, 1, 5, 5)
     test_module = torch.nn.Sequential(
         torch.nn.Conv2d(1, 1, 1),
@@ -48,13 +44,8 @@ def test_2d_eval_remains_stochastic():
         torch.nn.Conv2d(1, 1, 1),
     )
     test_module.eval()
-    # NOTE: This is quite a stochastic test...
     torch.manual_seed(2019)
-    with torch.no_grad():
-        assert not all(
-            (test_module(dummy_input) == test_module(dummy_input)).all()
-            for _ in range(10)
-        )
+    assert not is_deterministic(test_module, (8, 1, 5, 5))
 
 
 @pytest.mark.parametrize("inplace", (True, False))

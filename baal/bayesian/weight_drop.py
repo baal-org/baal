@@ -1,7 +1,7 @@
 import copy
 import warnings
 from typing import List, Optional, cast, Dict
-from baal.bayesian.common import replace_layers_in_module, BayesianModule
+from baal.bayesian.common import replace_layers_in_module, _patching_wrapper, BayesianModule
 import torch
 from torch import nn
 from packaging.version import parse as parse_version
@@ -97,14 +97,13 @@ def patch_module(
             The modified module, which is either the same object as you passed in
             (if inplace = True) or a copy of that object.
     """
-    if not inplace:
-        module = copy.deepcopy(module)
-    changed = replace_layers_in_module(
-        module, _dropconnect_mapping_fn, layers=layers, weight_dropout=weight_dropout
+    return _patching_wrapper(
+        module,
+        inplace=inplace,
+        patching_fn=_dropconnect_mapping_fn,
+        layers=layers,
+        weight_dropout=weight_dropout,
     )
-    if not changed:
-        warnings.warn("No layer was modified by patch_module!", UserWarning)
-    return module
 
 
 def unpatch_module(module: torch.nn.Module, inplace: bool = True) -> torch.nn.Module:
@@ -122,12 +121,7 @@ def unpatch_module(module: torch.nn.Module, inplace: bool = True) -> torch.nn.Mo
             The modified module, which is either the same object as you passed in
             (if inplace = True) or a copy of that object.
     """
-    if not inplace:
-        module = copy.deepcopy(module)
-    changed = replace_layers_in_module(module, _droconnect_unmapping_fn)
-    if not changed:
-        warnings.warn("No layer was modified by patch_module!", UserWarning)
-    return module
+    return _patching_wrapper(module, inplace=inplace, patching_fn=_droconnect_unmapping_fn)
 
 
 def _dropconnect_mapping_fn(module: torch.nn.Module, layers, weight_dropout) -> Optional[nn.Module]:

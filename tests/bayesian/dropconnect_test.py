@@ -29,7 +29,7 @@ class SimpleModel(torch.nn.Module):
 
 @pytest.mark.parametrize("inplace", (True, False))
 @pytest.mark.parametrize("layers", (['Linear'], ['Linear', 'Conv2d'], ['Conv2d']))
-def test_patch_module_changes_weights(inplace, layers):
+def test_patch_module_changes_weights(inplace, layers, is_deterministic):
     test_module = SimpleModel()
     test_module.eval()
     simple_input = torch.randn(10, 3, 10, 10)
@@ -39,7 +39,7 @@ def test_patch_module_changes_weights(inplace, layers):
 
     # objects should be the same if inplace is True and not otherwise:
     assert (mc_test_module is test_module) == inplace
-    assert not torch.allclose(mc_test_module(simple_input), mc_test_module(simple_input))
+    assert not is_deterministic(mc_test_module, (10, 3, 10, 10))
 
     assert list(mc_test_module.modules())[3].p == 0
 
