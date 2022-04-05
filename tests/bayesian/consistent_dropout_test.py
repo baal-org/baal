@@ -19,7 +19,7 @@ def a_model_with_dropout():
             torch.nn.Linear(5, 5),
             torch.nn.Dropout(p=0.5),
             torch.nn.Linear(5, 2),
-        ))
+        )).eval()
 
 def test_1d_eval_is_not_stochastic(a_model_with_dropout):
     dummy_input = torch.randn(8, 10)
@@ -69,7 +69,7 @@ def test_patch_module_replaces_all_dropout_layers(inplace, a_model_with_dropout)
     )
 
 
-def test_module_class_replaces_dropout_layers(a_model_with_dropout):
+def test_module_class_replaces_dropout_layers(a_model_with_dropout, is_deterministic):
     dummy_input = torch.randn(8, 10)
     test_module = a_model_with_dropout
     test_mc_module = baal.bayesian.consistent_dropout.MCConsistentDropoutModule(test_module)
@@ -99,11 +99,7 @@ def test_module_class_replaces_dropout_layers(a_model_with_dropout):
     # Check that unpatch works
     module = test_mc_module.unpatch()
     module.eval()
-    with torch.no_grad():
-        assert all(
-            torch.allclose(module(dummy_input), module(dummy_input))
-            for _ in range(10)
-        )
+    assert is_deterministic(module, (8, 10))
     assert not any(isinstance(mod, baal.bayesian.consistent_dropout.ConsistentDropout) for mod in module.modules())
 
 @pytest.mark.parametrize("inplace", (True, False))
