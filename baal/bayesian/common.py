@@ -48,7 +48,13 @@ class BayesianModule(torch.nn.Module):
         self.unpatch()
 
 
-def _patching_wrapper(module: nn.Module, inplace: bool, patching_fn: Callable[..., Optional[nn.Module]], *args, **kwargs) -> nn.Module:
+def _patching_wrapper(
+    module: nn.Module,
+    inplace: bool,
+    patching_fn: Callable[..., Optional[nn.Module]],
+    *args,
+    **kwargs
+) -> nn.Module:
     if not inplace:
         module = copy.deepcopy(module)
     changed = replace_layers_in_module(module, patching_fn, *args, **kwargs)
