@@ -1,6 +1,6 @@
 import copy
 import warnings
-from typing import Callable
+from typing import Callable, Optional
 
 import torch
 from torch import nn
@@ -48,7 +48,7 @@ class BayesianModule(torch.nn.Module):
         self.unpatch()
 
 
-def _patching_wrapper(module, inplace, patching_fn, *args, **kwargs):
+def _patching_wrapper(module: nn.Module, inplace: bool, patching_fn: Callable[..., Optional[nn.Module]], *args, **kwargs) -> nn.Module:
     if not inplace:
         module = copy.deepcopy(module)
     changed = replace_layers_in_module(module, patching_fn, *args, **kwargs)
