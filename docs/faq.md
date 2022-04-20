@@ -2,7 +2,13 @@
 
 If you have more questions, please submit an issue, and we will include it here!
 
-## How to predict uncertainty per sample in a dataset
+The FAQ is divided in two sections, a technical section that helps with the library and a second one that focus on the
+field of active learning and Bayesian deep learning. Finally, there is a Tips'n'Tricks section at the bottom so that
+your experiments run successfully.
+
+## Technical FAQ
+
+### How to predict uncertainty per sample in a dataset
 
 ```python
 model = YourModel()
@@ -25,30 +31,33 @@ pred_generator = wrapper.predict_on_dataset_generator(dataset, batch_size=32, it
 uncertainty = heuristic.get_uncertainties_generator(pred_generator)
 ```
 
-## Does BaaL work on semantic segmentation?
+### Does BaaL work on semantic segmentation?
 
 Yes! See the example in `experiments/segmentation/unet_mcdropout_pascal.py`.
 
 The key idea is to provide the Heuristic with a way to aggregate the uncertainties. In the case of semantic
-segmentation, MC-Dropout will provide a distribution per pixel. To reduce this to a single uncertainty value,
-you can provide `reduction` to the Heuristic with one of the following arguments:
+segmentation, MC-Dropout will provide a distribution per pixel. To reduce this to a single uncertainty value, you can
+provide `reduction` to the Heuristic with one of the following arguments:
 
 * String (one of `'max'`, `'mean'`, `'sum'`)
 * Callable, a function that will receive the uncertainty per pixel.
 
-## Does BaaL work on NLP/TS/Tabular data?
+### Does BaaL work on NLP/TS/Tabular data?
 
 BaaL is not task-specific, it can be used on a variety of domains and tasks. We are working toward more examples.
 
-Bayesian active learning has been used for Text Classification and NER in [(Siddhant and Lipton, 2018)](http://zacklipton.com/media/papers/1808.05697.pdf).
+Bayesian active learning has been used for Text Classification and NER
+in [(Siddhant and Lipton, 2018)](http://zacklipton.com/media/papers/1808.05697.pdf).
 
-## How to know if my model is calibrated
+### How to know if my model is calibrated
 
-Baal uses the ECE to compute the calibration of a model. It is available throught: `baal.utils.metrics.ECE` and `baal.utils.metrics.ECE_PerCLs`, the latter providing the metrics per class.
+Baal uses the ECE to compute the calibration of a model. It is available throught: `baal.utils.metrics.ECE`
+and `baal.utils.metrics.ECE_PerCLs`, the latter providing the metrics per class.
 
 You can add this metric to your model wrapper doing `ModelWrapper.add_metric('ece', lambda: ECE(n_bins=20))`
 
 After training and testing, you can get your score with:
+
 ```
 metrics = your_model.metrics
 # Test ECE
@@ -67,12 +76,11 @@ There is several ways to use Baal on large tasks.
     * Heuristics support generators
     * Use `ModelWrapper.predict_on_dataset_generator`
 
+### How can I specify that a label is missing and how to label it.
 
-## How can I specify that a label is missing and how to label it.
-
-The source of truth for what is labelled is the `ActiveLearningDataset.labelled` array.
-This means that we will never train on a sample if it is not labelled according to this array.
-This array determines the split between the labelled and unlabelled datasets.
+The source of truth for what is labelled is the `ActiveLearningDataset.labelled` array. This means that we will never
+train on a sample if it is not labelled according to this array. This array determines the split between the labelled
+and unlabelled datasets.
 
 ```python
 # Let ds = D, the entire dataset with labelled/unlabelled data.
@@ -86,12 +94,15 @@ pool = al_dataset.pool
 ```
 
 From a rigorous point of view: ``$`D = ds `$`` , ``$`D_L=al\_dataset `$`` and ``$`D_U = D \setminus D_L = pool `$``.
-Then, we train our model on ``$`D_L `$`` and compute the uncertainty on ``$`D_U `$``. The most uncertains samples are labelled and added to ``$`D_L `$``, removed from ``$`D_U `$``.
+Then, we train our model on ``$`D_L `$`` and compute the uncertainty on ``$`D_U `$``. The most uncertains samples are
+labelled and added to ``$`D_L `$``, removed from ``$`D_U `$``.
 
-Let a method `query_human` performs the annotations, we can label our dataset using indices relative to``$`D_U `$``. This assumes that your dataset class `YourDataset` has a method named `label` which has the following definition: `def label(self, idx, value)` where we give the label for index `idx`. There the index is not relative to the pool, so you don't have to worry about it.
+Let a method `query_human` performs the annotations, we can label our dataset using indices relative to``$`D_U `$``.
+This assumes that your dataset class `YourDataset` has a method named `label` which has the following
+definition: `def label(self, idx, value)` where we give the label for index `idx`. There the index is not relative to
+the pool, so you don't have to worry about it.
 
-
-#### Full example.
+##### Full example.
 
 ```python
 # Some definitions
@@ -109,6 +120,29 @@ labels = query_human(ranks, pool)
 active_dataset.label(ranks, labels)
 ```
 
+## Theory FAQ
+
+Bayesian active learning is a relatively small field will a lot of unknowns. This sections aims at presenting some of our findings so that newcomers can quickly learn.
+
+Don't forget to look at our [literature review](../literature/index.md) for a good introduction to the field.
+
+### Should you use early stopping?
+
+From our experiments, **early stopping hurts the process**. The training dataset is so small that the model overfits very quickly and hence early stopping triggers too early. We also know from [Atighehchian et al.](https://arxiv.org/abs/2006.09916) that **underfitting hurts the process more than overfitting**. 
+
+### Which optimizer works best?
+
+We find that **SGD works well in active learning**. More complex optimizers such as Adam hurt the process. This is mostly the case in the beginning of the process where the model overfits quickly because the training set is small.
+
+### How do you evaluate active learning?
+
+The standard process is to compare to uniform sampling (sometime refered as *Random*). Some datasets are better to use than others. Academic datasets are often too clean for active learning because they were manually curated. 
+Remember that **active learning works best on industrial datasets** where duplicates, low-information examples or noisy examples are common.
+
+### Which query size to use?
+
+Of course the lower the better, but [Atighehchian et al.](https://arxiv.org/abs/2006.09916) shows that BALD works well with a query size under 1000. This was tested on an academic dataset where Random sampling is especially strong. In practice, BALD performs worse on low-diversity datasets and could wrongly behave on a lower query size.
+
 
 ## Tips & Trick for a successful active learning experiment
 
@@ -117,20 +151,22 @@ Many of these tips can be found in our paper [Bayesian active learning for produ
 #### Remove data augmentation when computing uncertainty
 
 You can specify which variables to override when creating the unlabelled pool using the `pool_specifics` argument.
+
 ```python
 from torchvision import transforms
+
 transform = transforms.Compose([
-                transforms.Resize(32),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor()
-                ]) 
+    transforms.Resize(32),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor()
+])
 test_transform = transforms.Compose([
-                transforms.Resize(32),
-                transforms.ToTensor()
-                ]) 
-                
+    transforms.Resize(32),
+    transforms.ToTensor()
+])
+
 your_dataset = ADataset(transform=transform)
-active_dataset = ActiveLearningDataset(your_dataset, pool_specifics={'transform':test_transform})
+active_dataset = ActiveLearningDataset(your_dataset, pool_specifics={'transform': test_transform})
 
 # active_dataset will use data augmentation
 # the pool will use the `test_transform`
@@ -153,19 +189,23 @@ for al_step in range(NUM_AL_STEP):
     model.test_on_dataset(...)
     # Label the next set of labels.
     loop.step()
-    
+
 ```
 
 #### Use Bayesian model average when testing.
 
-When using MC-Dropout, or any other Bayesian methods, you will want to compute the Bayesian model average (BMA) at test time too.
+When using MC-Dropout, or any other Bayesian methods, you will want to compute the Bayesian model average (BMA) at test
+time too.
 
-To do so, you can specify the `average_predictions` parameters in `ModelWrapper.test_on_dataset`. The prediction will be averaged over `iterations` stochastic predictions. 
+To do so, you can specify the `average_predictions` parameters in `ModelWrapper.test_on_dataset`. The prediction will be
+averaged over `iterations` stochastic predictions.
 
 This will slightly increase the ECE of your model and will improve the predictive performance as well.
 
 #### Compute uncertainty on a subset of the unlabelled pool
 
-Predicting on the unlabelled pool is the most time consuming part of active learning, especially in expensive tasks such as segmentation.
+Predicting on the unlabelled pool is the most time consuming part of active learning, especially in expensive tasks such
+as segmentation.
 
-Our work shows that predicting on a random subset of the pool is as effective as the full prediction. BaaL supports this features throught the `max_samples` argument in `ActiveLearningPool`.
+Our work shows that predicting on a random subset of the pool is as effective as the full prediction. BaaL supports this
+features throught the `max_samples` argument in `ActiveLearningPool`.
