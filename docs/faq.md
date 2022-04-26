@@ -146,7 +146,7 @@ overfitting**.
 
 ### Which optimizer works best?
 
-We find that **SGD works well in for computer vision problems**. More complex optimizers such as Adam hurt the process.
+We find that **SGD works well in for computer vision problems**. More complex optimizers such as Adam hurt the process. [Beck et al. 2021](https://arxiv.org/abs/2106.15324) find similar results.
 This is mostly the case in the beginning of the process where the model overfits quickly because the training set is
 small.
 
