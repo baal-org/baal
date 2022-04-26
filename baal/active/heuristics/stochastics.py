@@ -134,4 +134,5 @@ class RankBasedSampling(StochasticHeuristic):
     def _make_distribution(self, scores: np.ndarray) -> np.ndarray:
         rank = rankdata(-scores)
         weights = rank ** (-1 / self.temperature)
-        return weights / weights.sum()
+        normalized_weights: np.ndarray = weights / weights.sum()
+        return normalized_weights
