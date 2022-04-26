@@ -15,7 +15,8 @@ class StochasticHeuristic(AbstractHeuristic):
     def __init__(self, base_heuristic: AbstractHeuristic, query_size):
         """Heuristic that is stochastic to improve diversity.
 
-        Common acquisition functions are heavily impacted by duplicates. When using a `top-k` approache where the most
+        Common acquisition functions are heavily impacted by duplicates.
+        When using a `top-k` approache where the most
         uncertain examples are selected, the acquisition function can select many duplicates.
         Techniques such as BADGE (Ash et al, 2019) or BatchBALD (Kirsh et al. 2019)
         are common solutions to this problem, but they are quite expensive.
@@ -68,7 +69,8 @@ class StochasticHeuristic(AbstractHeuristic):
 
 class PowerSampling(StochasticHeuristic):
     def __init__(self, base_heuristic: AbstractHeuristic, query_size, temperature=1.0):
-        """Samples from the uncertainty distribution without modification beside temperature scaling and normalization.
+        """Samples from the uncertainty distribution without modification beside
+        temperature scaling and normalization.
 
         Stochastic heuristic that assumes that the uncertainty distribution
         is positive and that items with near-zero uncertainty are uninformative.
