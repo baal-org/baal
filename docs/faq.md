@@ -31,6 +31,16 @@ pred_generator = wrapper.predict_on_dataset_generator(dataset, batch_size=32, it
 uncertainty = heuristic.get_uncertainties_generator(pred_generator)
 ```
 
+It is also possible to only temporarily modify the dropout layers.
+
+```python
+with MCDropoutModule(model) as mcdropout_model:
+    # this is stochastic
+    predictions = [mcdropout_model(input) for _ in range(ITERATIONS)]
+# this is deterministic
+output = model(input)
+```
+
 ### Does BaaL work on semantic segmentation?
 
 Yes! See the example in `experiments/segmentation/unet_mcdropout_pascal.py`.
@@ -122,31 +132,43 @@ active_dataset.label(ranks, labels)
 
 ## Theory FAQ
 
-Bayesian active learning is a relatively small field with a lot of unknowns. This section aims at presenting some of our findings so that newcomers can quickly learn.
+Bayesian active learning is a relatively small field with a lot of unknowns. This section aims at presenting some of our
+findings so that newcomers can quickly learn.
 
 Don't forget to look at our [literature review](../literature/index.md) for a good introduction to the field.
 
 ### Should you use early stopping?
 
-From our experiments, **early stopping hurts the process**. The training dataset is so small that the model overfits very quickly and hence early stopping triggers too early. We also know from [Atighehchian et al.](https://arxiv.org/abs/2006.09916) that **underfitting hurts the process more than overfitting**. 
+From our experiments, **early stopping hurts the process**. The training dataset is so small that the model overfits
+very quickly and hence early stopping triggers too early. We also know
+from [Atighehchian et al.](https://arxiv.org/abs/2006.09916) that **underfitting hurts the process more than
+overfitting**.
 
 ### Which optimizer works best?
 
-We find that **SGD works well in active learning**. More complex optimizers such as Adam hurt the process. This is mostly the case in the beginning of the process where the model overfits quickly because the training set is small.
+We find that **SGD works well in for computer vision problems**. More complex optimizers such as Adam hurt the process.
+This is mostly the case in the beginning of the process where the model overfits quickly because the training set is
+small.
+
+When finetuning Transformers, we find that the Adam optimizer works well.
 
 ### How do you evaluate active learning?
 
-The standard process is to compare to uniform sampling (sometime refered as *Random*). Some datasets are better to use than others. Academic datasets are often too clean for active learning because they were manually curated. 
-Remember that **active learning works best on industrial datasets** where duplicates, low-information examples or noisy examples are common.
+The standard process is to compare to uniform sampling (sometime refered as *Random*). Some datasets are better to use
+than others. Academic datasets are often too clean for active learning because they were manually curated. Remember
+that **active learning works best on industrial datasets** where duplicates, low-information examples or noisy examples
+are common.
 
 ### Which query size to use?
 
-Of course the lower the better, but [Atighehchian et al.](https://arxiv.org/abs/2006.09916) shows that BALD works well with a query size under 1000. This was tested on an academic dataset where Random sampling is especially strong. In practice, BALD performs worse on low-diversity datasets and could wrongly behave on a lower query size.
-
+Of course the lower the better, but [Atighehchian et al.](https://arxiv.org/abs/2006.09916) shows that BALD works well
+with a query size under 1000. This was tested on an academic dataset where Random sampling is especially strong. In
+practice, BALD performs worse on low-diversity datasets and could wrongly behave on a lower query size.
 
 ## Tips & Trick for a successful active learning experiment
 
-Many of these tips can be found in our paper [Bayesian active learning for production](https://arxiv.org/abs/2006.09916).
+Many of these tips can be found in our paper
+[Bayesian active learning for production](https://arxiv.org/abs/2006.09916).
 
 #### Remove data augmentation when computing uncertainty
 
