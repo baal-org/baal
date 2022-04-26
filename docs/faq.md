@@ -122,7 +122,7 @@ active_dataset.label(ranks, labels)
 
 ## Theory FAQ
 
-Bayesian active learning is a relatively small field will a lot of unknowns. This sections aims at presenting some of our findings so that newcomers can quickly learn.
+Bayesian active learning is a relatively small field with a lot of unknowns. This section aims at presenting some of our findings so that newcomers can quickly learn.
 
 Don't forget to look at our [literature review](../literature/index.md) for a good introduction to the field.
 
