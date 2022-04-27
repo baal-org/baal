@@ -150,7 +150,7 @@ We find that **SGD works well in for computer vision problems**. More complex op
 This is mostly the case in the beginning of the process where the model overfits quickly because the training set is
 small.
 
-When finetuning Transformers, we find that the Adam optimizer works well.
+When finetuning Transformers, we find that the Adam optimizer works well if it is re-initialized at the beginning of each active learning step.
 
 ### How do you evaluate active learning?
 
