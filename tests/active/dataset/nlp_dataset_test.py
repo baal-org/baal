@@ -49,8 +49,6 @@ class ActiveArrowDatasetTest(unittest.TestCase):
         assert len(self.active_dataset) == 0
         self.active_dataset.label_randomly(2)
         assert len(self.active_dataset) == 2
-        print(self.active_dataset[0])
-        assert self.active_dataset[0]['sentence'] == 'this is test number 0'
 
 
 class HuggingFaceDatasetsTest(unittest.TestCase):
