@@ -11,3 +11,8 @@ def is_deterministic():
         pred1 = module(inp).detach().cpu().numpy()
         return all(np.allclose(pred1, module(inp).detach().cpu().numpy()) for _ in range(5))
     return fn
+
+
+@pytest.fixture
+def sampled_predictions():
+    return np.random.randn(100, 10, 20)
