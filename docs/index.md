@@ -17,7 +17,7 @@ in order to maximize the efficiency of labelling during active learning. Our lib
 To know more on what is Bayesian active learning, see our [User guide](user_guide/index.md).
 
 We are a member of Pytorch's ecosystem, and we welcome contributions from the community.
-If you have any question, we are reachable on [Gitter](https://gitter.im/eai-baal/community#).
+If you have any question, we are reachable on [Slack](https://join.slack.com/t/baal-world/shared_invite/zt-z0izhn4y-Jt6Zu5dZaV2rsAS9sdISfg).
 
 ## Support
 
