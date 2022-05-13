@@ -42,7 +42,7 @@ class StochasticHeuristic(AbstractHeuristic):
         # Create the distribution to sample from.
         distributions = self._make_distribution(scores)
         # Force normalization for np.random.choice
-        distributions = np.clip(distributions, 0)
+        distributions = np.clip(distributions, 0, None)
         distributions /= distributions.sum()
 
         # TODO Seed?
