@@ -2,8 +2,8 @@
   <img height=15% width=25% src="https://github.com/ElementAI/baal/blob/master/docs/_static/images/logo-transparent.png?raw=true">
   <h1 align="center">Bayesian Active Learning (BaaL)
    <br>
-  <a href="https://circleci.com/gh/ElementAI/baal">
-    <img alt="CircleCI" src="https://circleci.com/gh/ElementAI/baal.svg?style=svg&circle-token=aa12d3134798ff2bf8a49cebe3c855b96a776df1"/>
+  <a href="https://github.com/baal-org/baal/actions/workflows/pythonci.yml">
+    <img alt="Python CI" src="https://github.com/baal-org/baal/actions/workflows/pythonci.yml/badge.svg"/>
   </a>
   <a href="https://baal.readthedocs.io/en/latest/?badge=latest">
     <img alt="Documentation Status" src="https://readthedocs.org/projects/baal/badge/?version=latest"/>
