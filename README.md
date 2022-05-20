@@ -56,7 +56,7 @@ To use BaaL with [HuggingFace](https://huggingface.co/) Trainers : `pip install 
 * [Can Active Learning Preemptively Mitigate Fairness Issues?
 ](https://arxiv.org/pdf/2104.06879.pdf) (Branchaud-Charron et al. 2021)
 * [Active learning with MaskAL reduces annotation effort for training Mask R-CNN](https://arxiv.org/abs/2112.06586) (Blok et al. 2021)
-
+* [Stochastic Batch Acquisition for Deep Active Learning](https://arxiv.org/abs/2106.12059) (Kirsch et al. 2022)
 
 # What is active learning?
 Active learning is a special case of machine learning in which a learning
