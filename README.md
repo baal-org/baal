@@ -145,7 +145,7 @@ To contribute, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 "There is passion, yet peace; serenity, yet emotion; chaos, yet order."
 
-The Baa; team tests and implements the most recent papers on uncertainty estimation and active learning.
+The Baal team tests and implements the most recent papers on uncertainty estimation and active learning.
 
 Current maintainers:
 
