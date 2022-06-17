@@ -10,7 +10,7 @@
 <!-- Place this tag where you want the button to render. -->
 <a class="github-button" href="https://github.com/ElementAI/baal" data-size="large" data-show-count="true" aria-label="Star ElementAI/baal on GitHub">Star</a>
 
-BaaL is a Bayesian active learning library.
+Baal is a Bayesian active learning library.
 We provide methods to estimate sampling from the posterior distribution
 in order to maximize the efficiency of labelling during active learning. Our library is suitable for research and industrial applications.
 
@@ -29,7 +29,7 @@ For support, we have several ways to help you:
 
 ```eval_rst
 .. toctree::
-    :caption: Learn more about BaaL
+    :caption: Learn more about Baal
     :maxdepth: 1
 
     User guide <user_guide/index>
@@ -42,7 +42,7 @@ For support, we have several ways to help you:
     :caption: Tutorials
     :maxdepth: 1
     
-    How to use BaaL with Label Studio <tutorials/label-studio.md>
+    How to use Baal with Label Studio <tutorials/label-studio.md>
     How to do research and plot progress <notebooks/active_learning_process.ipynb>
     How to use in production <notebooks/baal_prod_cls.ipynb>
     How to use deep ensembles <notebooks/deep_ensemble.ipynb>
