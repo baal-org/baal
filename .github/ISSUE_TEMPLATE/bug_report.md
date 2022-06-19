@@ -15,7 +15,7 @@ A clear and concise description of what the bug is.
 Some advices:
 * Please don't use custom data or custom paths.
 * Use random arrays or even np.ones, np.zeros.
-* The example should run with BaaL (and deps) alone.
+* The example should run with Baal (and deps) alone.
 * Should be Python3 compatible.
 * Should not be OS specific.
 * The file should reproduce the bug with **high* fidelity.
@@ -29,7 +29,7 @@ A clear and concise description of what you expected to happen.
 **Vesion (please complete the following information):**
  - OS:
  - Python: 
- - BaaL version:
+ - Baal version:
 
 **Additional context**
 Add any other context about the problem here.

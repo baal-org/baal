@@ -1,4 +1,4 @@
-## How can you contribute to BaaL.
+## How can you contribute to Baal.
 
 ### Bug fixes
 

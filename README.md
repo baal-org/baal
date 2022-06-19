@@ -1,6 +1,6 @@
 <p align="center">
   <img height=15% width=25% src="https://github.com/ElementAI/baal/blob/master/docs/_static/images/logo-transparent.png?raw=true">
-  <h1 align="center">Bayesian Active Learning (BaaL)
+  <h1 align="center">Bayesian Active Learning (Baal)
    <br>
   <a href="https://github.com/baal-org/baal/actions/workflows/pythonci.yml">
     <img alt="Python CI" src="https://github.com/baal-org/baal/actions/workflows/pythonci.yml/badge.svg"/>
@@ -21,7 +21,7 @@
 </p>
 
 
-BaaL is an active learning library developed at
+Baal is an active learning library developed at
 [ElementAI](https://www.elementai.com/). This repository contains techniques
 and reusable components to make active learning accessible for all.
 
@@ -88,7 +88,7 @@ The framework consists of four main parts, as demonstrated in the flowchart belo
 - ActiveLearningLoop
 
 <p align="center">
-  <img src="./docs/literature/images/Baalscheme.svg">
+  <img src="docs/research/literature/images/Baalscheme.svg">
 </p>
 
 To get started, wrap your dataset in our _[**ActiveLearningDataset**](baal/active/dataset.py)_ class. This will ensure that the dataset is split into

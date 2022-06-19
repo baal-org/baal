@@ -1,0 +1,50 @@
+site_name: Baal Documentation
+repo_url: https://github.com/baal-org/baal
+edit_uri: edit/master/docs/
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.instant
+  icon:
+    repo: fontawesome/brands/github
+plugins:
+  - search
+
+markdown_extensions:
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - User Guide:
+      - user_guide/index.md
+  - API:
+      - api/index.md
+  - Production:
+      - industry/index.md
+  - Research:
+      - research/index.md
+  - Blog:
+      - blog/index.md
+  - Support:
+      - support/index.md

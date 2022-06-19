@@ -53,7 +53,7 @@ We hope that work in this area continues so that we can better understand the im
 
 **Resources**
     
-* [Literature review](../literature/index.md)
+* [Literature review](../research/literature/index.md)
 * [Active learning dataset and training loop classes](../notebooks/fundamentals/active-learning)
 * [Methods for approximating bayesian posteriors](../notebooks/fundamentals/posteriors)
 * [Full active learning example](../notebooks/active_learning_process)

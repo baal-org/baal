@@ -1,16 +1,6 @@
-```eval_rst
-.. baal documentation master file, created by
-   sphinx-quickstart on Thu Apr  4 14:15:25 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-```
+# Welcome to Baal (**ba**yesian **a**ctive **l**earning)
 
-# Welcome to the documentation for baal (**ba**yesian **a**ctive **l**earning)
-
-<!-- Place this tag where you want the button to render. -->
-<a class="github-button" href="https://github.com/ElementAI/baal" data-size="large" data-show-count="true" aria-label="Star ElementAI/baal on GitHub">Star</a>
-
-BaaL is a Bayesian active learning library.
+Baal is a Bayesian active learning library.
 We provide methods to estimate sampling from the posterior distribution
 in order to maximize the efficiency of labelling during active learning. Our library is suitable for research and industrial applications.
 
@@ -23,20 +13,20 @@ If you have any question, we are reachable on [Slack](https://join.slack.com/t/b
 
 For support, we have several ways to help you:
 
-* Our [FAQ](faq.md)
+* Our [FAQ](support/faq.md)
 * Submit an issue on Github [here](https://github.com/ElementAI/baal/issues/new/choose)
 * Join our [Slack](https://join.slack.com/t/baal-world/shared_invite/zt-z0izhn4y-Jt6Zu5dZaV2rsAS9sdISfg)!
 
-```eval_rst
-.. toctree::
-    :caption: Learn more about BaaL
-    :maxdepth: 1
+## :material-file-tree: Learn more about Baal
 
-    User guide <user_guide/index>
-    Active learning dataset and training loop classes <notebooks/fundamentals/active-learning.ipynb>
-    Methods for approximating bayesian posteriors <notebooks/fundamentals/posteriors.ipynb>
-    API Index <api/index>
-    FAQ <faq>
+* [:material-link: User Guide](user_guide)
+* [:material-book-education: Active learning dataset and training loop classes](notebooks/fundamentals/active-learning.ipynb)
+* [:material-book-education: Methods for approximating bayesian posteriors](notebooks/fundamentals/posteriors.ipynb)
+* [:material-link: API Index](api)
+* [:material-help: FAQ](support/faq.md)
+
+## :material-file-tree: Industry
+* [:material-book-education: Active learning dataset and training loop classes](notebooks/fundamentals/active-learning.ipynb)
 
 .. toctree ::
     :caption: Tutorials
@@ -69,11 +59,4 @@ For support, we have several ways to help you:
 
     Background literature <literature/index>
     Cheat Sheet <user_guide/baal_cheatsheet>
-```
-   
-## Indices and tables
-
-```eval_rst
-* :ref:`genindex`
-* :ref:`search`
 ```

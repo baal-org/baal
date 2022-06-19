@@ -14,7 +14,7 @@ documentation = "https://baal.readthedocs.io"
 repository = "https://github.com/ElementAI/baal/"
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.10"
+python = ">=3.7.1,<4"
 torch = ">=1.6.0"
 h5py = "^3.4.0"
 numpy = "^1.21.2"
@@ -40,24 +40,17 @@ hypothesis = "4.24.0"
 flake8 = "^3.9.2"
 pytest-mock = "^3.6.1"
 black = "^21.8b0"
-
-# Documentation
-Sphinx = ">2"
-sphinx-rtd-theme = "^0.5.2"
-asteroid-sphinx-theme = "^0.0.3"
-jupyter-sphinx = "^0.3.2"
-Pygments = ">=2.6.1"
-nbsphinx = "^0.8.7"
-sphinx-automodapi = "^0.13"
-sphinx-copybutton = "^0.4.0"
-numpydoc = "^1.1.0"
-docutils = "0.16"
-recommonmark = "^0.7.1"
 mypy = "^0.910"
 bandit = "^1.7.1"
 
+# Documentation
+docutils = "0.16"
+
+
 # Lightning
 lightning-flash = {git = "https://github.com/PyTorchLightning/lightning-flash.git", extras = ["image"]}
+mkdocs-jupyter = "^0.21.0"
+mkdocs-material = "^8.3.6"
 
 [tool.poetry.extras]
 vision = ["torchvision"]
