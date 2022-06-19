@@ -39,7 +39,7 @@ For a quick introduction to Baal and Bayesian active learning, please see these 
 
 ## Installation and requirements
 
-Baal requires `Python>=3.6`.
+Baal requires `Python>=3.7`.
 
 To install Baal using pip: `pip install baal`
 To install Baal from source: `poetry install`
