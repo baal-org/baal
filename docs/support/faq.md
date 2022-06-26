@@ -103,11 +103,11 @@ al_dataset.label_randomly(10)
 pool = al_dataset.pool
 ```
 
-From a rigorous point of view: ``$`D = ds `$`` , ``$`D_L=al\_dataset `$`` and ``$`D_U = D \setminus D_L = pool `$``.
-Then, we train our model on ``$`D_L `$`` and compute the uncertainty on ``$`D_U `$``. The most uncertains samples are
-labelled and added to ``$`D_L `$``, removed from ``$`D_U `$``.
+From a rigorous point of view: $D = ds $ , $D_L=al\_dataset $ and $D_U = D \setminus D_L = pool $.
+Then, we train our model on $D_L $ and compute the uncertainty on $D_U $. The most uncertains samples are
+labelled and added to $D_L $, removed from $D_U $.
 
-Let a method `query_human` performs the annotations, we can label our dataset using indices relative to``$`D_U `$``.
+Let a method `query_human` performs the annotations, we can label our dataset using indices relative to$D_U $.
 This assumes that your dataset class `YourDataset` has a method named `label` which has the following
 definition: `def label(self, idx, value)` where we give the label for index `idx`. There the index is not relative to
 the pool, so you don't have to worry about it.

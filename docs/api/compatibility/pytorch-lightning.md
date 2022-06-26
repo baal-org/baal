@@ -1,12 +1,10 @@
 ## Pytorch Lightning Compatibility
 
- ```eval_rst
-.. autoclass:: baal.utils.pytorch_lightning.ResetCallback
-    :members: on_train_start
+**baal.utils.pytorch_lightning.ResetCallback**
+::: baal.utils.pytorch_lightning.ResetCallback
 
-.. autoclass:: baal.utils.pytorch_lightning.BaalTrainer
-    :members: predict_on_dataset, predict_on_dataset_generator
+**baal.utils.pytorch_lightning.BaalTrainer**
+::: baal.utils.pytorch_lightning.BaalTrainer
 
-.. autoclass:: baal.utils.pytorch_lightning.BaaLDataModule
-    :members: pool_dataloader
-```
+**baal.utils.pytorch_lightning.BaaLDataModule**
+::: baal.utils.pytorch_lightning.BaaLDataModule

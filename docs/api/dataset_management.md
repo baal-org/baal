@@ -36,13 +36,11 @@ assert al_dataset.pool.transform is None
 
 ### API
 
-```eval_rst
-.. autoclass:: baal.active.ActiveLearningDataset
-    :members:
+### baal.active.ActiveLearningDataset
+::: baal.active.ActiveLearningDataset
 
-.. autoclass:: baal.active.ActiveLearningLoop
-    :members:
+### baal.active.ActiveLearningLoop
+::: baal.active.ActiveLearningLoop
 
-.. autoclass:: baal.active.FileDataset
-    :members:
-```
+### baal.active.FileDataset
+::: baal.active.FileDataset

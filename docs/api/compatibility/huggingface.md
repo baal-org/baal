@@ -1,10 +1,7 @@
 ## HuggingFace Compatibility
 
- ```eval_rst
-.. autoclass:: baal.transformers_trainer_wrapper.BaalTransformersTrainer
-    :members: predict_on_dataset, predict_on_dataset_generator
+**baal.transformers_trainer_wrapper.BaalTransformersTrainer**
+::: baal.transformers_trainer_wrapper.BaalTransformersTrainer
 
-.. autoclass:: baal.active.nlp_datasets.HuggingFaceDatasets
-    :members:
-
-```
+**baal.active.dataset.nlp_datasets.HuggingFaceDatasets**
+::: baal.active.dataset.nlp_datasets.HuggingFaceDatasets

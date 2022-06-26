@@ -6,16 +6,16 @@
 
 This paper presents a novel Coreset algorithm called *Light Coreset*. 
 
-Let ``$`X`$`` be the dataset, ``$`d`$`` a distance function and ``$`\mu(X)`$`` the mean of the dataset per feature.
+Let $X$ be the dataset, $d$ a distance function and $\mu(X)$ the mean of the dataset per feature.
 
-We compute the distribution ``$`q`$``with:
+We compute the distribution $q$with:
 
-``$`q(x) = 0.5 * \frac{1}{\vert X  \vert} + 0.5 * \frac{d(x, \mu(X))^2}{\sum_{x' \in X} d(x', \mu(X))^2}`$``,
-where ``$`x \in X`$``. 
+$q(x) = 0.5 * \frac{1}{\vert X  \vert} + 0.5 * \frac{d(x, \mu(X))^2}{\sum_{x' \in X} d(x', \mu(X))^2}$,
+where $x \in X$. 
 
-We can then select ``$`m`$`` samples by sampling from this distribution. For their experiments, they used the L2 distance for *d*.
+We can then select $m$ samples by sampling from this distribution. For their experiments, they used the L2 distance for *d*.
 
-Let A be the first part of the equation ``$`q`$`` and B the second. The authors offers the following explanation :
+Let A be the first part of the equation $q$ and B the second. The authors offers the following explanation :
 
 >The first component (A) is the uniform distribution and ensures
 that all points are sampled with nonzero probability. The second

@@ -43,6 +43,17 @@ python-versions = ">=3.6"
 frozenlist = ">=1.1.0"
 
 [[package]]
+name = "astunparse"
+version = "1.6.3"
+description = "An AST unparser for Python"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+six = ">=1.6.1,<2.0"
+
+[[package]]
 name = "async-timeout"
 version = "4.0.2"
 description = "Timeout context manager for asyncio programs"
@@ -486,6 +497,20 @@ requests-oauthlib = ">=0.7.0"
 tool = ["click (>=6.0.0)"]
 
 [[package]]
+name = "griffe"
+version = "0.21.0"
+description = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+cached-property = {version = "*", markers = "python_version < \"3.8\""}
+
+[package.extras]
+async = ["aiofiles (>=0.7,<1.0)"]
+
+[[package]]
 name = "grpcio"
 version = "1.43.0"
 description = "HTTP/2-based RPC framework"
@@ -638,7 +663,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "jsonargparse"
-version = "4.9.0"
+version = "4.10.0"
 description = "Parsing of command line options, yaml/jsonnet config files and/or environment variables based on argparse."
 category = "dev"
 optional = false
@@ -649,9 +674,8 @@ docstring-parser = {version = ">=0.7.3", optional = true, markers = "extra == \"
 PyYAML = ">=3.13"
 
 [package.extras]
-all = ["docstring-parser (>=0.7.3)", "jsonschema (>=3.2.0)", "jsonnet (>=0.13.0)", "validators (>=0.14.2)", "requests (>=2.18.4)", "fsspec (>=0.8.4)", "argcomplete (>=2.0.0)", "ruyaml (>=0.20.0)", "omegaconf (>=2.1.1)", "reconplogger (>=4.4.0)", "typing-extensions (>=3.10.0.0)", "dataclasses (>=0.8)"]
+all = ["docstring-parser (>=0.7.3)", "jsonschema (>=3.2.0)", "jsonnet (>=0.13.0)", "validators (>=0.14.2)", "requests (>=2.18.4)", "fsspec (>=0.8.4)", "argcomplete (>=2.0.0)", "ruyaml (>=0.20.0)", "omegaconf (>=2.1.1)", "reconplogger (>=4.4.0)", "typing-extensions (>=3.10.0.0)"]
 argcomplete = ["argcomplete (>=2.0.0)"]
-dataclasses = ["dataclasses (>=0.8)"]
 dev = ["coverage (>=4.5.1)", "responses (>=0.12.0)", "Sphinx (>=1.7.9)", "sphinx-rtd-theme (>=0.4.3)", "autodocsumm (>=0.1.10)", "sphinx-autodoc-typehints (>=1.11.1)", "pre-commit (>=2.19.0)", "pylint (>=1.8.3)", "pycodestyle (>=2.5.0)", "mypy (>=0.701)", "tox (>=3.25.0)"]
 doc = ["Sphinx (>=1.7.9)", "sphinx-rtd-theme (>=0.4.3)", "autodocsumm (>=0.1.10)", "sphinx-autodoc-typehints (>=1.11.1)"]
 fsspec = ["fsspec (>=0.8.4)"]
@@ -979,6 +1003,18 @@ watchdog = ">=2.0"
 i18n = ["babel (>=2.9.0)"]
 
 [[package]]
+name = "mkdocs-autorefs"
+version = "0.4.1"
+description = "Automatically link across pages in MkDocs."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+Markdown = ">=3.3"
+mkdocs = ">=1.1"
+
+[[package]]
 name = "mkdocs-jupyter"
 version = "0.21.0"
 description = "Use Jupyter in mkdocs websites"
@@ -1016,6 +1052,53 @@ description = "Extension pack for Python Markdown."
 category = "dev"
 optional = false
 python-versions = ">=3.6"
+
+[[package]]
+name = "mkdocstrings"
+version = "0.18.1"
+description = "Automatic documentation from sources, for MkDocs."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+Jinja2 = ">=2.11.1"
+Markdown = ">=3.3"
+MarkupSafe = ">=1.1"
+mkdocs = ">=1.2"
+mkdocs-autorefs = ">=0.3.1"
+mkdocstrings-python = {version = ">=0.5.2", optional = true, markers = "extra == \"python\""}
+mkdocstrings-python-legacy = ">=0.2"
+pymdown-extensions = ">=6.3"
+
+[package.extras]
+crystal = ["mkdocstrings-crystal (>=0.3.4)"]
+python = ["mkdocstrings-python (>=0.5.2)"]
+python-legacy = ["mkdocstrings-python-legacy (>=0.2.1)"]
+
+[[package]]
+name = "mkdocstrings-python"
+version = "0.6.6"
+description = "A Python handler for mkdocstrings."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+griffe = ">=0.11.1"
+mkdocstrings = ">=0.18"
+
+[[package]]
+name = "mkdocstrings-python-legacy"
+version = "0.2.2"
+description = "A legacy Python handler for mkdocstrings."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+mkdocstrings = ">=0.18"
+pytkdocs = ">=0.14"
 
 [[package]]
 name = "multidict"
@@ -1465,6 +1548,22 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 
 [package.dependencies]
 six = ">=1.5"
+
+[[package]]
+name = "pytkdocs"
+version = "0.16.1"
+description = "Load Python objects documentation."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+astunparse = {version = ">=1.6", markers = "python_version < \"3.9\""}
+cached-property = {version = ">=1.5", markers = "python_version < \"3.8\""}
+typing-extensions = {version = ">=3.7", markers = "python_version < \"3.8\""}
+
+[package.extras]
+numpy-style = ["docstring_parser (>=0.7)"]
 
 [[package]]
 name = "pytorch-lightning"
@@ -2067,7 +2166,7 @@ vision = ["torchvision"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1,<4"
-content-hash = "3cbd5faf3ba5cc490829f3baf57a1758df1562e395f7800edb6878397bf46471"
+content-hash = "8b209ee7cb8ac2fea451b849155766636f927f01e1a33399cedf3634bed5edfd"
 
 [metadata.files]
 absl-py = [
@@ -2151,6 +2250,10 @@ aiohttp = [
 aiosignal = [
     {file = "aiosignal-1.2.0-py3-none-any.whl", hash = "sha256:26e62109036cd181df6e6ad646f91f0dcfd05fe16d0cb924138ff2ab75d64e3a"},
     {file = "aiosignal-1.2.0.tar.gz", hash = "sha256:78ed67db6c7b7ced4f98e495e572106d5c432a93e1ddd1bf475e1dc05f5b7df2"},
+]
+astunparse = [
+    {file = "astunparse-1.6.3-py2.py3-none-any.whl", hash = "sha256:c2652417f2c8b5bb325c885ae329bdf3f86424075c4fd1a128674bc6fba4b8e8"},
+    {file = "astunparse-1.6.3.tar.gz", hash = "sha256:5ad93a8456f0d084c3456d059fd9a92cce667963232cbf763eac3bc5b7940872"},
 ]
 async-timeout = [
     {file = "async-timeout-4.0.2.tar.gz", hash = "sha256:2163e1640ddb52b7a8c80d0a67a08587e5d245cc9c553a74a847056bc2976b15"},
@@ -2448,6 +2551,10 @@ google-auth-oauthlib = [
     {file = "google-auth-oauthlib-0.4.6.tar.gz", hash = "sha256:a90a072f6993f2c327067bf65270046384cda5a8ecb20b94ea9a687f1f233a7a"},
     {file = "google_auth_oauthlib-0.4.6-py2.py3-none-any.whl", hash = "sha256:3f2a6e802eebbb6fb736a370fbf3b055edcb6b52878bf2f26330b5e041316c73"},
 ]
+griffe = [
+    {file = "griffe-0.21.0-py3-none-any.whl", hash = "sha256:e9fb5eeb7c721e1d84804452bdc742bd57b120b13aba663157668ae2d217088a"},
+    {file = "griffe-0.21.0.tar.gz", hash = "sha256:61ab3bc02b09afeb489f1aef44c646a09f1837d9cdf15943ac6021903a4d3984"},
+]
 grpcio = [
     {file = "grpcio-1.43.0-cp310-cp310-linux_armv7l.whl", hash = "sha256:a4e786a8ee8b30b25d70ee52cda6d1dbba2a8ca2f1208d8e20ed8280774f15c8"},
     {file = "grpcio-1.43.0-cp310-cp310-macosx_10_10_universal2.whl", hash = "sha256:af9c3742f6c13575c0d4147a8454da0ff5308c4d9469462ff18402c6416942fe"},
@@ -2550,8 +2657,8 @@ joblib = [
     {file = "joblib-1.1.0.tar.gz", hash = "sha256:4158fcecd13733f8be669be0683b96ebdbbd38d23559f54dca7205aea1bf1e35"},
 ]
 jsonargparse = [
-    {file = "jsonargparse-4.9.0-py3-none-any.whl", hash = "sha256:aecd494346c251dd34372239b9bafe46fc7d760f07dc548d6aac58176cf3fce2"},
-    {file = "jsonargparse-4.9.0.tar.gz", hash = "sha256:4a2f4194796eb5d1a36179efdfc7e6bc383d9757b977192b4b2a6ea39d04b69d"},
+    {file = "jsonargparse-4.10.0-py3-none-any.whl", hash = "sha256:8042b5caa09b742fd963870f99050d43adee6668cd164ab437c419396564e45d"},
+    {file = "jsonargparse-4.10.0.tar.gz", hash = "sha256:db8d7adb3402c2269fa8b59e6f6a85d071bed0d0b6edea8cba23cf0ac19073f3"},
 ]
 jsonschema = [
     {file = "jsonschema-4.3.3-py3-none-any.whl", hash = "sha256:eb7a69801beb7325653aa8fd373abbf9ff8f85b536ab2812e5e8287b522fb6a2"},
@@ -2753,6 +2860,10 @@ mkdocs = [
     {file = "mkdocs-1.3.0-py3-none-any.whl", hash = "sha256:26bd2b03d739ac57a3e6eed0b7bcc86168703b719c27b99ad6ca91dc439aacde"},
     {file = "mkdocs-1.3.0.tar.gz", hash = "sha256:b504405b04da38795fec9b2e5e28f6aa3a73bb0960cb6d5d27ead28952bd35ea"},
 ]
+mkdocs-autorefs = [
+    {file = "mkdocs-autorefs-0.4.1.tar.gz", hash = "sha256:70748a7bd025f9ecd6d6feeba8ba63f8e891a1af55f48e366d6d6e78493aba84"},
+    {file = "mkdocs_autorefs-0.4.1-py3-none-any.whl", hash = "sha256:a2248a9501b29dc0cc8ba4c09f4f47ff121945f6ce33d760f145d6f89d313f5b"},
+]
 mkdocs-jupyter = [
     {file = "mkdocs-jupyter-0.21.0.tar.gz", hash = "sha256:c8c00ce44456e3cf50c5dc3fe0cb18fab6467fb5bafc2c0bfe1efff3e0a52470"},
 ]
@@ -2763,6 +2874,18 @@ mkdocs-material = [
 mkdocs-material-extensions = [
     {file = "mkdocs-material-extensions-1.0.3.tar.gz", hash = "sha256:bfd24dfdef7b41c312ede42648f9eb83476ea168ec163b613f9abd12bbfddba2"},
     {file = "mkdocs_material_extensions-1.0.3-py3-none-any.whl", hash = "sha256:a82b70e533ce060b2a5d9eb2bc2e1be201cf61f901f93704b4acf6e3d5983a44"},
+]
+mkdocstrings = [
+    {file = "mkdocstrings-0.18.1-py3-none-any.whl", hash = "sha256:4053929356df8cd69ed32eef71d8f676a472ef72980c9ffd4f933ead1debcdad"},
+    {file = "mkdocstrings-0.18.1.tar.gz", hash = "sha256:fb7c91ce7e3ab70488d3fa6c073a4f827cdc319042f682ef8ea95459790d64fc"},
+]
+mkdocstrings-python = [
+    {file = "mkdocstrings-python-0.6.6.tar.gz", hash = "sha256:37281696b9f199624ae420e0625b6659b7fdfbea736618bce7fd978682dea3b1"},
+    {file = "mkdocstrings_python-0.6.6-py3-none-any.whl", hash = "sha256:c118438d3cb4b14c492a51d109f4e5b27ab06ba19b099d624430dfd904926152"},
+]
+mkdocstrings-python-legacy = [
+    {file = "mkdocstrings-python-legacy-0.2.2.tar.gz", hash = "sha256:f0e7ec6a19750581b752acb38f6b32fcd1efe006f14f6703125d2c2c9a5c6f02"},
+    {file = "mkdocstrings_python_legacy-0.2.2-py3-none-any.whl", hash = "sha256:379107a3a5b8db9b462efc4493c122efe21e825e3702425dbd404621302a563a"},
 ]
 multidict = [
     {file = "multidict-5.2.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3822c5894c72e3b35aae9909bef66ec83e44522faf767c0ad39e0e2de11d3b55"},
@@ -3193,6 +3316,10 @@ pytest-mock = [
 python-dateutil = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
+]
+pytkdocs = [
+    {file = "pytkdocs-0.16.1-py3-none-any.whl", hash = "sha256:a8c3f46ecef0b92864cc598e9101e9c4cf832ebbf228f50c84aa5dd850aac379"},
+    {file = "pytkdocs-0.16.1.tar.gz", hash = "sha256:e2ccf6dfe9dbbceb09818673f040f1a7c32ed0bffb2d709b06be6453c4026045"},
 ]
 pytorch-lightning = [
     {file = "pytorch-lightning-1.5.8.tar.gz", hash = "sha256:57e7c9ea3663e5d8416be6a340d3a8d9271eb105fba82b7f7497cf0299880939"},

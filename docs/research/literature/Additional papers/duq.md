@@ -17,22 +17,22 @@ DUQ uses a RBF Network to compute centroids for each class. The model is trained
  
 For a model f, a centroid matrix W and a centroid e, we compute the similarity using a RBF kernel. Theta is a hyper parameter.
 
-``$`K_c(f_\theta, e_c) = exp(-\frac{\frac{1}{n}\mid \mid W_cf_\theta(x) - e_c\mid\mid^2_2}{2\sigma^2})`$``
+$K_c(f_\theta, e_c) = exp(-\frac{\frac{1}{n}\mid \mid W_cf_\theta(x) - e_c\mid\mid^2_2}{2\sigma^2})$
 
 with this similarity we can make a prediction by selecting the centroid with the highest similarity.
 
 The loss function is now simply
 
-``$`L(x,y) = - \sum_c y_clog(K_c) + (1 - y_c)log(1-K_c)`$``,
+$L(x,y) = - \sum_c y_clog(K_c) + (1 - y_c)log(1-K_c)$,
 
-where ``$`K_c(f_\theta, e_c)=K_c`$``
+where $K_c(f_\theta, e_c)=K_c$
 
 After each batch, we update the centroid matrix using an exponential moving average.
 
 ### Regularization
 
-To avoid feature collapse, the authors introduce a gradient penalty directly applied to ``$`K_c`$``: 
-``$`\lambda* (\mid\mid \nabla_x \sum_c K_c\mid\mid^2_2 - 1)^2`$``
-where 1 is the Lipschitz constant. In their experiments, they use ``$`\lambda=0.05`$``.
+To avoid feature collapse, the authors introduce a gradient penalty directly applied to $K_c$: 
+$\lambda* (\mid\mid \nabla_x \sum_c K_c\mid\mid^2_2 - 1)^2$
+where 1 is the Lipschitz constant. In their experiments, they use $\lambda=0.05$.
 
 In summary, this simple technique is faster and better than ensembles. It also shows that RBF networks work on large datasets.
