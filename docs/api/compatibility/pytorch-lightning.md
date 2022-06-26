@@ -7,6 +7,6 @@
 .. autoclass:: baal.utils.pytorch_lightning.BaalTrainer
     :members: predict_on_dataset, predict_on_dataset_generator
 
-.. autoclass:: baal.utils.pytorch_lightning.BaalDataModule
+.. autoclass:: baal.utils.pytorch_lightning.BaaLDataModule
     :members: pool_dataloader
 ```
