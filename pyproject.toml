@@ -27,6 +27,7 @@ scipy = "^1.7.1"
 
 # Vision
 torchvision = { version = ">=0.7.0", optional=true }
+lightning-flash = { version = "^0.7.5", optional=true }
 
 # NLP
 transformers = {version = "^4.10.2", optional=true}
@@ -56,11 +57,9 @@ recommonmark = "^0.7.1"
 mypy = "^0.910"
 bandit = "^1.7.1"
 
-# Lightning
-lightning-flash = {git = "https://github.com/PyTorchLightning/lightning-flash.git", extras = ["image"]}
 
 [tool.poetry.extras]
-vision = ["torchvision"]
+vision = ["torchvision", "lightning-flash"]
 nlp = ["transformers", "datasets"]
 
 [build-system]
