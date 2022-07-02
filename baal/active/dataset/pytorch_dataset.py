@@ -5,9 +5,8 @@ from typing import Union, Optional, Callable, Any, Dict, List
 
 import numpy as np
 import torch.utils.data as torchdata
-from sklearn.utils import check_random_state
 
-from baal.active.dataset.base import SplittedDataset
+from baal.active.dataset.base import SplittedDataset, Dataset
 
 
 def _identity(x):
@@ -33,7 +32,7 @@ class ActiveLearningDataset(SplittedDataset):
 
     def __init__(
         self,
-        dataset: torchdata.Dataset,
+        dataset: Dataset,
         labelled: Optional[np.ndarray] = None,
         make_unlabelled: Callable = _identity,
         random_state=None,
@@ -70,9 +69,9 @@ class ActiveLearningDataset(SplittedDataset):
             with definition: `label(self, idx, value)` where `value`
             is the label for indice `idx`.
         """
-        has_label_attr = hasattr(self._dataset, "label")
+        has_label_attr = getattr(self._dataset, "label", None)
         if has_label_attr:
-            if callable(self._dataset.label):
+            if callable(has_label_attr):
                 return True
             else:
                 warnings.warn(
@@ -109,22 +108,22 @@ class ActiveLearningDataset(SplittedDataset):
         return self.ActiveIter(self)
 
     @property
-    def pool(self) -> torchdata.Dataset:
+    def pool(self) -> "ActiveLearningPool":
         """Returns a new Dataset made from unlabelled samples.
 
         Raises:
             ValueError if a pool specific attribute cannot be set.
         """
-        pool_dataset = deepcopy(self._dataset)
+        current_dataset = deepcopy(self._dataset)
 
         for attr, new_val in self.pool_specifics.items():
-            if hasattr(pool_dataset, attr):
-                setattr(pool_dataset, attr, new_val)
+            if hasattr(current_dataset, attr):
+                setattr(current_dataset, attr, new_val)
             else:
-                raise ValueError(f"{pool_dataset} doesn't have {attr}")
+                raise ValueError(f"{current_dataset} doesn't have {attr}")
 
-        pool_dataset = torchdata.Subset(
-            pool_dataset, (~self.labelled).nonzero()[0].reshape([-1]).tolist()
+        pool_dataset: torchdata.Subset = torchdata.Subset(
+            current_dataset, (~self.labelled).nonzero()[0].reshape([-1]).tolist()
         )
         ald = ActiveLearningPool(pool_dataset, make_unlabelled=self.make_unlabelled)
         return ald
@@ -163,7 +162,7 @@ class ActiveLearningDataset(SplittedDataset):
         active_step = self.current_al_step + 1
         for idx, val in zip_longest(indexes, value_lst, fillvalue=None):
             if self.can_label and val is not None:
-                self._dataset.label(idx, val)
+                self._dataset.label(idx, val)  # type: ignore
                 self.labelled_map[idx] = active_step
             elif self.can_label and val is None:
                 raise ValueError(
@@ -211,8 +210,8 @@ class ActiveLearningPool(torchdata.Dataset):
 
     """
 
-    def __init__(self, dataset: torchdata.Dataset, make_unlabelled: Callable = _identity) -> None:
-        self._dataset: torchdata.Dataset = dataset
+    def __init__(self, dataset: torchdata.Subset, make_unlabelled: Callable = _identity) -> None:
+        self._dataset: torchdata.Subset = dataset
         self.make_unlabelled = make_unlabelled
 
     def __getitem__(self, index: int) -> Any:

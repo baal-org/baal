@@ -40,7 +40,7 @@ torch-hypothesis = "0.2.0"
 hypothesis = "4.24.0"
 flake8 = "^3.9.2"
 pytest-mock = "^3.6.1"
-black = "^21.8b0"
+black = "^22.6.0"
 
 # Documentation
 Sphinx = ">2"

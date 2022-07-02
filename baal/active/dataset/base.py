@@ -1,12 +1,23 @@
 import warnings
-from typing import Union, List, Optional, Any
+from typing import Union, List, Optional, Any, TYPE_CHECKING, Protocol
 
 import numpy as np
 from sklearn.utils import check_random_state
 from torch.utils import data as torchdata
 
 
-class SplittedDataset(torchdata.Dataset):
+class SizeableDataset(torchdata.Dataset):
+    def __len__(self):
+        pass
+
+
+if TYPE_CHECKING:
+    Dataset = SizeableDataset
+else:
+    Dataset = torchdata.Dataset
+
+
+class SplittedDataset(Dataset):
     """Abstract class for Dataset that can be splitted.
 
     Args:
