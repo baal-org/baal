@@ -1,13 +1,13 @@
 # Tutorials
 
 Tutorials are split in two sections, "How-to" and "Compatibility". The first one focuses on Baal's capabilities and the
-latter on how we integrate with other common frameworks such as [Label Studio], [HuggingFace] or [Lightning Flash].
+latter on how we integrate with other common frameworks such as Label Studio, HuggingFace or Lightning Flash.
 
 ## :material-file-tree: How to
 
-* Run an active learning experiments
-* Active learning in production
-* Deep Ensembles
+* [Run an active learning experiments](notebooks/active_learning_process.ipynb)
+* [Active learning in production](notebooks/baal_prod_cls.ipynb)
+* [Deep Ensembles](../notebooks/deep_ensemble.ipynb)
 
 ## :material-file-tree: Compatibility
 

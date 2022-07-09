@@ -41,6 +41,8 @@ markdown_extensions:
       emoji_generator: !!python/name:materialx.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
+  - admonition
+  - pymdownx.details
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
@@ -57,7 +59,7 @@ nav:
       - Cheat Sheet: user_guide/baal_cheatsheet.md
       - Active data structure: notebooks/fundamentals/active-learning.ipynb
       - Computing uncertainty:
-        - Stochastic models: notebooks/fundamentals/active-learning.ipynb
+        - Stochastic models: notebooks/fundamentals/posteriors.ipynb
         - Heuristics: user_guide/heuristics.md
   - API:
       - api/index.md
@@ -77,19 +79,18 @@ nav:
         - tutorials/label-studio.md
         - notebooks/compatibility/nlp_classification.ipynb
         - notebooks/compatibility/sklearn_tutorial.ipynb
-      - notebooks/baal_prod_cls.ipynb
-      - notebooks/deep_ensemble.ipynb
+      - Active learning for research: notebooks/active_learning_process.ipynb
+      - Active learning for production: notebooks/baal_prod_cls.ipynb
+      - Deep Ensembles for active learning: notebooks/deep_ensemble.ipynb
   - Research:
       - research/index.md
       - Technical Reports:
-          - notebooks/fairness/ActiveFairness.ipynb
+          - Active Fairness: notebooks/fairness/ActiveFairness.ipynb
           - research/dirichlet_calibration.md
           - research/double_descent.md
       - Literature:
         - research/literature/index.md
-        - research/literature/core-papers.md
         - Additional papers:
-          - research/literature/more_papers.md
           - research/literature/Additional papers/dmi.md
           - research/literature/Additional papers/duq.md
           - research/literature/Additional papers/gyolov3.md
