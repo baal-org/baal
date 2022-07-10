@@ -76,7 +76,9 @@ class ActiveLightningModule(LightningModule):
         # Get the input only.
         x, _ = batch
         # Perform Monte-Carlo Inference fro I iterations.
-        out = mc_inference(self, x, self.hparams.iterations, self.hparams.replicate_in_memory)
+        out = mc_inference(self, x,
+                           self.hparams.iterations,  # type: ignore
+                           self.hparams.replicate_in_memory)  # type: ignore
         return out
 
 
@@ -151,7 +153,7 @@ class BaalTrainer(Trainer):
         model = model or self.lightning_module
         model.eval()
         if isinstance(self.accelerator, GPUAccelerator):
-            model.cuda(self.accelerator.root_device)
+            model.cuda(self.strategy.root_device.index)
         dataloader = dataloader or model.pool_dataloader()
         if len(dataloader) == 0:
             return None

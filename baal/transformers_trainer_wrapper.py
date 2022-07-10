@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 # These packages are optional and not needed for BaaL main package.
 try:
-    from transformers import Trainer
+    from transformers.trainer import Trainer
 except ImportError:
     raise ImportError(
         "`transformers` library is required to use this module."

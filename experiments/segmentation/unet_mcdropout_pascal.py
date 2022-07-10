@@ -31,7 +31,7 @@ def mean_regions(n, grid_size=16):
     n = torch.from_numpy(n[:, None, ...])
     # [Batch_size, 1, grid, grid]
     out = F.adaptive_avg_pool2d(n, grid_size)
-    return np.mean(out.view([-1, grid_size ** 2]).numpy(), -1)
+    return np.mean(out.view([-1, grid_size**2]).numpy(), -1)
 
 
 def parse_args():

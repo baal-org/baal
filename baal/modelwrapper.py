@@ -7,11 +7,12 @@ import numpy as np
 import structlog
 import torch
 from torch.optim import Optimizer
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
 from tqdm import tqdm
 
 from baal.utils.array_utils import stack_in_memory
+from baal.active.dataset.base import Dataset
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
 from baal.utils.metrics import Loss
