@@ -1,4 +1,5 @@
 import argparse
+import typing
 from argparse import Namespace
 from typing import Dict
 
@@ -35,6 +36,7 @@ class SSLModule(pl.LightningModule):
         else:
             return self.unsupervised_training_step(SemiSupervisedIterator.get_batch(batch), *args)
 
+    @typing.no_type_check
     def train_dataloader(self) -> SemiSupervisedIterator:
         """SemiSupervisedIterator for train set.
 

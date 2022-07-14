@@ -142,7 +142,7 @@ def test_pl_step(monkeypatch, a_data_module, a_pl_module, hparams):
 
     assert after - before == hparams['query_size']
     # Add the lightning_module manually.
-    trainer.accelerator.connect(a_pl_module)
+    trainer.strategy.connect(a_pl_module)
 
     # Only give the model
     before = len(active_set)
