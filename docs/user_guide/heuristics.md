@@ -10,7 +10,7 @@ We will cover the two main heuristics: **Entropy** and **BALD**.
 
 The goal of this heuristic is to maximize information. To do so, we will compute the entropy of each prediction before ordering them.
 
-Let $p_c(x)$ be the probability of input $x$ to be from class $c$. The entropy can be computed as:
+Let $p_{c}(x)$ be the probability of input $x$ to be from class $c$. The entropy can be computed as:
 
 $$
 H(x) = \sum_c^C p_c(x)

@@ -27,7 +27,6 @@ theme:
   icon:
     repo: fontawesome/brands/github
 plugins:
-  - search
   - mkdocs-jupyter
   - mkdocstrings
 

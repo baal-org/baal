@@ -11,10 +11,12 @@ This is also a good way to start the conversation between your labelling team an
 We will built upon Label Studio's [Pytorch transfer learning](https://github.com/heartexlabs/label-studio-ml-backend/blob/master/label_studio_ml/examples/pytorch_transfer_learning.py) example, so be sure to download it and try to run it before adding BaaL to it. The full example can be found [here](https://gist.github.com/Dref360/288845b2fbb0504e4cfc216a76b547e7).
 
 More info:
+
 * [BaaL documentation](https://baal.readthedocs.io/en/latest/)
 * [Bayesian Deep Learning cheatsheet](https://baal.readthedocs.io/en/latest/user_guide/baal_cheatsheet.html)
 
 Support:
+
 * [Github](https://github.com/ElementAI/baal)
 * [Gitter](https://gitter.im/eai-baal/community)
 
@@ -30,7 +32,7 @@ RUN pip install --no-cache \
                 uwsgi==2.0.19.1 \
                 supervisor==4.2.2 \
                 label-studio==1.0.2 \
-                baal==1.3.0 \
+                baal \
                 click==7.1.2 \
                 git+https://github.com/heartexlabs/label-studio-ml-backend
 ```

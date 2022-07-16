@@ -49,7 +49,7 @@ docutils = "0.16"
 
 # Documentation
 mkdocs-jupyter = "^0.21.0"
-mkdocs-material = "^8.3.6"
+mkdocs-material = "^8.3.9"
 Pygments = "^2.12.0"
 mkdocstrings = {extras = ["python"], version = "^0.18.1"}
 
