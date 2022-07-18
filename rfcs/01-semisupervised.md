@@ -13,12 +13,12 @@
 
 ## Summary
 The goal of this feature is to remove the burden required to perform semi-supervised learning.
-Semi-supervised learning is widely popular in active learning and BaaL doesn't support it.
+Semi-supervised learning is widely popular in active learning and Baal doesn't support it.
 At first, we will **not** support label propagation, but it can be done in the future.
 
 ## Motivation
 
-Many papers propose to combine active learning and semi-supervised learning. Currently, it is not easy to perform SS learning with BaaL. One needs to know the internal representation of ActiveLearningDataset to do so.
+Many papers propose to combine active learning and semi-supervised learning. Currently, it is not easy to perform SS learning with Baal. One needs to know the internal representation of ActiveLearningDataset to do so.
 This RFC proposes a new API to make this easier.
 
 

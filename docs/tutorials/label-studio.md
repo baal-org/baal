@@ -1,17 +1,17 @@
-# Using BaaL with Label Studio
+# Using Baal with Label Studio
 
 *By: Frédéric Branchaud-Charron (@Dref360)*
 
-In this tutorial, we will see how to use BaaL inside of Label Studio, a widely known labelling tool.
+In this tutorial, we will see how to use Baal inside of Label Studio, a widely known labelling tool.
 
 By using Bayesian active learning in your labelling setup, you will be able to label only the most informative examples. This will avoid labelling duplicates and easy examples.
 
 This is also a good way to start the conversation between your labelling team and your machine learning team as they need to communicate early in the process!
 
-We will built upon Label Studio's [Pytorch transfer learning](https://github.com/heartexlabs/label-studio-ml-backend/blob/master/label_studio_ml/examples/pytorch_transfer_learning.py) example, so be sure to download it and try to run it before adding BaaL to it. The full example can be found [here](https://gist.github.com/Dref360/288845b2fbb0504e4cfc216a76b547e7).
+We will built upon Label Studio's [Pytorch transfer learning](https://github.com/heartexlabs/label-studio-ml-backend/blob/master/label_studio_ml/examples/pytorch_transfer_learning.py) example, so be sure to download it and try to run it before adding Baal to it. The full example can be found [here](https://gist.github.com/Dref360/288845b2fbb0504e4cfc216a76b547e7).
 
 More info:
-* [BaaL documentation](https://baal.readthedocs.io/en/latest/)
+* [Baal documentation](https://baal.readthedocs.io/en/latest/)
 * [Bayesian Deep Learning cheatsheet](https://baal.readthedocs.io/en/latest/user_guide/baal_cheatsheet.html)
 
 Support:
@@ -19,9 +19,9 @@ Support:
 * [Gitter](https://gitter.im/eai-baal/community)
 
 
-## Installing BaaL
+## Installing Baal
 
-To install BaaL, you will need to add `baal` in the [generated `Dockerfile`](https://github.com/heartexlabs/label-studio-ml-backend/blob/master/label_studio_ml/default_configs/Dockerfile).
+To install Baal, you will need to add `baal` in the [generated `Dockerfile`](https://github.com/heartexlabs/label-studio-ml-backend/blob/master/label_studio_ml/default_configs/Dockerfile).
 
 ```dockerfile
 # Dockerfile
@@ -35,7 +35,7 @@ RUN pip install --no-cache \
                 git+https://github.com/heartexlabs/label-studio-ml-backend
 ```
 
-and when developing, you should install BaaL in your local environment.
+and when developing, you should install Baal in your local environment.
 
 `pip install baal==1.3.0`
 
@@ -59,7 +59,7 @@ self.model.classifier[last_layer_idx] = nn.Linear(num_ftrs, num_classes)
 self.model = patch_module(self.model)
 ```
 
-Next, we will wrap our model using `baal.modelwrapper.ModelWrapper` from BaaL which will simplify the different loops. If you use another framework, feel free to checkout our [Pytorch Lightning integration](https://baal.readthedocs.io/en/latest/notebooks/compatibility/pytorch_lightning.html) and our [HuggingFace integration](https://baal.readthedocs.io/en/latest/notebooks/compatibility/nlp_classification.html).
+Next, we will wrap our model using `baal.modelwrapper.ModelWrapper` from Baal which will simplify the different loops. If you use another framework, feel free to checkout our [Pytorch Lightning integration](https://baal.readthedocs.io/en/latest/notebooks/compatibility/pytorch_lightning.html) and our [HuggingFace integration](https://baal.readthedocs.io/en/latest/notebooks/compatibility/nlp_classification.html).
 
 ```python
 # ImageClassifier.__init__
