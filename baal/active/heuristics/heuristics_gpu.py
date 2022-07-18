@@ -3,7 +3,7 @@ from typing import Callable, Optional, Sequence
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.utils.data import Dataset
+from baal.active.dataset.base import Dataset
 
 from baal import ModelWrapper
 
