@@ -2,9 +2,9 @@ from copy import deepcopy
 
 import structlog
 import torch
+from baal.active.dataset.base import Dataset
 from torch import nn
 from torch.optim import Adam
-from torch.utils.data import Dataset
 
 from baal import ModelWrapper
 from baal.utils.metrics import ECE, ECE_PerCLs

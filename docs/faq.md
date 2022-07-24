@@ -41,7 +41,7 @@ with MCDropoutModule(model) as mcdropout_model:
 output = model(input)
 ```
 
-### Does BaaL work on semantic segmentation?
+### Does Baal work on semantic segmentation?
 
 Yes! See the example in `experiments/segmentation/unet_mcdropout_pascal.py`.
 
@@ -52,9 +52,9 @@ provide `reduction` to the Heuristic with one of the following arguments:
 * String (one of `'max'`, `'mean'`, `'sum'`)
 * Callable, a function that will receive the uncertainty per pixel.
 
-### Does BaaL work on NLP/TS/Tabular data?
+### Does Baal work on NLP/TS/Tabular data?
 
-BaaL is not task-specific, it can be used on a variety of domains and tasks. We are working toward more examples.
+Baal is not task-specific, it can be used on a variety of domains and tasks. We are working toward more examples.
 
 Bayesian active learning has been used for Text Classification and NER
 in [(Siddhant and Lipton, 2018)](http://zacklipton.com/media/papers/1808.05697.pdf).
@@ -229,5 +229,5 @@ This will slightly increase the ECE of your model and will improve the predictiv
 Predicting on the unlabelled pool is the most time consuming part of active learning, especially in expensive tasks such
 as segmentation.
 
-Our work shows that predicting on a random subset of the pool is as effective as the full prediction. BaaL supports this
+Our work shows that predicting on a random subset of the pool is as effective as the full prediction. Baal supports this
 features throught the `max_samples` argument in `ActiveLearningPool`.

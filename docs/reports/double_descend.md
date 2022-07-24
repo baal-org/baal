@@ -123,5 +123,5 @@ learning.
 
 ### Note to our readers
 As we are excited to share our experiments and hypotheses with you, we do not claim that this report is satisfactory.
-Therefore, we would encourage our BaaL users to help us spread informations and results on this particular problem.
+Therefore, we would encourage our Baal users to help us spread informations and results on this particular problem.
 Please contact us if you make further discovery on this important question.

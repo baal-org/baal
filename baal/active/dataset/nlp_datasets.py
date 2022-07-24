@@ -2,8 +2,8 @@ from typing import List
 
 import numpy as np
 import torch
+from baal.active.dataset.base import Dataset
 from datasets import Dataset as HFDataset
-from torch.utils.data import Dataset
 
 from baal.active import ActiveLearningDataset
 

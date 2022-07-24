@@ -178,7 +178,7 @@ class PIModel(SSLModule):
     def rampdown_value(self):
         if self.current_epoch >= self.epoch - self.hparams.rampup_stop - 1:
             T = (1 / (self.epoch - self.hparams.rampup_stop - 1)) * self.current_epoch
-            return np.exp(-12.5 * T ** 2)
+            return np.exp(-12.5 * T**2)
         else:
             return 0
 
