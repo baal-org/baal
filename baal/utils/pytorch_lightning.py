@@ -76,9 +76,9 @@ class ActiveLightningModule(LightningModule):
         # Get the input only.
         x, _ = batch
         # Perform Monte-Carlo Inference fro I iterations.
-        out = mc_inference(self, x,
-                           self.hparams.iterations,  # type: ignore
-                           self.hparams.replicate_in_memory)  # type: ignore
+        out = mc_inference(
+            self, x, self.hparams.iterations, self.hparams.replicate_in_memory  # type: ignore
+        )  # type: ignore
         return out
 
 

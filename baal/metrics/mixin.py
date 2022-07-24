@@ -58,7 +58,13 @@ class MetricMixin:
         Returns:
             Dictionary with all values
         """
-        return {met_name: met.value for met_name, met in self.metrics.items() if filter in met_name}
+        metrics = {
+            met_name: met.value for met_name, met in self.metrics.items() if filter in met_name
+        }
+        if self._active_dataset_size != -1:
+            # Add dataset size if it was ever set.
+            metrics.update({"dataset_size": self._active_dataset_size})
+        return metrics
 
     def _update_metrics(self, out, target, loss, filter=""):
         """
