@@ -131,7 +131,7 @@ class ModelWrapper(MetricMixin):
             )
 
         log.info("Evaluation complete", test_loss=self.metrics["test_loss"].value)
-        self.active_step(None, self.get_metrics("train"))
+        self.active_step(None, self.get_metrics("test"))
         return self.metrics["test_loss"].value
 
     def train_and_test_on_datasets(

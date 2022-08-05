@@ -27,7 +27,17 @@ print(wrapper.get_metrics())
     'test_loss': 2.190103769302368,
     'train_accuracy': 0.3214285671710968,
     'train_loss': 2.1795670986175537}
-...
+"""
+
+# Get metrics per dataset_size (state is kept for the entire loop.
+print(wrapper.active_learning_metrics)
+"""
+>>> {200: {'dataset_size': 200,
+    'test_accuracy': 0.26038339734077454,
+    'test_loss': 2.190103769302368,
+    'train_accuracy': 0.3214285671710968,
+    'train_loss': 2.1795670986175537},
+    ...
 """
 ```
 
