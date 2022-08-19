@@ -156,7 +156,7 @@ class ModelWrapper:
         log.info("Starting evaluating", dataset=len(dataset))
         self._reset_metrics("test")
 
-        for data, target in DataLoader(
+        for data, target, *_ in DataLoader(
             dataset, batch_size, False, num_workers=workers, collate_fn=collate_fn
         ):
             _ = self.test_on_batch(
