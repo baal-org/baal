@@ -136,6 +136,17 @@ class ActiveDatasetTest(unittest.TestCase):
         with pytest.raises(ValueError) as e:
             ActiveLearningDataset(MyDataset(train_transform), pool_specifics={'whatever': 123}).pool
 
+        # Test warnings related to stochasticity of the pool.
+        with warnings.catch_warnings(record=True) as w:
+            _ = ActiveLearningDataset(MyDataset(Lambda(lambda k: np.random.rand())))
+            assert (len(w) > 0 and issubclass(w[-1].category, UserWarning)
+                    and "Data augmentation does not looks disabled" in str(w[-1].message))
+
+        with warnings.catch_warnings(record=True) as w:
+            _ = ActiveLearningDataset(MyDataset(Lambda(lambda k: np.random.rand())),
+                                      pool_specifics={'transform': test_transform})
+            assert len(w) == 0
+
     def test_random(self):
         self.dataset.label_randomly(50)
         assert len(self.dataset) == 50
