@@ -234,7 +234,7 @@ class ModelWrapper(MetricMixin):
         loader = DataLoader(dataset, batch_size, False, num_workers=workers, collate_fn=collate_fn)
         if verbose:
             loader = tqdm(loader, total=len(loader), file=sys.stdout)
-        for idx, (data, _), *_ in enumerate(loader):
+        for idx, (data, *_) in enumerate(loader):
 
             pred = self.predict_on_batch(data, iterations, use_cuda)
             pred = map_on_tensor(lambda x: x.detach(), pred)
