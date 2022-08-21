@@ -11,6 +11,23 @@ from torch import Tensor
 from baal.active.dataset.base import SplittedDataset, Dataset
 from baal.utils.equality import deep_check
 
+STOCHASTIC_POOL_WARNING = """
+Data augmentation does not looks disabled when iterating on the pool.
+You can disable it by overriding attributes using `pool_specifics` 
+when instantiating ActiveLearningDataset.
+Example:
+```
+from torchvision.transforms import *
+train_transform = Compose([Resize((224, 224)), RandomHorizontalFlip(),
+                            RandomRotation(30), ToTensor()])
+test_transform = Compose([Resize((224, 224)),ToTensor()])
+dataset = CIFAR10(..., transform=train_transform)
+
+al_dataset = ActiveLearningDataset(dataset,
+                                    pool_specifics={'transform': test_transform})
+```   
+"""
+
 
 def _identity(x):
     return x
@@ -207,19 +224,7 @@ class ActiveLearningDataset(SplittedDataset):
         pool = self.pool
         if not deep_check(pool[0], pool[0]):
             warnings.warn(
-                """Data augmentation does not looks disabled when iterating on the pool.
-                          You can disable it by overriding attributes using `pool_specifics` when instantiating ActiveLearningDataset.
-                          Example:
-                          ```
-                          from torchvision.transforms import *
-                          train_transform = Compose([Resize((224, 224)), RandomHorizontalFlip(),
-                                                     RandomRotation(30), ToTensor()])
-                          test_transform = Compose([Resize((224, 224)),ToTensor()])
-                          dataset = CIFAR10(..., transform=train_transform)
-                          
-                          al_dataset = ActiveLearningDataset(dataset, pool_specifics={'transform':test_transform})
-                          ```   
-                          """,
+                STOCHASTIC_POOL_WARNING,
                 UserWarning,
             )
 
