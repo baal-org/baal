@@ -24,7 +24,7 @@ To do so, we will use BALD
 
 ### BALD
 
-Bayesian active learning by disagrement or BALD (Houslby et al. 2013) is the basis of most modern active learning heuristics.
+Bayesian active learning by disagreement or BALD (Houslby et al. 2013) is the basis of most modern active learning heuristics.
 
 From a Bayesian model $f$, we draw $I$ predictions per sample $x$.
 

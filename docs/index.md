@@ -1,4 +1,4 @@
-# Welcome to Baal (**ba**yesian **a**ctive **l**earning)
+# Welcome to Baal (**Ba**yesian **a**ctive **l**earning)
 
 Baal is a Bayesian active learning library.
 We provide methods to estimate sampling from the posterior distribution

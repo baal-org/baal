@@ -88,9 +88,9 @@ While we have not seen improvements by using calibration on an active learning b
 By giving more nuanced predictions, the model is deemed more trustable by the human annotator. 
 
 
-### Calibration in BaaL
+### Calibration in Baal
 
-With BaaL 1.2, we add a new module based on this report. We propose new tools and methods to calibrate your model. Our first method will be a Pytorch implementation of the Dirichlet Calibration method. Here is an example:
+With Baal 1.2, we add a new module based on this report. We propose new tools and methods to calibrate your model. Our first method will be a Pytorch implementation of the Dirichlet Calibration method. Here is an example:
 
 ```python
 from baal import DirichletCalibrator

@@ -5,7 +5,7 @@ In this module, we find all the utilities to do active learning.
 1. Dataset management
 2. Active loop implementation
 
-BaaL takes care of the dataset split between labelled and unlabelled examples.
+Baal takes care of the dataset split between labelled and unlabelled examples.
 It also takes care of the active learning loop:
 
 1. Predict on the unlabelled examples.

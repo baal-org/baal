@@ -1,8 +1,8 @@
 # User guide
 
-Welcome to BaaL's user guide where we will learn on bayesian deep learning and bayesian active learning.
+Welcome to Baal's user guide where we will learn on bayesian deep learning and bayesian active learning.
 
-In addition, we propose a [cheat sheet](./baal_cheatsheet.md) that will help users translate an equation to the equivalent BaaL representation.
+In addition, we propose a [cheat sheet](./baal_cheatsheet.md) that will help users translate an equation to the equivalent Baal representation.
 
 ### Notations and glossary
 

@@ -1,3 +1,8 @@
+---
+search:
+  boost: 2
+---
+
 # Baal FAQ
 
 If you have more questions, please submit an issue, and we will include it here!
@@ -41,7 +46,7 @@ with MCDropoutModule(model) as mcdropout_model:
 output = model(input)
 ```
 
-### Does BaaL work on semantic segmentation?
+### Does Baal work on semantic segmentation?
 
 Yes! See the example in `experiments/segmentation/unet_mcdropout_pascal.py`.
 
@@ -52,9 +57,9 @@ provide `reduction` to the Heuristic with one of the following arguments:
 * String (one of `'max'`, `'mean'`, `'sum'`)
 * Callable, a function that will receive the uncertainty per pixel.
 
-### Does BaaL work on NLP/TS/Tabular data?
+### Does Baal work on NLP/TS/Tabular data?
 
-BaaL is not task-specific, it can be used on a variety of domains and tasks. We are working toward more examples.
+Baal is not task-specific, it can be used on a variety of domains and tasks. We are working toward more examples.
 
 Bayesian active learning has been used for Text Classification and NER
 in [(Siddhant and Lipton, 2018)](http://zacklipton.com/media/papers/1808.05697.pdf).
@@ -103,9 +108,9 @@ al_dataset.label_randomly(10)
 pool = al_dataset.pool
 ```
 
-From a rigorous point of view: $D = ds $ , $D_L=al\_dataset $ and $D_U = D \setminus D_L = pool $.
-Then, we train our model on $D_L $ and compute the uncertainty on $D_U $. The most uncertains samples are
-labelled and added to $D_L $, removed from $D_U $.
+From a rigorous point of view: $D = ds$ , $D_L=al\_dataset$ and $D_U = D \setminus D_L = pool$.
+Then, we train our model on $D_L$ and compute the uncertainty on $D_U $. The most uncertains samples are
+labelled and added to $D_L$, removed from $D_U$.
 
 Let a method `query_human` performs the annotations, we can label our dataset using indices relative to$D_U $.
 This assumes that your dataset class `YourDataset` has a method named `label` which has the following
@@ -229,5 +234,5 @@ This will slightly increase the ECE of your model and will improve the predictiv
 Predicting on the unlabelled pool is the most time consuming part of active learning, especially in expensive tasks such
 as segmentation.
 
-Our work shows that predicting on a random subset of the pool is as effective as the full prediction. BaaL supports this
+Our work shows that predicting on a random subset of the pool is as effective as the full prediction. Baal supports this
 features throught the `max_samples` argument in `ActiveLearningPool`.

@@ -62,13 +62,7 @@ for step in range(100):
     )
     test_loss = wrapper.test_on_dataset(test_ds, batch_size=32, use_cuda=use_cuda)
 
-    pprint(
-        {
-            "dataset_size": len(al_dataset),
-            "train_loss": wrapper.metrics["train_loss"].value,
-            "test_loss": wrapper.metrics["test_loss"].value,
-        }
-    )
+    pprint(wrapper.get_metrics())
     flag = al_loop.step()
     if not flag:
         # We are done labelling! stopping

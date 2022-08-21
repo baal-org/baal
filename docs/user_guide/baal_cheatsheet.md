@@ -1,6 +1,6 @@
-# BaaL cheat sheet
+# Baal cheat sheet
 
-In the table below, we have a mapping between common equations and the BaaL API.
+In the table below, we have a mapping between common equations and the Baal API.
 
 ### Setup
 
@@ -18,7 +18,7 @@ We assume that `baal.bayesian.dropout.patch_module` has been applied to the mode
 
 `model = baal.bayesian.dropout.patch_module(model)`
 
-| Description              | Equation                                                                                                                               | BaaL                                                                                      |
+| Description              | Equation                                                                                                                               | Baal                                                                                      |
 |--------------------------|----------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
 | Bayesian Model Averaging | $\hat{T} = p(y \mid x, {\cal D})= \int p(y \mid x, \theta)p(\theta \mid D) d\theta$                                                    | `wrapper.predict_on_dataset(dataset, batch_size=B, iterations=I, use_cuda=True).mean(-1)` |
 | MC-Dropout               | $T = \{p(y\mid x_j, \theta_i)\} \mid x_j \in {\cal D}' ,i \in \{1, \ldots, I\}$                                                        | `wrapper.predict_on_dataset(dataset, batch_size=B, iterations=I, use_cuda=True)`          |
