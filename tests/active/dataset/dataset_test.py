@@ -212,7 +212,7 @@ def test_warning_raised_on_label():
             return len(self.x)
 
         def __getitem__(self, item):
-            return self.x[item], self.y[item]
+            return self.x[item], self.label[item]
 
     with warnings.catch_warnings(record=True) as w:
         al = ActiveLearningDataset(DS())
