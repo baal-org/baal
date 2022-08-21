@@ -222,7 +222,7 @@ class ActiveLearningDataset(SplittedDataset):
 
     def _warn_if_pool_stochastic(self):
         pool = self.pool
-        if not deep_check(pool[0], pool[0]):
+        if len(pool) > 0 and not deep_check(pool[0], pool[0]):
             warnings.warn(
                 STOCHASTIC_POOL_WARNING,
                 UserWarning,
