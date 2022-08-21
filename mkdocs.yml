@@ -27,8 +27,13 @@ theme:
   icon:
     repo: fontawesome/brands/github
 plugins:
+  - search
+  - exclude-search:
+      exclude:
+        - notebooks/active_learning_process.md
   - mkdocs-jupyter
   - mkdocstrings
+
 
 markdown_extensions:
   - md_in_html
