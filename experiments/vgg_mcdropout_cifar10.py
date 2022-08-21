@@ -1,4 +1,5 @@
 import argparse
+from pprint import pprint
 import random
 from copy import deepcopy
 
@@ -115,7 +116,7 @@ def main():
     # We will reset the weights at each active learning step.
     init_weights = deepcopy(model.state_dict())
 
-    for epoch in tqdm(range(args.epoch)):
+    for _ in tqdm(range(args.epoch)):
         # Load the initial weights.
         model.load_state_dict(init_weights)
         model.train_on_dataset(
@@ -128,20 +129,11 @@ def main():
 
         # Validation!
         model.test_on_dataset(test_set, hyperparams["batch_size"], use_cuda)
-        metrics = model.metrics
         should_continue = active_loop.step()
         if not should_continue:
             break
 
-        val_loss = metrics["test_loss"].value
-        logs = {
-            "val": val_loss,
-            "epoch": epoch,
-            "train": metrics["train_loss"].value,
-            "labeled_data": active_set.labelled,
-            "Next Training set size": len(active_set),
-        }
-        print(logs)
+        pprint(model.get_metrics())
 
 
 if __name__ == "__main__":

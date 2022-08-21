@@ -1,4 +1,5 @@
 import sys
+from collections import defaultdict
 from collections.abc import Sequence
 from copy import deepcopy
 from typing import Callable, Optional
@@ -11,6 +12,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
 from tqdm import tqdm
 
+from baal.metrics.mixin import MetricMixin
 from baal.utils.array_utils import stack_in_memory
 from baal.active.dataset.base import Dataset
 from baal.utils.cuda_utils import to_cuda
@@ -28,7 +30,7 @@ def _stack_preds(out):
     return out
 
 
-class ModelWrapper:
+class ModelWrapper(MetricMixin):
     """
     Wrapper created to ease the training/testing/loading.
 
@@ -42,48 +44,10 @@ class ModelWrapper:
         self.model = model
         self.criterion = criterion
         self.metrics = dict()
+        self.active_learning_metrics = defaultdict(dict)
         self.add_metric("loss", lambda: Loss())
         self.replicate_in_memory = replicate_in_memory
-
-    def add_metric(self, name: str, initializer: Callable):
-        """
-        Add a baal.utils.metric.Metric to the Model.
-
-        Args:
-            name (str): name of the metric.
-            initializer (Callable): lambda to initialize a new instance of a
-                                    baal.utils.metrics.Metric object.
-        """
-        self.metrics["test_" + name] = initializer()
-        self.metrics["train_" + name] = initializer()
-
-    def _reset_metrics(self, filter=""):
-        """
-        Reset all Metrics according to a filter.
-
-        Args:
-            filter (str): Only keep the metric if `filter` in the name.
-        """
-        for k, v in self.metrics.items():
-            if filter in k:
-                v.reset()
-
-    def _update_metrics(self, out, target, loss, filter=""):
-        """
-        Update all metrics.
-
-        Args:
-            out (Tensor): Prediction.
-            target (Tensor): Ground truth.
-            loss (Tensor): Loss from the criterion.
-            filter (str): Only update metrics according to this filter.
-        """
-        for k, v in self.metrics.items():
-            if filter in k:
-                if "loss" in k:
-                    v.update(loss)
-                else:
-                    v.update(out, target)
+        self._active_dataset_size = -1
 
     def train_on_dataset(
         self,
@@ -112,9 +76,11 @@ class ModelWrapper:
         Returns:
             The training history.
         """
+        dataset_size = len(dataset)
         self.train()
+        self.set_dataset_size(dataset_size)
         history = []
-        log.info("Starting training", epoch=epoch, dataset=len(dataset))
+        log.info("Starting training", epoch=epoch, dataset=dataset_size)
         collate_fn = collate_fn or default_collate
         for _ in range(epoch):
             self._reset_metrics("train")
@@ -126,6 +92,7 @@ class ModelWrapper:
 
         optimizer.zero_grad()  # Assert that the gradient is flushed.
         log.info("Training complete", train_loss=self.metrics["train_loss"].value)
+        self.active_step(dataset_size, self.get_metrics("train"))
         return history
 
     def test_on_dataset(
@@ -164,6 +131,7 @@ class ModelWrapper:
             )
 
         log.info("Evaluation complete", test_loss=self.metrics["test_loss"].value)
+        self.active_step(None, self.get_metrics("test"))
         return self.metrics["test_loss"].value
 
     def train_and_test_on_datasets(
@@ -466,6 +434,15 @@ class ModelWrapper:
                 getattr(m, "reset_parameters", lambda: None)()
 
         self.model.apply(reset)
+
+    def set_dataset_size(self, dataset_size: int):
+        """
+        Set state for dataset size. Useful for tracking.
+
+        Args:
+            dataset_size: Dataset state
+        """
+        self._active_dataset_size = dataset_size
 
 
 def mc_inference(model, data, iterations, replicate_in_memory):
