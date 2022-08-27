@@ -153,7 +153,6 @@ def main():
         # Validation!
         model.test_on_dataset(test_set, batch_size, use_cuda)
         should_continue = loop.step()
-        metrics = model.metrics
 
         logs = model.get_metrics()
         pprint(logs)
