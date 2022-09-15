@@ -18,18 +18,18 @@ ENV PYTHONFAULTHANDLER=1 \
 RUN conda remove PyYAML -y
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y curl git && \
-    rm -rf /var/lib/apt/lists/*
+  DEBIAN_FRONTEND=noninteractive apt-get install -y curl git && \
+  rm -rf /var/lib/apt/lists/*
 
-RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python \
-    && ln -sf /usr/local/poetry/bin/poetry /usr/local/bin/poetry
+RUN curl -sSL https://install.python-poetry.org | python \
+  && ln -sf /usr/local/poetry/bin/poetry /usr/local/bin/poetry
 
 # Install dependencies.
 COPY poetry.lock pyproject.toml /app/
 
 WORKDIR /app
 RUN poetry config virtualenvs.create false && \
- poetry install --no-interaction --no-ansi --no-root --no-dev
+  poetry install --no-interaction --no-ansi --no-root --no-dev
 
 # Install the project.
 COPY . /app/
