@@ -14,9 +14,13 @@
   <a href="https://github.com/Elementai/baal/blob/master/LICENSE">
     <img alt="Licence" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"/>
   </a>
+  <a href="https://calendly.com/baal-org/30min">
+    <img alt="Downloads" src="https://img.shields.io/badge/Office hours-Calendly-blue.svg"/>
+  </a>
   <a href="https://pepy.tech/project/baal">
     <img alt="Downloads" src="https://pepy.tech/badge/baal"/>
   </a>
+
   </h1>
 </p>
 
