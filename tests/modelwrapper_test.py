@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 import torch
+import torchmetrics
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 
@@ -26,9 +27,9 @@ class DummyDataset(Dataset):
         return x, (torch.FloatTensor([item % 2]))
 
 
-class DummyModel(nn.Module):
+class SimpleModel(nn.Module):
     def __init__(self):
-        super(DummyModel, self).__init__()
+        super().__init__()
         self.conv = nn.Conv2d(3, 8, kernel_size=10)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout()
@@ -50,7 +51,7 @@ class ModelWrapperMultiOutMultiInTest(unittest.TestCase):
         class MultiOutModel(nn.Module):
             def __init__(self):
                 super().__init__()
-                self.model = DummyModel()
+                self.model = SimpleModel()
 
             def forward(self, x):
                 return [self.model(x)] * 2
@@ -186,7 +187,7 @@ class ModelWrapperTest(unittest.TestCase):
         # self.model = nn.Sequential(
         #     nn.Linear(10, 8), nn.ReLU(), nn.Dropout(), nn.Linear(8, 1), nn.Sigmoid()
         # )
-        self.model = DummyModel()
+        self.model = SimpleModel()
         self.criterion = nn.BCEWithLogitsLoss()
         self.wrapper = ModelWrapper(self.model, self.criterion)
         self.optim = torch.optim.SGD(self.wrapper.get_params(), 0.01)
@@ -370,12 +371,24 @@ class ModelWrapperTest(unittest.TestCase):
         assert len(res) == 2
         assert len(res[0]) < 50 and len(res[0]) > 20
 
+    def test_torchmetric(self):
+        mse_fn = lambda: torchmetrics.MeanSquaredError()
+        corr_fn = lambda: torchmetrics.SpearmanCorrCoef()
+        wrapper = ModelWrapper(self.model, self.criterion)
+        wrapper.add_metric('mse', mse_fn)
+        wrapper.add_metric('corr', corr_fn)
+        wrapper.train_on_dataset(self.dataset, self.optim, batch_size=32, epoch=1, use_cuda=False)
+        wrapper.test_on_dataset(self.dataset, batch_size=32, use_cuda=False)
+        metrics = wrapper.get_metrics()
+        assert {'train_corr', 'test_corr', 'train_mse', 'test_mse'}.issubset(metrics.keys()) # Torchmetric metric
+        assert {'train_loss', 'test_loss'}.issubset(metrics.keys()) # Baal metric
+
 
 def test_multi_input_model():
     class MultiInModel(nn.Module):
         def __init__(self):
             super().__init__()
-            self.model = DummyModel()
+            self.model = SimpleModel()
 
         def forward(self, x):
             # We get two inputs
