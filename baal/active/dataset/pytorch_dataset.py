@@ -1,12 +1,32 @@
 import warnings
 from copy import deepcopy
 from itertools import zip_longest
-from typing import Union, Optional, Callable, Any, Dict, List
+from typing import Union, Optional, Callable, Any, Dict, List, Sequence, Mapping
 
 import numpy as np
+import torch
 import torch.utils.data as torchdata
+from torch import Tensor
 
 from baal.active.dataset.base import SplittedDataset, Dataset
+from baal.utils.equality import deep_check
+
+STOCHASTIC_POOL_WARNING = """
+It seems that data augmentation is not disabled when iterating on the pool.
+You can disable it by overriding attributes using `pool_specifics` 
+when instantiating ActiveLearningDataset.
+Example:
+```
+from torchvision.transforms import *
+train_transform = Compose([Resize((224, 224)), RandomHorizontalFlip(),
+                            RandomRotation(30), ToTensor()])
+test_transform = Compose([Resize((224, 224)),ToTensor()])
+dataset = CIFAR10(..., transform=train_transform)
+
+al_dataset = ActiveLearningDataset(dataset,
+                                    pool_specifics={'transform': test_transform})
+```   
+"""
 
 
 def _identity(x):
@@ -57,6 +77,7 @@ class ActiveLearningDataset(SplittedDataset):
         super().__init__(
             labelled=labelled_map, random_state=random_state, last_active_steps=last_active_steps
         )
+        self._warn_if_pool_stochastic()
 
     def check_dataset_can_label(self):
         """Check if a dataset can be labelled.
@@ -198,6 +219,14 @@ class ActiveLearningDataset(SplittedDataset):
         """Load the labelled map and random_state with give state_dict."""
         self.labelled_map = state_dict["labelled"]
         self.random_state = state_dict["random_state"]
+
+    def _warn_if_pool_stochastic(self):
+        pool = self.pool
+        if len(pool) > 0 and not deep_check(pool[0], pool[0]):
+            warnings.warn(
+                STOCHASTIC_POOL_WARNING,
+                UserWarning,
+            )
 
 
 class ActiveLearningPool(torchdata.Dataset):
