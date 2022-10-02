@@ -140,7 +140,7 @@ class ActiveDatasetTest(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             _ = ActiveLearningDataset(MyDataset(Lambda(lambda k: np.random.rand())))
             assert (len(w) > 0 and issubclass(w[-1].category, UserWarning)
-                    and "Data augmentation does not looks disabled when iterating on the pool." in str(w[-1].message))
+                    and "It seems that data augmentation is not disabled when iterating on the pool." in str(w[-1].message))
 
         with warnings.catch_warnings(record=True) as w:
             _ = ActiveLearningDataset(MyDataset(Lambda(lambda k: np.random.rand())),
