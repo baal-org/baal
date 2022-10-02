@@ -16,6 +16,7 @@ repository = "https://github.com/ElementAI/baal/"
 [tool.poetry.dependencies]
 python = ">=3.7,<4"
 torch = ">=1.6.0"
+torchmetrics = "^0.9.3"
 h5py = "^3.4.0"
 numpy = "^1.21.2"
 matplotlib = "^3.4.3"
