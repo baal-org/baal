@@ -394,7 +394,7 @@ graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 name = "docstring-parser"
-version = "0.14.1"
+version = "0.15"
 description = "Parse Python docstrings in reST, Google and Numpydoc format"
 category = "main"
 optional = true
@@ -485,38 +485,38 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "fsspec"
-version = "2022.7.1"
+version = "2022.8.2"
 description = "File-system specification"
 category = "main"
 optional = true
 python-versions = ">=3.7"
 
 [package.dependencies]
-aiohttp = {version = "*", optional = true, markers = "extra == \"http\""}
+aiohttp = {version = "<4.0.0a0 || >4.0.0a0,<4.0.0a1 || >4.0.0a1", optional = true, markers = "extra == \"http\""}
 requests = {version = "*", optional = true, markers = "extra == \"http\""}
 
 [package.extras]
-tqdm = ["tqdm"]
-ssh = ["paramiko"]
-smb = ["smbprotocol"]
-sftp = ["paramiko"]
-s3 = ["s3fs"]
-oci = ["ocifs"]
-libarchive = ["libarchive-c"]
-http = ["aiohttp", "requests"]
-hdfs = ["pyarrow (>=1)"]
-gui = ["panel"]
-gs = ["gcsfs"]
-github = ["requests"]
-git = ["pygit2"]
-gcs = ["gcsfs"]
-fuse = ["fusepy"]
-entrypoints = ["importlib-metadata"]
-dropbox = ["dropbox", "requests", "dropboxdrivefs"]
-dask = ["distributed", "dask"]
-arrow = ["pyarrow (>=1)"]
-adl = ["adlfs"]
 abfs = ["adlfs"]
+adl = ["adlfs"]
+arrow = ["pyarrow (>=1)"]
+dask = ["dask", "distributed"]
+dropbox = ["dropboxdrivefs", "requests", "dropbox"]
+entrypoints = ["importlib-metadata"]
+fuse = ["fusepy"]
+gcs = ["gcsfs"]
+git = ["pygit2"]
+github = ["requests"]
+gs = ["gcsfs"]
+gui = ["panel"]
+hdfs = ["pyarrow (>=1)"]
+http = ["requests", "aiohttp (!=4.0.0a0,!=4.0.0a1)"]
+libarchive = ["libarchive-c"]
+oci = ["ocifs"]
+s3 = ["s3fs"]
+sftp = ["paramiko"]
+smb = ["smbprotocol"]
+ssh = ["paramiko"]
+tqdm = ["tqdm"]
 
 [[package]]
 name = "gitdb"
@@ -827,33 +827,35 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "jsonargparse"
-version = "4.13.1"
+version = "4.15.0"
 description = "Parsing of command line options, yaml/jsonnet config files and/or environment variables based on argparse."
 category = "main"
 optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
-docstring-parser = {version = ">=0.7.3", optional = true, markers = "extra == \"signatures\""}
+docstring-parser = {version = ">=0.15", optional = true, markers = "extra == \"signatures\""}
 PyYAML = ">=3.13"
 
 [package.extras]
-urls = ["requests (>=2.18.4)", "validators (>=0.14.2)"]
-typing_extensions = ["typing-extensions (>=3.10.0.0)"]
-test_no_urls = ["coverage (>=4.5.1)"]
-test = ["responses (>=0.12.0)", "coverage (>=4.5.1)"]
-signatures = ["docstring-parser (>=0.7.3)"]
-ruyaml = ["ruyaml (>=0.20.0)"]
-reconplogger = ["reconplogger (>=4.4.0)"]
-omegaconf = ["omegaconf (>=2.1.1)"]
-maintainer = ["twine (>=4.0.0)", "bump2version (>=0.5.11)"]
-jsonschema = ["jsonschema (>=3.2.0)"]
-jsonnet = ["jsonnet (>=0.13.0)", "jsonnet-binary (>=0.17.0)"]
-fsspec = ["fsspec (>=0.8.4)"]
-doc = ["sphinx-autodoc-typehints (>=1.11.1)", "autodocsumm (>=0.1.10)", "sphinx-rtd-theme (>=0.4.3)", "Sphinx (>=1.7.9)"]
-dev = ["tox (>=3.25.0)", "mypy (>=0.701)", "pycodestyle (>=2.5.0)", "pylint (>=1.8.3)", "pre-commit (>=2.19.0)", "sphinx-autodoc-typehints (>=1.11.1)", "autodocsumm (>=0.1.10)", "sphinx-rtd-theme (>=0.4.3)", "Sphinx (>=1.7.9)", "responses (>=0.12.0)", "coverage (>=4.5.1)"]
+all = ["docstring-parser (>=0.15)", "jsonschema (>=3.2.0)", "validators (>=0.14.2)", "requests (>=2.18.4)", "fsspec (>=0.8.4)", "argcomplete (>=2.0.0)", "ruyaml (>=0.20.0)", "omegaconf (>=2.1.1)", "reconplogger (>=4.4.0)", "jsonnet-binary (>=0.17.0)", "jsonnet (>=0.13.0)", "typing-extensions (>=3.10.0.0)"]
 argcomplete = ["argcomplete (>=2.0.0)"]
-all = ["typing-extensions (>=3.10.0.0)", "jsonnet (>=0.13.0)", "jsonnet-binary (>=0.17.0)", "reconplogger (>=4.4.0)", "omegaconf (>=2.1.1)", "ruyaml (>=0.20.0)", "argcomplete (>=2.0.0)", "fsspec (>=0.8.4)", "requests (>=2.18.4)", "validators (>=0.14.2)", "jsonschema (>=3.2.0)", "docstring-parser (>=0.7.3)"]
+dev = ["coverage (>=4.5.1)", "responses (>=0.12.0)", "Sphinx (>=1.7.9)", "sphinx-rtd-theme (>=0.4.3)", "autodocsumm (>=0.1.10)", "sphinx-autodoc-typehints (>=1.11.1,<1.19.3)", "pylint (>=1.8.3)", "mypy (>=0.701)", "types-PyYAML (>=6.0.11)", "types-requests (>=2.28.9)", "pre-commit (>=2.19.0)", "tox (>=3.25.0)", "pycodestyle (>=2.5.0)"]
+doc = ["Sphinx (>=1.7.9)", "sphinx-rtd-theme (>=0.4.3)", "autodocsumm (>=0.1.10)", "sphinx-autodoc-typehints (>=1.11.1,<1.19.3)"]
+fsspec = ["fsspec (>=0.8.4)"]
+jsonnet = ["jsonnet-binary (>=0.17.0)", "jsonnet (>=0.13.0)"]
+jsonschema = ["jsonschema (>=3.2.0)"]
+maintainer = ["bump2version (>=0.5.11)", "twine (>=4.0.0)"]
+mypy = ["mypy (>=0.701)", "types-PyYAML (>=6.0.11)", "types-requests (>=2.28.9)"]
+omegaconf = ["omegaconf (>=2.1.1)"]
+pylint = ["pylint (>=1.8.3)"]
+reconplogger = ["reconplogger (>=4.4.0)"]
+ruyaml = ["ruyaml (>=0.20.0)"]
+signatures = ["docstring-parser (>=0.15)"]
+test = ["coverage (>=4.5.1)", "responses (>=0.12.0)"]
+test_no_urls = ["coverage (>=4.5.1)"]
+typing_extensions = ["typing-extensions (>=3.10.0.0)"]
+urls = ["validators (>=0.14.2)", "requests (>=2.18.4)"]
 
 [[package]]
 name = "jsonschema"
@@ -2392,8 +2394,8 @@ vision = ["torchvision", "lightning-flash"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = ">=3.7,<3.10"
-content-hash = "ddc9981eda2e9b9a4d63108b3e935a5067b4ae8614be5f1574d419197a202397"
+python-versions = ">=3.7,<4"
+content-hash = "bf26a664b86992814dcf444f011370cd03e656a43fd3c735f473256458e953e6"
 
 [metadata.files]
 absl-py = []
