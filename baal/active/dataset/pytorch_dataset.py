@@ -12,7 +12,7 @@ from baal.active.dataset.base import SplittedDataset, Dataset
 from baal.utils.equality import deep_check
 
 STOCHASTIC_POOL_WARNING = """
-Data augmentation does not looks disabled when iterating on the pool.
+It seems that data augmentation is not disabled when iterating on the pool.
 You can disable it by overriding attributes using `pool_specifics` 
 when instantiating ActiveLearningDataset.
 Example:

@@ -84,7 +84,7 @@ class ModelWrapper(MetricMixin):
         collate_fn = collate_fn or default_collate
         for _ in range(epoch):
             self._reset_metrics("train")
-            for data, target in DataLoader(
+            for data, target, *_ in DataLoader(
                 dataset, batch_size, True, num_workers=workers, collate_fn=collate_fn
             ):
                 _ = self.train_on_batch(data, target, optimizer, use_cuda, regularizer)
@@ -123,7 +123,7 @@ class ModelWrapper(MetricMixin):
         log.info("Starting evaluating", dataset=len(dataset))
         self._reset_metrics("test")
 
-        for data, target in DataLoader(
+        for data, target, *_ in DataLoader(
             dataset, batch_size, False, num_workers=workers, collate_fn=collate_fn
         ):
             _ = self.test_on_batch(
@@ -234,7 +234,7 @@ class ModelWrapper(MetricMixin):
         loader = DataLoader(dataset, batch_size, False, num_workers=workers, collate_fn=collate_fn)
         if verbose:
             loader = tqdm(loader, total=len(loader), file=sys.stdout)
-        for idx, (data, _) in enumerate(loader):
+        for idx, (data, *_) in enumerate(loader):
 
             pred = self.predict_on_batch(data, iterations, use_cuda)
             pred = map_on_tensor(lambda x: x.detach(), pred)
