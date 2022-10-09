@@ -84,14 +84,14 @@ class ModelWrapper(MetricMixin):
         collate_fn = collate_fn or default_collate
         for _ in range(epoch):
             self._reset_metrics("train")
-            for data, target in DataLoader(
+            for data, target, *_ in DataLoader(
                 dataset, batch_size, True, num_workers=workers, collate_fn=collate_fn
             ):
                 _ = self.train_on_batch(data, target, optimizer, use_cuda, regularizer)
-            history.append(self.metrics["train_loss"].value)
+            history.append(self.get_metrics("train")["train_loss"])
 
         optimizer.zero_grad()  # Assert that the gradient is flushed.
-        log.info("Training complete", train_loss=self.metrics["train_loss"].value)
+        log.info("Training complete", train_loss=self.get_metrics("train")["train_loss"])
         self.active_step(dataset_size, self.get_metrics("train"))
         return history
 
@@ -123,16 +123,16 @@ class ModelWrapper(MetricMixin):
         log.info("Starting evaluating", dataset=len(dataset))
         self._reset_metrics("test")
 
-        for data, target in DataLoader(
+        for data, target, *_ in DataLoader(
             dataset, batch_size, False, num_workers=workers, collate_fn=collate_fn
         ):
             _ = self.test_on_batch(
                 data, target, cuda=use_cuda, average_predictions=average_predictions
             )
 
-        log.info("Evaluation complete", test_loss=self.metrics["test_loss"].value)
+        log.info("Evaluation complete", test_loss=self.get_metrics("test")["test_loss"])
         self.active_step(None, self.get_metrics("test"))
-        return self.metrics["test_loss"].value
+        return self.get_metrics("test")["test_loss"]
 
     def train_and_test_on_datasets(
         self,
@@ -179,7 +179,7 @@ class ModelWrapper(MetricMixin):
                 train_dataset, optimizer, batch_size, 1, use_cuda, workers, collate_fn, regularizer
             )
             te_loss = self.test_on_dataset(test_dataset, batch_size, use_cuda, workers, collate_fn)
-            hist.append({k: v.value for k, v in self.metrics.items()})
+            hist.append(self.get_metrics())
             if te_loss < best_loss:
                 best_epoch = e
                 best_loss = te_loss
@@ -234,7 +234,7 @@ class ModelWrapper(MetricMixin):
         loader = DataLoader(dataset, batch_size, False, num_workers=workers, collate_fn=collate_fn)
         if verbose:
             loader = tqdm(loader, total=len(loader), file=sys.stdout)
-        for idx, (data, _) in enumerate(loader):
+        for idx, (data, *_) in enumerate(loader):
 
             pred = self.predict_on_batch(data, iterations, use_cuda)
             pred = map_on_tensor(lambda x: x.detach(), pred)
