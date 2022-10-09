@@ -1,3 +1,8 @@
+<p align="center">
+ <img src="_static/images/logo-with-bg.jpg" width="50%" class="rounded-corners"/>
+</p>
+
+
 # Welcome to Baal (**Ba**yesian **a**ctive **l**earning)
 
 Baal is a Bayesian active learning library.

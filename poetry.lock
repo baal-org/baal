@@ -2097,7 +2097,7 @@ vision = ["torchvision", "lightning-flash"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<4"
-content-hash = "9cb982d18241f2f14c4132b215665d87d492a9f0804535a2702301e91b96f6de"
+content-hash = "146804eb73a03d155e981e6c07d6aadbfdd1453d84031e06986691c24be0fcad"
 
 [metadata.files]
 absl-py = []
