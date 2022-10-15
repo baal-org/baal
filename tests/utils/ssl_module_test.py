@@ -55,8 +55,8 @@ class SSLModuleTest(unittest.TestCase):
             'workers': 0}
 
         module = TestSSLModule(self.al_dataset, **hparams)
-        trainer = Trainer(max_epochs=1, num_sanity_val_steps=0, progress_bar_refresh_rate=0, logger=False,
-                          checkpoint_callback=False)
+        trainer = Trainer(max_epochs=1, num_sanity_val_steps=0, logger=False,
+                          enable_checkpointing=False)
         trainer.fit(module)
 
         assert len(module.labeled_data) == len(module.unlabeled_data)

@@ -1,5 +1,6 @@
 <p align="center">
- <img src="_static/images/logo-with-bg.jpg" width="50%" class="rounded-corners"/>
+ <img alt="Logo dark mode" src="_static/images/logo-transparent.png#only-dark" width="50%" class="rounded-corners"/>
+ <img alt="Logo light mode" src="_static/images/logo-with-bg-solid.png#only-light" width="50%" class="rounded-corners"/>
 </p>
 
 
