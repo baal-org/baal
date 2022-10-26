@@ -1,10 +1,8 @@
 <p align="center">
- <img alt="Logo dark mode" src="_static/images/logo-transparent.png#only-dark" width="50%" class="rounded-corners"/>
- <img alt="Logo light mode" src="_static/images/logo-with-bg-solid.png#only-light" width="50%" class="rounded-corners"/>
+ <img alt="Logo dark mode" src="_static/images/logo-horizontal-transparent.png#only-dark" width="50%" />
+ <img alt="Logo light mode" src="_static/images/BAAL-horizontal-logo-black.png#only-light" width="50%"/>
 </p>
 
-
-# Welcome to Baal (**Ba**yesian **a**ctive **l**earning)
 
 Baal is a Bayesian active learning library.
 We provide methods to estimate sampling from the posterior distribution
