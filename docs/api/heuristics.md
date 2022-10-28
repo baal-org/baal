@@ -33,13 +33,14 @@ BALD(reduction="mean")
 
 ### API
 
-```eval_rst
-.. autoclass:: baal.active.heuristics.AbstractHeuristic
-    :members:
+### baal.active.heuristics.AbstractHeuristic
+::: baal.active.heuristics.AbstractHeuristic
 
-.. autoclass:: baal.active.heuristics.BALD
+### baal.active.heuristics.BALD
+::: baal.active.heuristics.BALD
 
-.. autoclass:: baal.active.heuristics.Random
+### baal.active.heuristics.Random
+::: baal.active.heuristics.Random
 
-.. autoclass:: baal.active.heuristics.Entropy
-```
+### baal.active.heuristics.Entropy
+::: baal.active.heuristics.Entropy

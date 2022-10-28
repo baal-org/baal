@@ -22,11 +22,10 @@ model = MCDropoutConnectModule(model, layers=["Linear"], weight_dropout=0.5)
 
 ## API
 
-```eval_rst
-.. autoclass:: baal.bayesian.dropout.MCDropoutModule
-    :members: __init__
+### baal.bayesian.dropout.MCDropoutModule
 
-..autoclass:: baal.bayesian.weight_drop.MCDropoutConnectModule
-    :members: __init__
+::: baal.bayesian.dropout.MCDropoutModule
 
-```
+### baal.bayesian.weight_drop.MCDropoutConnectModule
+
+::: baal.bayesian.weight_drop.MCDropoutConnectModule

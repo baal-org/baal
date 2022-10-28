@@ -47,7 +47,6 @@ print(wrapper.active_learning_metrics)
 """
 ```
 
-```eval_rst
-.. automodule:: baal.utils.metrics
-    :members:
-```
+### baal.utils.metrics
+
+::: baal.utils.metrics

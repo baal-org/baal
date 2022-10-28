@@ -1,6 +1,5 @@
 # Calibration Wrapper
 
-```eval_rst
-.. autoclass:: baal.calibration.DirichletCalibrator
-    :members:
-```
+### baal.calibration.DirichletCalibrator
+
+::: baal.calibration.DirichletCalibrator
