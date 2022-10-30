@@ -1,5 +1,5 @@
 <p align="center">
-  <img height=15% width=25% src="https://github.com/ElementAI/baal/blob/master/docs/_static/images/logo-with-bg-solid.png?raw=true">
+  <img height=15% width=25% src="https://github.com/baal-org/baal/blob/master/docs/_static/images/logo-with-bg.jpg?raw=true" style="max-width: 100%;border-radius: 25%;">
   <h1 align="center">Bayesian Active Learning (Baal)
    <br>
   <a href="https://github.com/baal-org/baal/actions/workflows/pythonci.yml">
