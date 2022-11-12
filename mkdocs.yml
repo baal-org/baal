@@ -85,10 +85,12 @@ nav:
 
   - Tutorials:
       - tutorials/index.md
+      - Label Studio:
+          - tutorials/label-studio-cv.md
+          - tutorials/label-studio-hf.md
       - Compatibility:
-        - tutorials/label-studio.md
-        - notebooks/compatibility/nlp_classification.ipynb
-        - notebooks/compatibility/sklearn_tutorial.ipynb
+        - HuggingFace: notebooks/compatibility/nlp_classification.ipynb
+        - Scikit-learn: notebooks/compatibility/sklearn_tutorial.ipynb
       - Active learning for research: notebooks/active_learning_process.ipynb
       - Active learning for production: notebooks/baal_prod_cls.ipynb
       - Deep Ensembles for active learning: notebooks/deep_ensemble.ipynb

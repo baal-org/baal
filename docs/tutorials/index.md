@@ -14,4 +14,4 @@ latter on how we integrate with other common frameworks such as Label Studio, Hu
 * [:material-link: Lightning Flash](https://devblog.pytorchlightning.ai/active-learning-made-simple-using-flash-and-baal-2216df6f872c)
 * [HuggingFace](../notebooks/compatibility/nlp_classification.ipynb)
 * [Scikit-Learn](../notebooks/compatibility/sklearn_tutorial.ipynb)
-* [Label Studio](./label-studio.md)
+* [Label Studio](./label-studio-cv.md)

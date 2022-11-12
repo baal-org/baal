@@ -1,4 +1,4 @@
-# Using Baal with Label Studio
+# Image Classification
 
 *By: Frédéric Branchaud-Charron (@Dref360)*
 
@@ -18,12 +18,12 @@ found [here](https://gist.github.com/Dref360/288845b2fbb0504e4cfc216a76b547e7).
 More info:
 
 * [Baal documentation](https://baal.readthedocs.io/en/latest/)
-* [Bayesian Deep Learning cheatsheet](https://baal.readthedocs.io/en/latest/user_guide/baal_cheatsheet.html)
+* [Bayesian Deep Learning cheatsheet](https://baal.readthedocs.io/en/latest/user_guide/baal_cheatsheet/)
 
 Support:
 
 * [Github](https://github.com/ElementAI/baal)
-* [Gitter](https://gitter.im/eai-baal/community)
+* [Slack](https://join.slack.com/t/baal-world/shared_invite/zt-z0izhn4y-Jt6Zu5dZaV2rsAS9sdISfg)
 
 ## Installing Baal
 
@@ -160,6 +160,6 @@ In the image below, we have the F1 for two underrepresented classes:
 ![](https://i.imgur.com/dWP7QIJ.png)
 
 **In conlusion**, we can now use Bayesian active learning in Label Studio which would help your labelling process be
-more efficient. Please do not hesitate to reach out on our Gitter or on Label
+more efficient. Please do not hesitate to reach out on our Slack or on Label
 Studio's [Slack](http://slack.labelstud.io.s3-website-us-east-1.amazonaws.com/?source=site-header) if you have feedback
 or questions.
