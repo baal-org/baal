@@ -1,5 +1,5 @@
 <p align="center">
-  <img height=15% width=25% src="https://github.com/ElementAI/baal/blob/master/docs/_static/images/logo-transparent.png?raw=true">
+  <img height=15% width=25% src="https://github.com/baal-org/baal/blob/master/docs/_static/images/logo-with-bg.jpg?raw=true" style="max-width: 100%;border-radius: 25%;">
   <h1 align="center">Bayesian Active Learning (Baal)
    <br>
   <a href="https://github.com/baal-org/baal/actions/workflows/pythonci.yml">
@@ -14,9 +14,13 @@
   <a href="https://github.com/Elementai/baal/blob/master/LICENSE">
     <img alt="Licence" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"/>
   </a>
+  <a href="https://calendly.com/baal-org/30min">
+    <img alt="Office hours" src="https://img.shields.io/badge/Office hours-Calendly-blue.svg"/>
+  </a>
   <a href="https://pepy.tech/project/baal">
     <img alt="Downloads" src="https://pepy.tech/badge/baal"/>
   </a>
+
   </h1>
 </p>
 
@@ -88,7 +92,7 @@ The framework consists of four main parts, as demonstrated in the flowchart belo
 - ActiveLearningLoop
 
 <p align="center">
-  <img src="./docs/literature/images/Baalscheme.svg">
+  <img src="docs/research/literature/images/Baalscheme.svg">
 </p>
 
 To get started, wrap your dataset in our _[**ActiveLearningDataset**](baal/active/dataset.py)_ class. This will ensure

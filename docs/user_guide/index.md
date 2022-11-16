@@ -6,9 +6,9 @@ In addition, we propose a [cheat sheet](./baal_cheatsheet.md) that will help use
 
 ### Notations and glossary
 
-* Training dataset ``$`D_L`$``
-* Pool, the unlabelled portion of the dataset ``$`D_U`$``
-* Heuristic, the function that computes the uncertainty (ex. BALD) ``$`U `$``
+* Training dataset $D_L$
+* Pool, the unlabelled portion of the dataset $D_U$
+* Heuristic, the function that computes the uncertainty (ex. BALD) $U$
 * Active learning step, the sequence of training, selecting and labelling one or many examples.
 * BALD, an heuristic that works well with deep learning models that are overconfident.
 * Query size, the number of items to label between retraining.
@@ -53,13 +53,14 @@ We hope that work in this area continues so that we can better understand the im
 
 **Resources**
     
-* [Literature review](../literature/index.md)
+* [Literature review](../research/literature/index.md)
 * [Active learning dataset and training loop classes](../notebooks/fundamentals/active-learning)
 * [Methods for approximating bayesian posteriors](../notebooks/fundamentals/posteriors)
 * [Full active learning example](../notebooks/active_learning_process)
 
 
 **References**
+
 * Kirsch, Andreas, Joost Van Amersfoort, and Yarin Gal. "Batchbald: Efficient and diverse batch acquisition for deep bayesian active learning." NeurIPS (2019).
 * Jain, Siddhartha, Ge Liu, and David Gifford. "Information Condensing Active Learning." arXiv preprint arXiv:2002.07916 (2020).
 * Houlsby, Neil, et al. "Bayesian active learning for classification and preference learning." arXiv preprint arXiv:1112.5745 (2011).

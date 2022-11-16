@@ -32,7 +32,6 @@ predictions.shape
 
 ### API
 
-```eval_rst
-.. autoclass:: baal.ModelWrapper
-    :members:
-```
+### baal.ModelWrapper
+
+::: baal.ModelWrapper

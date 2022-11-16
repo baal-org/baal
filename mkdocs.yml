@@ -1,0 +1,115 @@
+site_name: Baal Documentation
+repo_url: https://github.com/baal-org/baal
+edit_uri: edit/master/docs/
+theme:
+  name: material
+  logo: _static/images/logo-transparent.png
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+    - navigation.instant
+  icon:
+    repo: fontawesome/brands/github
+plugins:
+  - search
+  - exclude-search:
+      exclude_unreferenced: true
+      exclude:
+        - notebooks/active_learning_process.md
+        - /*/active_learning_process*
+        - /*/nbsphinx*
+  - mkdocs-jupyter
+  - mkdocstrings
+
+
+markdown_extensions:
+  - md_in_html
+  - attr_list
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - User Guide:
+      - user_guide/index.md
+      - Cheat Sheet: user_guide/baal_cheatsheet.md
+      - Active data structure: notebooks/fundamentals/active-learning.ipynb
+      - Computing uncertainty:
+        - Stochastic models: notebooks/fundamentals/posteriors.ipynb
+        - Heuristics: user_guide/heuristics.md
+  - API:
+      - api/index.md
+      - api/bayesian.md
+      - api/calibration.md
+      - api/dataset_management.md
+      - api/heuristics.md
+      - api/modelwrapper.md
+      - api/utils.md
+      - Compatibility:
+        - api/compatibility/huggingface.md
+        - api/compatibility/pytorch-lightning.md
+
+  - Tutorials:
+      - tutorials/index.md
+      - Label Studio:
+          - tutorials/label-studio-cv.md
+          - tutorials/label-studio-hf.md
+      - Compatibility:
+        - HuggingFace: notebooks/compatibility/nlp_classification.ipynb
+        - Scikit-learn: notebooks/compatibility/sklearn_tutorial.ipynb
+      - Active learning for research: notebooks/active_learning_process.ipynb
+      - Active learning for production: notebooks/baal_prod_cls.ipynb
+      - Deep Ensembles for active learning: notebooks/deep_ensemble.ipynb
+  - Research:
+      - research/index.md
+      - Technical Reports:
+          - Active Fairness: notebooks/fairness/ActiveFairness.ipynb
+          - research/dirichlet_calibration.md
+          - research/double_descent.md
+      - Literature:
+        - research/literature/index.md
+        - Additional papers:
+          - research/literature/Additional papers/dmi.md
+          - research/literature/Additional papers/duq.md
+          - research/literature/Additional papers/gyolov3.md
+          - research/literature/Additional papers/lightcoresets.md
+          - research/literature/Additional papers/sparse_selection.md
+          - research/literature/Additional papers/vaal.md
+
+  - Support:
+      - support/index.md
+      - support/faq.md

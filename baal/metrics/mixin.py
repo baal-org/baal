@@ -1,12 +1,13 @@
-from collections import defaultdict
-from numbers import Number
-from typing import Callable, Dict, Any, Optional, DefaultDict
+from typing import Callable, Dict, Any, Optional, DefaultDict, Union
+
+import numpy as np
+from torchmetrics import Metric as TorchMetric
 
 from baal.utils.metrics import Metrics
 
 
 class MetricMixin:
-    metrics: Dict[str, Metrics]
+    metrics: Dict[str, Union[Metrics, TorchMetric]]
     active_learning_metrics: DefaultDict[int, Dict[str, Any]]
     _active_dataset_size: int
 
@@ -25,14 +26,14 @@ class MetricMixin:
             dataset_size = self._active_dataset_size
         self.active_learning_metrics[dataset_size].update(metrics)
 
-    def add_metric(self, name: str, initializer: Callable):
+    def add_metric(self, name: str, initializer: Callable[[], Union[Metrics, TorchMetric]]):
         """
-        Add a baal.utils.metric.Metric to the Model.
+        Add a baal.utils.metric.Metrics or torchmetrics.Metric to the Model.
 
         Args:
             name (str): name of the metric.
             initializer (Callable): lambda to initialize a new instance of a
-                                    baal.utils.metrics.Metric object.
+                                    Union[Metrics, TorchMetric].
         """
         self.metrics["test_" + name] = initializer()
         self.metrics["train_" + name] = initializer()
@@ -58,8 +59,17 @@ class MetricMixin:
         Returns:
             Dictionary with all values
         """
+
+        def get_value(met: Union[Metrics, TorchMetric]):
+            if isinstance(met, Metrics):
+                return met.value
+            val = met.compute().detach().cpu().numpy()
+            if val.shape == ():
+                val = val.item()
+            return val
+
         metrics = {
-            met_name: met.value for met_name, met in self.metrics.items() if filter in met_name
+            met_name: get_value(met) for met_name, met in self.metrics.items() if filter in met_name
         }
         if self._active_dataset_size != -1:
             # Add dataset size if it was ever set.
@@ -76,9 +86,9 @@ class MetricMixin:
             loss (Tensor): Loss from the criterion.
             filter (str): Only update metrics according to this filter.
         """
-        for k, v in self.metrics.items():
-            if filter in k:
-                if "loss" in k:
-                    v.update(loss)
+        for met_name, metric in self.metrics.items():
+            if filter in met_name:
+                if "loss" in met_name:
+                    metric.update(loss)
                 else:
-                    v.update(out, target)
+                    metric.update(out, target)
