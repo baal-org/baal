@@ -15,7 +15,7 @@ def replace_layers_in_module(module: nn.Module, mapping_fn: Callable, *args, **k
     """
     changed = False
     for name, child in module.named_children():
-        new_module: nn.Module = mapping_fn(child, *args, **kwargs)
+        new_module: Optional[nn.Module] = mapping_fn(child, *args, **kwargs)
 
         if new_module is not None:
             changed = True
