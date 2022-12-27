@@ -24,11 +24,7 @@
   </h1>
 </p>
 
-
-Baal is an active learning library initially developed at
-[ElementAI](https://www.elementai.com/) (acquired by ServiceNow in 2021).
-
-Our goal is to support both industrial applications and research in active learning.
+Baal is an active learning library that supports both industrial applications and research usecases.
 
 Read the documentation at https://baal.readthedocs.io.
 
@@ -37,9 +33,12 @@ usable in production.
 
 For a quick introduction to Baal and Bayesian active learning, please see these links:
 
-* [Seminar with Label Studio](https://www.youtube.com/watch?v=HG7imRQN3-k)
-* [User guide](https://baal.readthedocs.io/en/latest/user_guide/index.html)
-* [Bayesian active learning presentation](https://drive.google.com/file/d/13UUDsS1rvqDnXza7L0j4bnqyhOT5TDSt/view?usp=sharing)
+- [Seminar with Label Studio](https://www.youtube.com/watch?v=HG7imRQN3-k)
+- [User guide](https://baal.readthedocs.io/en/latest/user_guide/index.html)
+- [Bayesian active learning presentation](https://drive.google.com/file/d/13UUDsS1rvqDnXza7L0j4bnqyhOT5TDSt/view?usp=sharing)
+
+*Baal was initially developed at [ElementAI](https://www.elementai.com/) (acquired by ServiceNow in 2021), but is now independant.*
+
 
 ## Installation and requirements
 
@@ -52,15 +51,15 @@ To install Baal from source: `poetry install`
 
 ## Papers using Baal
 
-* [Bayesian active learning for production, a systematic study and a reusable library
+- [Bayesian active learning for production, a systematic study and a reusable library
   ](https://arxiv.org/abs/2006.09916) (Atighehchian et al. 2020)
-* [Synbols: Probing Learning Algorithms with Synthetic Datasets
+- [Synbols: Probing Learning Algorithms with Synthetic Datasets
   ](https://nips.cc/virtual/2020/public/poster_0169cf885f882efd795951253db5cdfb.html) (Lacoste et al. 2020)
-* [Can Active Learning Preemptively Mitigate Fairness Issues?
+- [Can Active Learning Preemptively Mitigate Fairness Issues?
   ](https://arxiv.org/pdf/2104.06879.pdf) (Branchaud-Charron et al. 2021)
-* [Active learning with MaskAL reduces annotation effort for training Mask R-CNN](https://arxiv.org/abs/2112.06586) (
+- [Active learning with MaskAL reduces annotation effort for training Mask R-CNN](https://arxiv.org/abs/2112.06586) (
   Blok et al. 2021)
-* [Stochastic Batch Acquisition for Deep Active Learning](https://arxiv.org/abs/2106.12059) (Kirsch et al. 2022)
+- [Stochastic Batch Acquisition for Deep Active Learning](https://arxiv.org/abs/2106.12059) (Kirsch et al. 2022)
 
 # What is active learning?
 
@@ -106,6 +105,9 @@ For example, the _[**MCDropoutModule**](baal/bayesian/dropout.py)_ wrapper chang
 in both training and inference time and the `ModelWrapper` makes the specifies the number of iterations to run at
 training and inference.
 
+Finally, _[**ActiveLearningLoop**](baal/active/active_loop.py)_ automatically computes the uncertainty and label the most
+uncertain items in the pool.
+
 In conclusion, your script should be similar to this:
 
 ```python
@@ -115,26 +117,25 @@ model = MCDropoutModule(your_model)
 model = ModelWrapper(model, your_criterion)
 active_loop = ActiveLearningLoop(dataset,
                                  get_probabilities=model.predict_on_dataset,
-                                 heuristic=heuristics.BALD(shuffle_prop=0.1),
-                                 query_size=NDATA_TO_LABEL)
+                                 heuristic=heuristics.BALD(),
+                                 iterations=20, # Number of MC sampling.
+                                 query_size=QUERY_SIZE)  # Number of item to label.
 for al_step in range(N_ALSTEP):
     model.train_on_dataset(dataset, optimizer, BATCH_SIZE, use_cuda=use_cuda)
+    metrics = model.test_on_dataset(test_dataset, BATCH_SIZE)
+    # Label the next most uncertain items.
     if not active_loop.step():
         # We're done!
         break
 ```
 
-For a complete experiment, we provide _[experiments/](experiments/)_ to understand how to write an active training
-process. Generally, we use the **ActiveLearningLoop**
-provided at _[src/baal/active/active_loop.py](baal/active/active_loop.py)_. This class provides functionality to get the
-predictions on the unlabeled pool after each (few) epoch(s) and sort the next set of data items to be labeled based on
-the calculated uncertainty of the pool.
+For a complete experiment, see _[experiments/vgg_mcdropout_cifar10.py](experiments/vgg_mcdropout_cifar10.py)_ .
 
 ### Re-run our Experiments
 
 ```bash
 docker build [--target base_baal] -t baal .
-docker run --rm baal --gpus all python3 experiments/vgg_mcdropout_cifar10.py 
+docker run --rm baal --gpus all python3 experiments/vgg_mcdropout_cifar10.py
 ```
 
 ### Use Baal for YOUR Experiments
