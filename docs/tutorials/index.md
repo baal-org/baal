@@ -6,7 +6,8 @@ latter on how we integrate with other common frameworks such as Label Studio, Hu
 ## :material-file-tree: How to
 
 * [Run an active learning experiments](notebooks/active_learning_process.ipynb)
-* [Active learning in production](notebooks/baal_prod_cls.ipynb)
+* [Active learning in production (Image Classification)](notebooks/production/baal_prod_cls.ipynb)
+* [Active learning in production (Text Classification)](notebooks/production/baal_prod_cls_nlp_hf.ipynb)
 * [Deep Ensembles](../notebooks/deep_ensemble.ipynb)
 
 ## :material-file-tree: Compatibility

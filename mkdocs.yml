@@ -91,8 +91,10 @@ nav:
       - Compatibility:
         - HuggingFace: notebooks/compatibility/nlp_classification.ipynb
         - Scikit-learn: notebooks/compatibility/sklearn_tutorial.ipynb
+      - Production use cases:
+        - Computer vision: notebooks/production/baal_prod_cls.ipynb
+        - Text classification: notebooks/production/baal_prod_cls_nlp_hf.ipynb
       - Active learning for research: notebooks/active_learning_process.ipynb
-      - Active learning for production: notebooks/baal_prod_cls.ipynb
       - Deep Ensembles for active learning: notebooks/deep_ensemble.ipynb
   - Research:
       - research/index.md
