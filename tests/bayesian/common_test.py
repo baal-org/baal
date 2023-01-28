@@ -59,6 +59,19 @@ def test_replace_layers_in_module_swap_no_relu_deep(a_model):
     assert not any(isinstance(m, nn.Identity) for m in a_model.modules())
 
 
+@pytest.mark.parametrize('state', [True, False])
+def test_training_state(a_model, state):
+    # Check that the state of the Module is the same as previously.
+    a_model = a_model.train(mode=state)
+    mapping = lambda mod: None if not isinstance(mod, nn.ReLU) else nn.Identity()
+    _ = replace_layers_in_module(a_model, mapping)
+    assert all(m.training is state for m in a_model.modules())
+
+    unmap = lambda mod: None if not isinstance(mod, nn.Identity) else nn.ReLU()
+    _ = replace_layers_in_module(a_model, unmap)
+    assert all(m.training is state for m in a_model.modules())
+
+
 
 if __name__ == '__main__':
     pytest.main()
