@@ -388,7 +388,15 @@ class ModelWrapper(MetricMixin):
                 out = map_on_tensor(lambda o: o.view([iterations, -1, *o.size()[1:]]), out)
                 out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
             else:
-                out = [self.model(data) for _ in range(iterations)]
+                try:
+                    func_list = dir(self.model.module)
+                except:
+                    func_list = []
+                    
+                if "montecarlo_forward" in func_list:
+                    out = self.model.module.montecarlo_forward(data, iterations)
+                else:
+                    out = [self.model(data) for _ in range(iterations)]
                 out = _stack_preds(out)
             return out
 
