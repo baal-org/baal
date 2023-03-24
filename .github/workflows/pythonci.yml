@@ -24,7 +24,7 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: Gr1N/setup-poetry@v7
+    - uses: Gr1N/setup-poetry@v8
     - name: Install dependencies
       run: |
         poetry install --no-interaction --no-ansi --remove-untracked -E nlp -E vision
