@@ -8,7 +8,7 @@ import numpy as np
 import structlog
 import torch
 from pytorch_lightning import Trainer, Callback, LightningDataModule, LightningModule
-from pytorch_lightning.accelerators import GPUAccelerator
+from pytorch_lightning.accelerators import CUDAAccelerator
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -152,7 +152,7 @@ class BaalTrainer(Trainer):
         """
         model = model or self.lightning_module
         model.eval()
-        if isinstance(self.accelerator, GPUAccelerator):
+        if isinstance(self.accelerator, CUDAAccelerator):
             model.cuda(self.strategy.root_device.index)
         dataloader = dataloader or model.pool_dataloader()
         if len(dataloader) == 0:
@@ -160,7 +160,7 @@ class BaalTrainer(Trainer):
 
         log.info("Start Predict", dataset=len(dataloader))
         for idx, batch in enumerate(tqdm(dataloader, total=len(dataloader), file=sys.stdout)):
-            if isinstance(self.accelerator, GPUAccelerator):
+            if isinstance(self.accelerator, CUDAAccelerator):
                 batch = to_cuda(batch)
             pred = model.predict_step(batch, idx)
             yield map_on_tensor(lambda x: x.detach().cpu().numpy(), pred)
