@@ -148,6 +148,7 @@ class ModelWrapper(MetricMixin):
         return_best_weights=False,
         patience=None,
         min_epoch_for_es=0,
+        skip_epochs=1
     ):
         """
         Train and test the model on both Dataset `train_dataset`, `test_dataset`.
@@ -166,7 +167,7 @@ class ModelWrapper(MetricMixin):
             patience (Optional[int]): If provided, will use early stopping to stop after
                                         `patience` epoch without improvement.
             min_epoch_for_es (int): Epoch at which the early stopping starts.
-
+            skip_epochs (int): Number of epochs to skip for test_on_dataset
         Returns:
             History and best weights if required.
         """
@@ -178,17 +179,21 @@ class ModelWrapper(MetricMixin):
             _ = self.train_on_dataset(
                 train_dataset, optimizer, batch_size, 1, use_cuda, workers, collate_fn, regularizer
             )
-            te_loss = self.test_on_dataset(test_dataset, batch_size, use_cuda, workers, collate_fn)
-            hist.append(self.get_metrics())
-            if te_loss < best_loss:
-                best_epoch = e
-                best_loss = te_loss
-                if return_best_weights:
-                    best_weight = deepcopy(self.state_dict())
+            if e%skip_epochs==0:
+                te_loss = self.test_on_dataset(test_dataset, batch_size, use_cuda, workers, collate_fn)
+                hist.append(self.get_metrics())
+                if te_loss < best_loss:
+                    best_epoch = e
+                    best_loss = te_loss
+                    if return_best_weights:
+                        best_weight = deepcopy(self.state_dict())
 
-            if patience is not None and (e - best_epoch) > patience and (e > min_epoch_for_es):
-                # Early stopping
-                break
+                if patience is not None and (e - best_epoch) > patience and (e > min_epoch_for_es):
+                    # Early stopping
+                    break
+                hist.append(self.get_metrics())
+            else:
+                hist.append(self.get_metrics("train"))
 
         if return_best_weights:
             return hist, best_weight
