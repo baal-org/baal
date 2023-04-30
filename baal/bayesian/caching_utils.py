@@ -37,7 +37,7 @@ def _caching_mapping_fn(module: torch.nn.Module) -> Optional[nn.Module]:
 
 def _caching_unmapping_fn(module: torch.nn.Module) -> Optional[nn.Module]:
     new_module: Optional[nn.Module] = None
-    # Could add more
+
     if isinstance(module, LRUCacheModule):
         new_module = module.module
     return new_module
