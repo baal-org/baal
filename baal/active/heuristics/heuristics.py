@@ -15,7 +15,7 @@ from baal.utils.array_utils import to_prob
 DEPRECATED = "DEPRECATED"
 SHUFFLE_PROP_DEPRECATION_NOTICE = """
 `shuffle_prop` is deprecated and will be removed in Baal 1.9.0.
-To upgrade, use `baal.active.heuristics.stochastics.PowerSampling`.
+For better batch uncertainty estimation, use `baal.active.heuristics.stochastics.PowerSampling`.
 See `https://baal.readthedocs.io/en/latest/user_guide/heuristics/` for more details.
 """
 
