@@ -191,7 +191,6 @@ class ModelWrapper(MetricMixin):
                 if patience is not None and (e - best_epoch) > patience and (e > min_epoch_for_es):
                     # Early stopping
                     break
-                hist.append(self.get_metrics())
             else:
                 hist.append(self.get_metrics("train"))
 
