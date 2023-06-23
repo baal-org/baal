@@ -141,7 +141,7 @@ docker run --rm baal --gpus all python3 experiments/vgg_mcdropout_cifar10.py
 ### Use Baal for YOUR Experiments
 
 Simply clone the repo, and create your own experiment script similar to the example
-at [experiments/vgg_experiment.py](experiments/vgg_experiment.py). Make sure to use the four main parts of Baal
+at _[experiments/vgg_mcdropout_cifar10.py](experiments/vgg_mcdropout_cifar10.py)_. Make sure to use the four main parts of Baal
 framework. _Happy running experiments_
 
 ### Contributing!
