@@ -54,7 +54,7 @@ class SplittedDataset(Dataset):
             if self.last_active_steps == -1:
                 min_labelled_step = 0
             else:
-                min_labelled_step = max(0, curr_al_step- self.last_active_steps)
+                min_labelled_step = max(0, curr_al_step - self.last_active_steps)
 
             # we need to work with lists since arrow dataset is not compatible with np.int types!
             indices = [
