@@ -50,17 +50,17 @@ class SplittedDataset(Dataset):
         Returns:
             List of the selected indices for training.
         """
-        if self.current_al_step != self._indices_cache[0]:
+        if (curr_al_step := self.current_al_step) != self._indices_cache[0]:
             if self.last_active_steps == -1:
                 min_labelled_step = 0
             else:
-                min_labelled_step = max(0, self.current_al_step - self.last_active_steps)
+                min_labelled_step = max(0, curr_al_step- self.last_active_steps)
 
             # we need to work with lists since arrow dataset is not compatible with np.int types!
             indices = [
                 indx for indx, val in enumerate(self.labelled_map) if val > min_labelled_step
             ]
-            self._indices_cache = (self.current_al_step, indices)
+            self._indices_cache = (curr_al_step, indices)
         return self._indices_cache[1]
 
     def is_labelled(self, idx: int) -> bool:
