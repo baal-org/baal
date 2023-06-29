@@ -168,6 +168,7 @@ class ModelWrapper(MetricMixin):
                                         `patience` epoch without improvement.
             min_epoch_for_es (int): Epoch at which the early stopping starts.
             skip_epochs (int): Number of epochs to skip for test_on_dataset
+
         Returns:
             History and best weights if required.
         """
