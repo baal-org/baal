@@ -148,7 +148,7 @@ class ModelWrapper(MetricMixin):
         return_best_weights=False,
         patience=None,
         min_epoch_for_es=0,
-        skip_epochs=1
+        skip_epochs=1,
     ):
         """
         Train and test the model on both Dataset `train_dataset`, `test_dataset`.
@@ -179,8 +179,10 @@ class ModelWrapper(MetricMixin):
             _ = self.train_on_dataset(
                 train_dataset, optimizer, batch_size, 1, use_cuda, workers, collate_fn, regularizer
             )
-            if e%skip_epochs==0:
-                te_loss = self.test_on_dataset(test_dataset, batch_size, use_cuda, workers, collate_fn)
+            if e % skip_epochs == 0:
+                te_loss = self.test_on_dataset(
+                    test_dataset, batch_size, use_cuda, workers, collate_fn
+                )
                 hist.append(self.get_metrics())
                 if te_loss < best_loss:
                     best_epoch = e
