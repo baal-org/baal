@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 from hypothesis import given
@@ -332,6 +334,18 @@ def test_heuristic_reductio_check(distributions):
         heuristic(distributions)
         assert "Can't order sequence with more than 1 dimension." in str(e_info.value)
 
+def test_shuffle_prop_warning():
+    with warnings.catch_warnings(record=True) as tape:
+        _ = BALD()
+        assert len(tape) == 0
+        _ = BALD(shuffle_prop=.1)
+        assert len(tape) == 1 and "shuffle_prop" in str(tape[0].message)\
+               and isinstance(tape[0].message, DeprecationWarning)
+
+    # Random doesn't raise the warning
+    with warnings.catch_warnings(record=True) as tape:
+        _ = Random()
+        assert len(tape) == 0
 
 if __name__ == '__main__':
     pytest.main()
