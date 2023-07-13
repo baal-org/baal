@@ -68,6 +68,7 @@ nav:
       - user_guide/index.md
       - Cheat Sheet: user_guide/baal_cheatsheet.md
       - Active data structure: notebooks/fundamentals/active-learning.ipynb
+      - Speeding up Monte-Carlo Inference With MCCachingModule: notebooks/mccaching_layer.ipynb
       - Computing uncertainty:
         - Stochastic models: notebooks/fundamentals/posteriors.ipynb
         - Heuristics: user_guide/heuristics.md
