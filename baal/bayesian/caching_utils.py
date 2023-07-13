@@ -30,7 +30,7 @@ class LRUCacheModule(nn.Module):
 def _caching_mapping_fn(module: torch.nn.Module) -> Optional[nn.Module]:
     new_module: Optional[nn.Module] = None
     # Could add more
-    if isinstance(module, (nn.Linear, nn.ReLU, nn.Conv2d)):
+    if isinstance(module, (nn.Linear, nn.Conv2d)):
         new_module = LRUCacheModule(module=module)
     return new_module
 
