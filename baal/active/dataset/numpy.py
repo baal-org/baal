@@ -68,5 +68,6 @@ class ActiveNumpyArray(SplittedDataset):
         if not isinstance(value, (list, tuple)):
             value = [value]
         indexes = self._pool_to_oracle_index(index)
+        active_step = self.current_al_step + 1
         for index, val in zip_longest(indexes, value, fillvalue=None):
-            self.labelled_map[index] = 1
+            self.labelled_map[index] = active_step
