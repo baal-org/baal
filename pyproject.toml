@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "baal"
-version = "1.7.0"
+version = "1.8.0"
 description = "Library to enable Bayesian active learning in your research or labeling work."
 authors = ["Parmida Atighehchian <parmida.atighehchian@servicenow.com>",
            "Frederic Branchaud-Charron <frederic.branchaud-charron@servicenow.com>",
