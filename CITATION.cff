@@ -1,34 +1,14 @@
 cff-version: 1.2.0
 message: "If you use Baal in your projects, please cite it as below."
 authors:
-- family-names: Atighehchian
-  given-names: Parmida
-- family-names: Branchaud-Charron
-  given-names: Frederic
+- family-names: "Atighehchian"
+  given-names: "Parmida"
+- family-names: "Branchaud-Charron"
+  given-names: "Frederic"
 title: "Baal, a Bayesian active learning library"
 version: 1.8.0
 date-released: 2022-08-14
 url: "https://baal.readthedocs.io/en/latest/"
 repository-code: "https://github.com/baal-org/baal"
 license: Apache-2.0
-identifiers:
-  - type: doi
-    value: 10.5281/zenodo.8155749
-preferred-citation:
-  type: conference-paper
-  title: "Bayesian active learning for production, a systematic study and a reusable library"
-  authors:
-  - family-names: Atighehchian
-  given-names: Parmida
-  - family-names: Branchaud-Charron
-    given-names: Frederic
-  - family-names: Lacoste
-    given-names: Alexandre
-  collection-title: "Proceedings of the ICML 2020 Workshop on Uncertainty and Robustness in Deep Learning"
-  collection-type: proceedings
-  month: 06
-  year: 2020
-  identifiers:
-  - type: other
-    value: "arXiv:2006.09916"
-    description: "The arXiv preprint of the paper"
+doi: 10.5281/zenodo.8155749
