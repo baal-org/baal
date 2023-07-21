@@ -726,16 +726,14 @@ class CombineHeuristics(AbstractHeuristic):
         ranks = _shuffle_subset(ranks, self.shuffle_prop)
         return ranks
 
+
 class EPIG(AbstractHeuristic):
     """
     Implementation of Expected Predicted Information Gain
     https://arxiv.org/abs/2304.08151
 
-
     References:
     Code from https://github.com/fbickfordsmith/epig
-
-
     """
 
     def __init__(self, shuffle_prop=DEPRECATED, reverse=False, reduction="none"):
@@ -744,7 +742,8 @@ class EPIG(AbstractHeuristic):
     def _conditional_epig_from_probs(self, predictions, targets):
         # converting to Tensor
         probs_pool = torch.Tensor(predictions)
-        probs_target = torch.Tensor(targets)
+        probs_targ = torch.Tensor(targets)
+        
         # Estimate the joint predictive distribution.
         probs_pool = probs_pool.permute(1, 0, 2)  # [K, N_p, Cl]
         probs_targ = probs_targ.permute(1, 0, 2)  # [K, N_t, Cl]
@@ -772,23 +771,78 @@ class EPIG(AbstractHeuristic):
         )  # [N_p, N_t, Cl, Cl]
         scores = torch.sum(probs_pool_targ_joint * log_term, dim=(-2, -1))  # [N_p, N_t]
         return scores  # [N_p, N_t]
-
+    
     def compute_score(self, predictions, targets):
         """
         Compute the score according to the heuristic.
-
 
         Args:
         predictions (ndarray): Array of predictions
         targets (ndarray): Array of targets
 
-
         Returns:
         Array of scores.
         """
         assert predictions.ndim >= 3
-        assert targets.ndim == predictions.ndim
+        assert targets.ndim >= 3
+        scores = self._conditional_epig_from_probs(predictions, targets)
+        return torch.mean(scores, dim=-1)  # [N_p,]
+        
+    def get_uncertainties(self, predictions, targets):
+        """
+        Get the uncertainties.
 
-        scores = self._conditional_epig_from_probs(predictions, targets)  # [N_p, N_t]
-        epig_scores = torch.mean(scores, dim=-1)  # [N_p,]
-        return np.array(epig_scores)
+        Args:
+            predictions (ndarray): Array of predictions
+
+        Returns:
+            Array of uncertainties
+
+        """
+        if isinstance(predictions, Tensor):
+            predictions = predictions.numpy()
+        scores = self.compute_score(predictions, targets)
+        scores = self.reduction(scores)
+        if not np.all(np.isfinite(scores)):
+            fixed = 0.0 if self.reversed else 10000
+            warnings.warn(f"Invalid value in the score, will be put to {fixed}", UserWarning)
+            scores[~np.isfinite(scores)] = fixed
+        return scores
+    
+    def get_uncertainties_generator(self, predictions):
+        """
+        Compute the score according to the heuristic.
+
+        Args:
+            predictions (Iterable): Generator of predictions
+
+        Raises:
+            ValueError if the generator is empty.
+
+        Returns:
+            Array of scores.
+        """
+        acc = []
+        for pred in predictions:
+            acc.append(self.get_uncertainties(pred))
+        if len(acc) == 0:
+            raise ValueError("No prediction! Cannot order the values!")
+        return np.concatenate(acc)
+    def get_ranks(self, predictions, targets):
+        """
+        Rank the predictions according to their uncertainties.
+
+        Args:
+            predictions (ndarray): [batch_size, C, ..., Iterations]
+
+        Returns:
+            Ranked index according to the uncertainty (highest to lowes).
+            Scores for all predictions.
+
+        """
+        if isinstance(predictions, types.GeneratorType):
+            scores = self.get_uncertainties_generator(predictions, targets)
+        else:
+            scores = self.get_uncertainties(predictions, targets)
+
+        return self.reorder_indices(scores), scores
