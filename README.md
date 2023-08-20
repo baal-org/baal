@@ -18,7 +18,7 @@
     <img alt="Office hours" src="https://img.shields.io/badge/Office hours-Calendly-blue.svg"/>
   </a>
   <a href="https://pepy.tech/project/baal">
-    <img alt="Downloads" src="https://pepy.tech/badge/baal"/>
+    <img alt="Downloads" src="https://static.pepy.tech/badge/baal"/>
   </a>
 
   </h1>
