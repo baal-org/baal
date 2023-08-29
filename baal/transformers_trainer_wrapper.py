@@ -79,7 +79,7 @@ class BaalTransformersTrainer(Trainer):
             )
 
             out = map_on_tensor(lambda o: o.view([iterations, -1, *o.size()[1:]]), out)
-            out = map_on_tensor(lambda o: o.permute(1, 2, *range(3, o.ndimension()), 0), out)
+            out = map_on_tensor(lambda o: o.permute(1, *range(3, o.ndimension()), 2, 0), out)
             out = map_on_tensor(lambda x: x.detach(), out)
             if half:
                 out = map_on_tensor(lambda x: x.half(), out)

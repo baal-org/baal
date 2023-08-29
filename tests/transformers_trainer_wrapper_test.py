@@ -40,11 +40,11 @@ class BaalTransformerTrainer(unittest.TestCase):
 
         # iteration == 1
         pred = self.wrapper.predict_on_dataset_generator(self.dataset, 1, False)
-        assert next(pred).shape == (5, 10, 100, 1)
+        assert next(pred).shape == (5, 100, 10, 1)
 
         # iterations > 1
         pred = self.wrapper.predict_on_dataset_generator(self.dataset, 10, False)
-        assert next(pred).shape == (5, 10, 100, 10)
+        assert next(pred).shape == (5, 100, 10, 10)
 
         # Test generators
         l_gen = self.wrapper.predict_on_dataset_generator(self.dataset, 10, False)
