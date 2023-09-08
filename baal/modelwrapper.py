@@ -18,6 +18,7 @@ from baal.active.dataset.base import Dataset
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
 from baal.utils.metrics import Loss
+from baal.utils.warnings import raise_warnings_cache_replicated
 
 log = structlog.get_logger("ModelWrapper")
 
@@ -48,6 +49,8 @@ class ModelWrapper(MetricMixin):
         self.add_metric("loss", lambda: Loss())
         self.replicate_in_memory = replicate_in_memory
         self._active_dataset_size = -1
+
+        raise_warnings_cache_replicated(self.model, replicate_in_memory=replicate_in_memory)
 
     def train_on_dataset(
         self,
