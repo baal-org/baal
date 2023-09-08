@@ -1,7 +1,10 @@
+import warnings
+
 import pytest
 import torch
 from torch.nn import Sequential, Linear
 
+from baal import ModelWrapper
 from baal.bayesian.caching_utils import MCCachingModule
 
 
@@ -49,4 +52,14 @@ def test_caching(my_model):
     my_model(x)
     assert LinearMocked.call_count == 20
 
+
+def test_caching_warnings(my_model):
+    my_model = MCCachingModule(my_model)
+    with warnings.catch_warnings(record=True) as tape:
+        ModelWrapper(my_model, criterion=None, replicate_in_memory=True)
+        assert len(tape) == 1 and "MCCachingModule" in str(tape[0].message)
+
+    with warnings.catch_warnings(record=True) as tape:
+        ModelWrapper(my_model, criterion=None, replicate_in_memory=False)
+        assert len(tape) == 0
 
