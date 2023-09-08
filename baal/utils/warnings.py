@@ -5,7 +5,8 @@ from torch import nn
 from baal.bayesian.caching_utils import LRUCacheModule
 
 WARNING_CACHE_REPLICATED = """
-To use MCCachingModule at maximum effiency, we recommend using `replicate_in_memory=False`, but it is `True`.
+To use MCCachingModule at maximum effiency, we recommend using
+ `replicate_in_memory=False`, but it is `True`.
 """
 
 
