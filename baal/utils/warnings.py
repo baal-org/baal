@@ -10,6 +10,10 @@ To use MCCachingModule at maximum effiency, we recommend using
 """
 
 
-def raise_warnings_cache_replicated(module: nn.Module, replicate_in_memory):
-    if replicate_in_memory and any(isinstance(m, LRUCacheModule) for m in module.modules()):
+def raise_warnings_cache_replicated(module, replicate_in_memory):
+    if (
+        isinstance(module, nn.Module)
+        and replicate_in_memory
+        and any(isinstance(m, LRUCacheModule) for m in module.modules())
+    ):
         warnings.warn(WARNING_CACHE_REPLICATED, UserWarning)
