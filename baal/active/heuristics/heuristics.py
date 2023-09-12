@@ -725,3 +725,146 @@ class CombineHeuristics(AbstractHeuristic):
             ranks = ranks[::-1]
         ranks = _shuffle_subset(ranks, self.shuffle_prop)
         return ranks
+
+
+class EPIG(AbstractHeuristic):
+    """
+    Implementation of Expected Predicted Information Gain
+    https://arxiv.org/abs/2304.08151
+
+    References:
+    Code from https://github.com/fbickfordsmith/epig
+    """
+
+    def __init__(self, shuffle_prop=DEPRECATED, reverse=False, reduction="none"):
+        super().__init__(shuffle_prop=shuffle_prop, reverse=True, reduction=reduction)
+
+    def entropy_from_probs(self,probs):
+        """
+        See entropy_from_logprobs.
+
+        If p(y=y'|x) is 0, we make sure p(y=y'|x) log p(y=y'|x) evaluates to 0, not NaN.
+
+        Arguments:
+            probs: Tensor[float], [*N, Cl]
+
+        Returns:
+            Tensor[float], [*N,]
+        """
+        logprobs = torch.clone(probs)  #  [*N, Cl]
+        logprobs[probs > 0] = torch.log(probs[probs > 0])  #  [*N, Cl]
+        return -torch.sum((probs * logprobs), dim=-1)  # [*N,]
+    
+    def marginal_entropy_from_probs(self,probs):
+        """
+        See marginal_entropy_from_logprobs.
+
+        Arguments:
+            probs: Tensor[float], [N, Cl, K]
+
+        Returns:
+            Tensor[float], [N,]
+        """
+        probs = torch.mean(probs, dim=2)  # [N, Cl]
+        scores = self.entropy_from_probs(probs)
+        return scores  # [N,]
+
+    def compute_score(self, predictions, targets):
+        """
+        Compute the score according to the heuristic.
+
+        Args:
+        predictions (ndarray): Array of predictions
+        targets (ndarray): Array of targets
+
+        Returns:
+        Array of scores.
+        """
+        assert predictions.ndim >= 3
+        assert targets.ndim >= 3
+
+        probs_pool = torch.Tensor(predictions)  #[N, Cl, K]
+        probs_targ = torch.Tensor(targets)
+
+        N_t, C, K = probs_targ.shape
+
+        entropy_pool = self.marginal_entropy_from_probs(probs_pool)  # [N_p,]
+        entropy_targ = self.marginal_entropy_from_probs(probs_targ)  # [N_t,]
+        entropy_targ = torch.mean(entropy_targ)  # [1,]
+
+        #probs_pool = probs_pool.permute(0, 2, 1)  # [N_p, Cl, K]
+        probs_targ = probs_targ.permute(2, 0, 1)  # [K, N_t, Cl]
+        probs_targ = probs_targ.reshape(K, N_t * C)  # [K, N_t * Cl]
+        probs_pool_targ_joint = torch.matmul(probs_pool,probs_targ / K)  # [N_p, Cl, N_t * Cl]
+
+        entropy_pool_targ = (
+            -torch.sum(xlogy(probs_pool_targ_joint, probs_pool_targ_joint), dim=(-2, -1)) / N_t
+        )  # [N_p,]
+        
+        entropy_pool_targ[torch.isnan(entropy_pool_targ)] = 0.0
+        scores = entropy_pool + entropy_targ - entropy_pool_targ  # [N_p,]
+        return scores.numpy()  # [N_p,]
+
+        # scores = self._conditional_epig_from_probs(predictions, targets)
+        # return torch.mean(scores, dim=-1)  # [N_p,]
+        
+    def get_uncertainties(self, predictions, targets):
+        """
+        Get the uncertainties.
+
+        Args:
+            predictions (ndarray): Array of predictions
+
+        Returns:
+            Array of uncertainties
+
+        """
+        if isinstance(predictions, Tensor):
+            predictions = predictions.numpy()
+        scores = self.compute_score(predictions, targets)
+        scores = self.reduction(scores)
+        if not np.all(np.isfinite(scores)):
+            fixed = 0.0 if self.reversed else 10000
+            warnings.warn(f"Invalid value in the score, will be put to {fixed}", UserWarning)
+            scores[~np.isfinite(scores)] = fixed
+        return scores
+    
+    def get_uncertainties_generator(self, predictions, targets):
+        """
+        Compute the score according to the heuristic.
+
+        Args:
+            predictions (Iterable): Generator of predictions
+
+        Raises:
+            ValueError if the generator is empty.
+
+        Returns:
+            Array of scores.
+        """
+        acc = []
+        for pred in predictions:
+            acc.append(self.get_uncertainties(pred, targets))
+        if len(acc) == 0:
+            raise ValueError("No prediction! Cannot order the values!")
+        return np.concatenate(acc)
+    def get_ranks(self, predictions, targets):
+        """
+        Rank the predictions according to their uncertainties.
+
+        Args:
+            predictions (ndarray): [batch_size, C, ..., Iterations]
+
+        Returns:
+            Ranked index according to the uncertainty (highest to lowes).
+            Scores for all predictions.
+
+        """
+        if isinstance(predictions, types.GeneratorType):
+            scores = self.get_uncertainties_generator(predictions, targets)
+        else:
+            scores = self.get_uncertainties(predictions, targets)
+        
+        print(scores)
+
+        return self.reorder_indices(scores), scores
