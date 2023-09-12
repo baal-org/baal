@@ -79,7 +79,10 @@ class ActiveLearningLoop:
             indices = None
 
         if len(pool) > 0:
-            probs = self.get_probabilities(pool, **self.kwargs)
+            if self.heuristic.__class__.__name__ == "Random":
+                probs = np.random.uniform(low=0, high=1, size=(len(pool), 1))
+            else:
+                probs = self.get_probabilities(pool, **self.kwargs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label, uncertainty = self.heuristic.get_ranks(probs)
                 if indices is not None:
