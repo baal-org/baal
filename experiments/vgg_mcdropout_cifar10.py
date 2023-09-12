@@ -84,7 +84,7 @@ def main():
 
     heuristic = get_heuristic(hyperparams["heuristic"], hyperparams["shuffle_prop"])
     criterion = CrossEntropyLoss()
-    model = vgg16(pretrained=False, num_classes=10)
+    model = vgg16(weights=None, num_classes=10)
     weights = load_state_dict_from_url("https://download.pytorch.org/models/vgg16-397923af.pth")
     weights = {k: v for k, v in weights.items() if "classifier.6" not in k}
     model.load_state_dict(weights, strict=False)
