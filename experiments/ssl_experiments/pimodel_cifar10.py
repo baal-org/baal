@@ -289,7 +289,7 @@ if __name__ == "__main__":
     print("Active set length: {}".format(len(active_set)))
     print("Pool set length: {}".format(len(active_set.pool)))
 
-    net = vgg11(pretrained=False, num_classes=10)
+    net = vgg11(weights=None, num_classes=10)
 
     weights = load_state_dict_from_url("https://download.pytorch.org/models/vgg11-bbd30ac9.pth")
     weights = {k: v for k, v in weights.items() if "classifier.6" not in k}
