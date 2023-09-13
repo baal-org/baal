@@ -1,6 +1,7 @@
 import os
 import pickle
 import warnings
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -139,6 +140,25 @@ def test_deprecation():
                                          dummy_param=1)
         assert issubclass(w[-1].category, DeprecationWarning)
         assert "ndata_to_label" in str(w[-1].message)
+
+
+@pytest.mark.parametrize('heur,num_get_probs', [(heuristics.Random(), 0),
+                                  (heuristics.BALD(), 1),
+                                  (heuristics.Entropy(), 1),
+                                  (heuristics.Variance(reduction='sum'), 1)
+                                  ])
+def test_get_probs(heur, num_get_probs):
+    dataset = ActiveLearningDataset(MyDataset(), make_unlabelled=lambda x: -1)
+    active_loop = ActiveLearningLoop(dataset,
+                                    get_probs_iter,
+                                    heur,
+                                    query_size=5,
+                                    dummy_param=1)
+    dataset.label_randomly(10)
+    with patch.object(active_loop, "get_probabilities") as mock_probs:
+        active_loop.step()
+    assert mock_probs.call_count == num_get_probs
+
 
 if __name__ == '__main__':
     pytest.main()
