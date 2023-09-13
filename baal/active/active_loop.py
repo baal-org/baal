@@ -79,7 +79,7 @@ class ActiveLearningLoop:
             indices = None
 
         if len(pool) > 0:
-            if self.heuristic.__class__.__name__ == "Random":
+            if isinstance(self.heuristic, heuristics.Random):
                 probs = np.random.uniform(low=0, high=1, size=(len(pool), 1))
             else:
                 probs = self.get_probabilities(pool, **self.kwargs)
