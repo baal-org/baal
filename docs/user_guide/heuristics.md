@@ -33,11 +33,9 @@ This approach is on-par with methods like BADGE or BatchBALD, while being hundre
     To use PowerBALD in your code, it is as simple as:
 
     ```
-    from baal.active.heuristics import BALD
-    from baal.active.heuristics.stochastics import PowerSampling
+    from baal.active.heuristics.aliases import PowerBALD
 
-
-    heuristic = PowerSampling(BALD(), query_size=QUERY_SIZE, temperature=1.0)
+    heuristic = PowerBALD(query_size=QUERY_SIZE, temperature=1.0)
     ```
 
 ### BALD
