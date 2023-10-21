@@ -41,6 +41,8 @@ class BaalTransformersTrainer(Trainer):
 
     Args:
         model (transformers.PreTrainedModel): The model to train, evaluate or use for predictions.
+        replicate_in_memory: If True, will perform MC-Dropout in a single forward pass.
+            It is faster, but more memory expensive. Default: True.
         data_collator (Optional(Callable)): The function to use to from a batch.
         train_dataset (Optional(torch.utils.data.Dataset)): The dataset to use for training.
         eval_dataset (Optional(torch.utils.data.Dataset)): The dataset to use for evaluation.
