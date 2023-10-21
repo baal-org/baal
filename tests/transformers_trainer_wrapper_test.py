@@ -5,8 +5,10 @@ import numpy as np
 import pytest
 import torch
 from transformers import GPT2LMHeadModel, GPT2Config
-from baal.transformers_trainer_wrapper import BaalTransformersTrainer
 from transformers import TrainingArguments
+
+from baal.transformers_trainer_wrapper import BaalTransformersTrainer
+
 
 # the DummyDataset is taken from
 # (https://github.com/huggingface/transformers/blob/master/tests/test_trainer.py#L81)
@@ -26,47 +28,53 @@ class BaalTransformerTrainer(unittest.TestCase):
     def setUp(self):
         x = torch.randint(0, 5, (10,))
         self.dataset = DummyDataset(x)
-        args = TrainingArguments(".")
+        self.args = TrainingArguments(".")
         config = GPT2Config(vocab_size=100, n_positions=128, n_ctx=128, n_embd=32, n_layer=3,
                             n_head=4)
         self.model = GPT2LMHeadModel(config)
-        self.wrapper = BaalTransformersTrainer(model=self.model,
-                                               args=args,
-                                               train_dataset=self.dataset,
-                                               eval_dataset=self.dataset,
-                                               tokenizer=None)
 
     def test_predict_on_dataset_generator(self):
+        for replicate in [True, False]:
+            wrapper = BaalTransformersTrainer(model=self.model,
+                                              args=self.args,
+                                              replicate_in_memory=replicate,
+                                              train_dataset=self.dataset,
+                                              eval_dataset=self.dataset,
+                                              tokenizer=None)
+            # iteration == 1
+            pred = wrapper.predict_on_dataset_generator(self.dataset, 1, False)
+            assert next(pred).shape == (5, 100, 10, 1)
 
-        # iteration == 1
-        pred = self.wrapper.predict_on_dataset_generator(self.dataset, 1, False)
-        assert next(pred).shape == (5, 100, 10, 1)
+            # iterations > 1
+            pred = wrapper.predict_on_dataset_generator(self.dataset, 10, False)
+            assert next(pred).shape == (5, 100, 10, 10)
 
-        # iterations > 1
-        pred = self.wrapper.predict_on_dataset_generator(self.dataset, 10, False)
-        assert next(pred).shape == (5, 100, 10, 10)
+            # Test generators
+            l_gen = wrapper.predict_on_dataset_generator(self.dataset, 10, False)
+            l = wrapper.predict_on_dataset(self.dataset, 10, False)
+            assert np.allclose(next(l_gen)[0], l[0])
 
-        # Test generators
-        l_gen = self.wrapper.predict_on_dataset_generator(self.dataset, 10, False)
-        l = self.wrapper.predict_on_dataset(self.dataset, 10, False)
-        assert np.allclose(next(l_gen)[0], l[0])
-
-        # Test Half
-        l_gen = self.wrapper.predict_on_dataset_generator(self.dataset, 10, half=True)
-        l = self.wrapper.predict_on_dataset(self.dataset, 10, half=True)
-        assert next(l_gen).dtype == np.float16
-        assert l.dtype == np.float16
+            # Test Half
+            l_gen = wrapper.predict_on_dataset_generator(self.dataset, 10, half=True)
+            l = wrapper.predict_on_dataset(self.dataset, 10, half=True)
+            assert next(l_gen).dtype == np.float16
+            assert l.dtype == np.float16
 
     def test_load_state_dic(self):
-        model_weights = deepcopy(list(self.wrapper.model.parameters())[0])
-        initial_state_dict = deepcopy(self.wrapper.model.state_dict())
-        self.wrapper.train()
-        weights_after_training = deepcopy(list(self.wrapper.model.parameters())[0])
+        wrapper = BaalTransformersTrainer(model=self.model,
+                                          args=self.args,
+                                          train_dataset=self.dataset,
+                                          eval_dataset=self.dataset,
+                                          tokenizer=None)
+        model_weights = deepcopy(list(wrapper.model.parameters())[0])
+        initial_state_dict = deepcopy(wrapper.model.state_dict())
+        wrapper.train()
+        weights_after_training = deepcopy(list(wrapper.model.parameters())[0])
         assert not torch.equal(model_weights.data, weights_after_training.data)
 
-        self.wrapper.load_state_dict(initial_state_dict)
+        wrapper.load_state_dict(initial_state_dict)
 
-        reloaded_weights = deepcopy(list(self.wrapper.model.parameters())[0])
+        reloaded_weights = deepcopy(list(wrapper.model.parameters())[0])
         assert torch.equal(model_weights.data, reloaded_weights.data)
 
 

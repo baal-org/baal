@@ -1,7 +1,13 @@
-from typing import Optional, List, Sequence
+from typing import Optional, List, Sequence, Union
+
 import numpy as np
 import structlog
+import torch
+from torch import nn
 from tqdm import tqdm
+from transformers import PreTrainedModel, TrainingArguments
+
+from baal.utils.warnings import raise_warnings_cache_replicated
 
 # These packages are optional and not needed for BaaL main package.
 try:
@@ -15,7 +21,15 @@ except ImportError:
 from baal.utils.array_utils import stack_in_memory
 from baal.utils.iterutils import map_on_tensor
 
-log = structlog.get_logger("ModelWrapper")
+log = structlog.get_logger("BaalTransformersTrainer")
+
+
+def _stack_preds(out):
+    if isinstance(out[0], Sequence):
+        out = [torch.stack(ts, dim=0) for ts in zip(*out)]
+    else:
+        out = torch.stack(out, dim=0)
+    return out
 
 
 class BaalTransformersTrainer(Trainer):
@@ -39,6 +53,17 @@ class BaalTransformersTrainer(Trainer):
         optimizers (Optional(Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR])):
             A tuple containing the optimizer and the scheduler to use.
     """
+
+    def __init__(
+        self,
+        model: Union[PreTrainedModel, nn.Module] = None,
+        args: TrainingArguments = None,
+        replicate_in_memory=True,
+        **kwargs
+    ):
+        self.replicate_in_memory = replicate_in_memory
+        super().__init__(model=model, args=args, **kwargs)
+        raise_warnings_cache_replicated(model, replicate_in_memory)
 
     def predict_on_dataset_generator(
         self,
@@ -70,15 +95,37 @@ class BaalTransformersTrainer(Trainer):
 
         model.eval()
         for step, inputs in enumerate(tqdm(dataloader)):
-            inputs = map_on_tensor(
-                lambda element: map_on_tensor(lambda d: stack_in_memory(d, iterations), element),
-                inputs,
-            )
-            _, out, _ = self.prediction_step(
-                model, inputs, prediction_loss_only=False, ignore_keys=ignore_keys
-            )
-
-            out = map_on_tensor(lambda o: o.view([iterations, -1, *o.size()[1:]]), out)
+            if self.replicate_in_memory:
+                try:
+                    # We perform MC-Dropout in a single pass, fast, but memory intensive.
+                    inputs = map_on_tensor(
+                        lambda element: map_on_tensor(
+                            lambda d: stack_in_memory(d, iterations), element
+                        ),
+                        inputs,
+                    )
+                    _, out, _ = self.prediction_step(
+                        model, inputs, prediction_loss_only=False, ignore_keys=ignore_keys
+                    )
+                except RuntimeError as e:
+                    if "CUDA out of memory" in str(e):
+                        raise RuntimeError(
+                            """CUDA ran out of memory while Baal tried to replicate data. See the exception above.
+                        Use `replicate_in_memory=False` in order to reduce the memory requirements.
+                        Note that there will be some speed trade-offs"""
+                        ) from e
+                    raise e
+                out = map_on_tensor(lambda o: o.view([iterations, -1, *o.size()[1:]]), out)
+            else:
+                # We perform a forward pass `iterations` time. Slower, but memory efficient.
+                out = [
+                    self.prediction_step(
+                        model, inputs, prediction_loss_only=False, ignore_keys=ignore_keys
+                    )[1]
+                    for _ in range(iterations)
+                ]
+                out = _stack_preds(out)
+            # Swap axes to match Baal [Batch_size, Classes, ..., Iterations]
             out = map_on_tensor(lambda o: o.permute(1, *range(3, o.ndimension()), 2, 0), out)
             out = map_on_tensor(lambda x: x.detach(), out)
             if half:
