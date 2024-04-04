@@ -185,7 +185,7 @@ class ActiveDatasetTest(unittest.TestCase):
 
 
 def test_arrowds():
-    dataset = HFdata.load_dataset('glue', 'sst2')['test']
+    dataset = HFdata.load_dataset('stanfordnlp/sst2')['test']
     dataset = ActiveLearningDataset(dataset)
     dataset.label(np.arange(10))
     assert len(dataset) == 10
