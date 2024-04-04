@@ -47,7 +47,7 @@ class StochasticHeuristic(AbstractHeuristic):
 
         # TODO Seed?
         if (distributions > 0).sum() < self.query_size:
-            log.warnings("Not enough values, return random")
+            log.warn("Not enough values, return random")
             distributions = np.ones_like(distributions) / len(distributions)
         return (
             np.random.choice(len(distributions), self.query_size, replace=False, p=distributions),
