@@ -9,6 +9,7 @@ from torchvision.datasets import MNIST
 from baal import ActiveLearningDataset, ModelWrapper
 from baal.active import ActiveLearningLoop
 from baal.active.heuristics import BALD
+from baal.active.stopping_criteria import LabellingBudgetStoppingCriterion
 from baal.bayesian.dropout import patch_module
 
 use_cuda = torch.cuda.is_available()
@@ -54,8 +55,11 @@ al_loop = ActiveLearningLoop(
 
 # Following Gal 2016, we reset the weights at the beginning of each step.
 initial_weights = deepcopy(model.state_dict())
+stopping_criterion = LabellingBudgetStoppingCriterion(
+    active_dataset=al_dataset, labelling_budget=10
+)
 
-for step in range(100):
+while True:
     model.load_state_dict(initial_weights)
     train_loss = wrapper.train_on_dataset(
         al_dataset, optimizer=optimizer, batch_size=32, epoch=10, use_cuda=use_cuda
@@ -63,7 +67,6 @@ for step in range(100):
     test_loss = wrapper.test_on_dataset(test_ds, batch_size=32, use_cuda=use_cuda)
 
     pprint(wrapper.get_metrics())
-    flag = al_loop.step()
-    if not flag:
-        # We are done labelling! stopping
+    al_loop.step()
+    if stopping_criterion.should_stop():
         break
