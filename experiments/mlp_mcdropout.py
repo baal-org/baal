@@ -67,6 +67,6 @@ while True:
     test_loss = wrapper.test_on_dataset(test_ds, batch_size=32, use_cuda=use_cuda)
 
     pprint(wrapper.get_metrics())
-    al_loop.step()
-    if stopping_criterion.should_stop():
+    flag = al_loop.step()
+    if stopping_criterion.should_stop() or flag:
         break

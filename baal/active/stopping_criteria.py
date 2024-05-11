@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Iterable, Dict
 
 import numpy as np
 
@@ -9,7 +9,7 @@ class StoppingCriterion:
     def __init__(self, active_dataset: ActiveLearningDataset):
         self._active_ds = active_dataset
 
-    def should_stop(self, metrics: Dict[str, float], uncertainty: List[float]) -> bool:
+    def should_stop(self, metrics: Dict[str, float], uncertainty: Iterable[float]) -> bool:
         raise NotImplementedError
 
 
@@ -21,7 +21,7 @@ class LabellingBudgetStoppingCriterion(StoppingCriterion):
         self._start_length = len(active_dataset)
         self.labelling_budget = labelling_budget
 
-    def should_stop(self, uncertainty: List[float]) -> bool:
+    def should_stop(self, uncertainty: Iterable[float]) -> bool:
         return (len(self._active_ds) - self._start_length) >= self.labelling_budget
 
 
@@ -32,7 +32,7 @@ class LowAverageUncertaintyStoppingCriterion(StoppingCriterion):
         super().__init__(active_dataset)
         self.avg_uncertainty_thresh = avg_uncertainty_thresh
 
-    def should_stop(self, metrics: Dict[str, float], uncertainty: List[float]) -> bool:
+    def should_stop(self, metrics: Dict[str, float], uncertainty: Iterable[float]) -> bool:
         return np.mean(uncertainty) < self.avg_uncertainty_thresh
 
 
@@ -57,7 +57,7 @@ class EarlyStoppingCriterion(StoppingCriterion):
         self.epsilon = epsilon
         self._acc = []
 
-    def should_stop(self, metrics: Dict[str, float], uncertainty: List[float]) -> bool:
+    def should_stop(self, metrics: Dict[str, float], uncertainty: Iterable[float]) -> bool:
         self._acc.append(metrics[self.metric_name])
         near_threshold = np.isclose(np.array(self._acc), self._acc[-1], atol=self.epsilon)
-        return len(near_threshold) > self.patience and near_threshold[-self.patience].all()
+        return len(near_threshold) >= self.patience and near_threshold[-(self.patience + 1) :].all()
