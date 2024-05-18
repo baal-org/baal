@@ -6,6 +6,7 @@ from torch.nn import Sequential, Linear
 
 from baal import ModelWrapper
 from baal.bayesian.caching_utils import MCCachingModule
+from baal.modelwrapper import TrainingArgs
 
 
 class LinearMocked(Linear):
@@ -56,10 +57,10 @@ def test_caching(my_model):
 def test_caching_warnings(my_model):
     my_model = MCCachingModule(my_model)
     with warnings.catch_warnings(record=True) as tape:
-        ModelWrapper(my_model, criterion=None, replicate_in_memory=True)
+        ModelWrapper(my_model, args=TrainingArgs(replicate_in_memory=True))
         assert len(tape) == 1 and "MCCachingModule" in str(tape[0].message)
 
     with warnings.catch_warnings(record=True) as tape:
-        ModelWrapper(my_model, criterion=None, replicate_in_memory=False)
+        ModelWrapper(my_model, args=TrainingArgs(replicate_in_memory=False))
         assert len(tape) == 0
 

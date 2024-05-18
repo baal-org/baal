@@ -5,7 +5,7 @@ import torch
 from torch import nn, Tensor
 
 from baal import ModelWrapper
-from baal.modelwrapper import _stack_preds
+from baal.modelwrapper import _stack_preds, TrainingArgs
 from baal.utils.cuda_utils import to_cuda
 
 
@@ -15,15 +15,15 @@ class EnsembleModelWrapper(ModelWrapper):
 
     Args:
         model (nn.Module): A Model.
-        criterion (Callable): Loss function
+        args (TrainingArgs): Argument for model
 
     Notes:
         If you're looking to use ensembles for non-deep models, see our sklearn tutorial:
          baal.readthedocs.io/en/latest/notebooks/sklearn_tutorial.html
     """
 
-    def __init__(self, model, criterion):
-        super().__init__(model, criterion)
+    def __init__(self, model, args: TrainingArgs):
+        super().__init__(model, args)
         self._weights = []
 
     def add_checkpoint(self):

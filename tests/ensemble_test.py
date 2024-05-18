@@ -5,6 +5,7 @@ from torch import optim
 from torch.utils.data import Dataset
 
 from baal.ensemble import EnsembleModelWrapper, ensemble_prediction
+from baal.modelwrapper import TrainingArgs
 
 N_CLASS = 3
 
@@ -52,15 +53,17 @@ def weight_init(m):
 )
 def test_prediction(use_cuda, n_ensemble):
     model = AModel()
-    ensemble = EnsembleModelWrapper(model, nn.CrossEntropyLoss())
     optimizer = optim.SGD(model.parameters(), lr=0.001)
+    args = TrainingArgs(criterion=nn.CrossEntropyLoss(), optimizer=optimizer, batch_size=10, use_cuda=use_cuda, epoch=0)
+    ensemble = EnsembleModelWrapper(model, args )
+
     dataset = DummyDataset()
     if use_cuda:
         model.cuda()
 
     for i in range(n_ensemble):
         model.apply(weight_init)
-        ensemble.train_on_dataset(dataset, optimizer, 1, 2, use_cuda)
+        ensemble.train_on_dataset(dataset)
         ensemble.add_checkpoint()
     assert len(ensemble._weights) == n_ensemble
 

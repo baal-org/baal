@@ -110,9 +110,7 @@ calibrator = DirichletCalibrator(wrapper, 2, lr=0.001, reg_factor=0.001)
 wrapper.train_on_dataset(train_ds, SGD(...), batch_size=32, epoch=30, use_cuda=True)
 
 # Calibrate your model on a held-out set.
-calibrator.calibrate(calib_ds, valid_ds, batch_size=10, epoch=5,
-                     use_cuda=True,
-                     double_fit=True, workers=4)
+calibrator.calibrate(calib_ds, valid_ds, use_cuda=True, double_fit=True, workers=4)
 calibrated_model = calibrator.calibrated_model
 ```
 

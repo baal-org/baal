@@ -60,13 +60,12 @@ class AbstractGPUHeuristic(ModelWrapper):
     def __init__(
         self,
         model: ModelWrapper,
-        criterion,
         shuffle_prop=0.0,
         threshold=None,
         reverse=False,
         reduction="none",
     ):
-        super().__init__(model, criterion)
+        super().__init__(model, model.args)
         self.shuffle_prop = shuffle_prop
         self.threshold = threshold
         self.reversed = reverse
@@ -94,25 +93,15 @@ class AbstractGPUHeuristic(ModelWrapper):
     def predict_on_dataset(
         self,
         dataset: Dataset,
-        batch_size: int,
         iterations: int,
-        use_cuda: bool,
-        workers: int = 4,
-        collate_fn: Optional[Callable] = None,
         half=False,
         verbose=True,
     ):
-        return (
-            super()
-            .predict_on_dataset(
-                dataset, batch_size, iterations, use_cuda, workers, collate_fn, half, verbose
-            )
-            .reshape([-1])
-        )
+        return super().predict_on_dataset(dataset, iterations, half, verbose).reshape([-1])
 
-    def predict_on_batch(self, data, iterations=1, use_cuda=False):
+    def predict_on_batch(self, data, iterations=1):
         """Rank the predictions according to their uncertainties."""
-        return self.get_uncertainties(self.model.predict_on_batch(data, iterations, cuda=use_cuda))
+        return self.get_uncertainties(self.model.predict_on_batch(data, iterations))
 
 
 class BALDGPUWrapper(AbstractGPUHeuristic):
@@ -121,12 +110,9 @@ class BALDGPUWrapper(AbstractGPUHeuristic):
         https://arxiv.org/abs/1703.02910
     """
 
-    def __init__(
-        self, model: ModelWrapper, criterion, shuffle_prop=0.0, threshold=None, reduction="none"
-    ):
+    def __init__(self, model: ModelWrapper, shuffle_prop=0.0, threshold=None, reduction="none"):
         super().__init__(
             model,
-            criterion=criterion,
             shuffle_prop=shuffle_prop,
             threshold=threshold,
             reverse=True,

@@ -13,6 +13,7 @@ from baal.active.heuristics import BALD
 from baal.active.heuristics.heuristics_gpu import BALDGPUWrapper
 from baal.bayesian import Dropout
 from baal.bayesian.dropout import Dropout2d
+from baal.modelwrapper import TrainingArgs
 
 
 class Flatten(nn.Module):
@@ -43,7 +44,7 @@ def classification_task(tmpdir):
                           Dropout(),
                           nn.Linear(128, 10)
                           )
-    model = ModelWrapper(model, nn.CrossEntropyLoss())
+    model = ModelWrapper(model, TrainingArgs(criterion=nn.CrossEntropyLoss(), use_cuda=False, batch_size=4))
     test = SimpleDataset()
     return model, test
 
@@ -51,13 +52,13 @@ def classification_task(tmpdir):
 def test_bald_gpu(classification_task):
     torch.manual_seed(1337)
     model, test_set = classification_task
-    wrap = BALDGPUWrapper(model, criterion=None)
+    wrap = BALDGPUWrapper(model)
 
-    out = wrap.predict_on_dataset(test_set, 4, 10, False, 4)
+    out = wrap.predict_on_dataset(test_set,  10)
     assert out.shape[0] == len(test_set)
     bald = BALD()
     torch.manual_seed(1337)
-    out_bald = bald.get_uncertainties(model.predict_on_dataset(test_set, 4, 10, False, 4))
+    out_bald = bald.get_uncertainties(model.predict_on_dataset(test_set, 10))
     assert np.allclose(out, out_bald, rtol=1e-5, atol=1e-5)
 
 
@@ -71,7 +72,7 @@ def segmentation_task(tmpdir):
                           Dropout2d(),
                           nn.ConvTranspose2d(64, 10, 3, 1)
                           )
-    model = ModelWrapper(model, nn.CrossEntropyLoss())
+    model = ModelWrapper(model, TrainingArgs(criterion=nn.CrossEntropyLoss(), use_cuda=False, batch_size=4))
     test = SimpleDataset()
     return model, test
 
@@ -79,12 +80,12 @@ def segmentation_task(tmpdir):
 def test_bald_gpu_seg(segmentation_task):
     torch.manual_seed(1337)
     model, test_set = segmentation_task
-    wrap = BALDGPUWrapper(model, criterion=None, reduction='sum')
+    wrap = BALDGPUWrapper(model, reduction='sum')
 
-    out = wrap.predict_on_dataset(test_set, 4, 10, False, 4)
+    out = wrap.predict_on_dataset(test_set, 10)
     assert out.shape[0] == len(test_set)
     bald = BALD(reduction='sum')
     torch.manual_seed(1337)
     out_bald = bald.get_uncertainties_generator(
-        model.predict_on_dataset_generator(test_set, 4, 10, False, 4))
+        model.predict_on_dataset_generator(test_set, 10))
     assert np.allclose(out, out_bald, rtol=1e-5, atol=1e-5)
