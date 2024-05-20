@@ -224,7 +224,7 @@ def test_that_logits_get_converted_to_probabilities(logits):
 
     # define a random func:
     @requireprobs
-    def wrapped(_, logits, training_predictions=None):
+    def wrapped(_, logits, target_predictions=None):
         return logits
 
     probability_distribution = wrapped(None, logits)

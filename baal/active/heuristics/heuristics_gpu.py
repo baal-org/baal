@@ -44,12 +44,12 @@ def to_prob_torch(probabilities):
 def requireprobs(fn):
     """Will convert logits to probs if needed"""
 
-    def wrapper(self, probabilities, training_predictions=None):
+    def wrapper(self, probabilities, target_predictions=None):
         # Expected shape : [n_sample, n_classes, ..., n_iterations]
         probabilities = to_prob_torch(probabilities)
-        if training_predictions is not None:
-            training_predictions = to_prob_torch(training_predictions)
-        return fn(self, probabilities, training_predictions)
+        if target_predictions is not None:
+            target_predictions = to_prob_torch(target_predictions)
+        return fn(self, probabilities, target_predictions)
 
     return wrapper
 
@@ -82,12 +82,12 @@ class AbstractGPUHeuristic(ModelWrapper):
             reduction if callable(reduction) else available_reductions[reduction]
         )
 
-    def compute_score(self, predictions, training_predictions=None):
+    def compute_score(self, predictions, target_predictions=None):
         """
         Compute the score according to the heuristic.
         Args:
-            predictions (ndarray): Array of predictions
-            training_predictions (ndarray): Array of predictions from training set.
+            predictions (ndarray): Array of predictions.
+            target_predictions (ndarray): Array of predictions on target inputs.
 
         Returns:
             Array of scores.
@@ -158,7 +158,7 @@ class BALDGPUWrapper(AbstractGPUHeuristic):
         )
 
     @requireprobs
-    def compute_score(self, predictions, training_predictions=None):
+    def compute_score(self, predictions, target_predictions=None):
         assert predictions.ndimension() >= 3
         # [n_sample, n_class, ..., n_iterations]
         expected_entropy = -torch.mean(
