@@ -37,7 +37,6 @@ if use_cuda:
 wrapper = ModelWrapper(model=model, criterion=nn.CrossEntropyLoss())
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
 
-# We will use BALD as our heuristic as it is a great tradeoff between performance and efficiency.
 epig = EPIG()
 # Setup our active learning loop for our experiments
 al_loop = ActiveLearningLoop(
