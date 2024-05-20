@@ -81,15 +81,15 @@ def test_epig(distributions, reduction):
     marg = epig(distributions, train_preds)
     str_marg = epig(chunks(distributions, 10), train_preds)
 
-    # EPIG uses mean entropy of the unlablled predictions, so it's not stable.
+    # EPIG uses mean entropy of the unlabelled predictions, so it's not stable.
     assert np.allclose(
         epig.get_uncertainties(distributions, train_preds),
         epig.get_uncertainties_generator(chunks(distributions, 10), train_preds),
         rtol=.05
     )
 
-    assert np.all(marg == [1, 2, 0]), "BALD is not right {}".format(marg)
-    assert np.all(str_marg == [1, 2, 0]), "StreamingBALD is not right {}".format(marg)
+    assert np.all(marg == [1, 2, 0]), "EPIG is not right {}".format(marg)
+    assert np.all(str_marg == [1, 2, 0]), "StreamingEPIG is not right {}".format(marg)
 
     epig = EPIG(0.99, reduction=reduction)
     marg = epig(distributions, train_preds)
