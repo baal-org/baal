@@ -81,15 +81,15 @@ class ActiveLearningLoop:
         if len(pool) > 0:
             if isinstance(self.heuristic, heuristics.Random):
                 probs = np.random.uniform(low=0, high=1, size=(len(pool), 1))
-                targets = None
+                target_probs = None
             else:
                 probs = self.get_probabilities(pool, **self.kwargs)
                 if isinstance(self.heuristic, heuristics.EPIG):
-                    targets = self.get_probabilities(self.dataset, **self.kwargs)
+                    target_probs = self.get_probabilities(self.dataset, **self.kwargs)
                 else:
-                    targets = None
+                    target_probs = None
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
-                to_label, uncertainty = self.heuristic.get_ranks(probs, targets)
+                to_label, uncertainty = self.heuristic.get_ranks(probs, target_probs)
                 log.info(
                     "Uncertainty",
                     mean=uncertainty.mean(),
