@@ -755,8 +755,7 @@ class CombineHeuristics(AbstractHeuristic):
 
 class EPIG(AbstractHeuristic):
     """
-    Implementation of Expected Predicted Information Gain
-    https://arxiv.org/abs/2304.08151
+    Implementation of Expected Predicted Information Gain (https://arxiv.org/abs/2304.08151)
 
     Args:
         shuffle_prop (float): DEPRECATED
@@ -764,7 +763,7 @@ class EPIG(AbstractHeuristic):
         reduction (Union[str, callable]): function that aggregates the results.
 
     References:
-    Code from https://github.com/fbickfordsmith/epig
+        Code from https://github.com/fbickfordsmith/epig
     """
 
     def __init__(self, shuffle_prop=DEPRECATED, reverse=False, reduction="none"):
@@ -772,52 +771,55 @@ class EPIG(AbstractHeuristic):
 
     def marginal_entropy_from_probs(self, probs):
         """
-        See marginal_entropy_from_logprobs.
+        Compute the marginal predictive entropy for each input, x_i:
+            H[p(y|x_i)]  = H[E_{q(θ)}[p(y|x_i,θ)]]
+                        ~= H[(1/K) Σ_{j=1}^K p(y|x_i,θ_j)]
+        where θ_j ~ q(θ) is a parameter sample and p(y|x_i,θ_j) is the parameter-conditional
+        predictive distribution for x_i and θ_j.
 
         Args:
-            probs: Tensor[float], [N, Cl, K]
+            probs (Tensor[float], [N, C, K]): p(y|x_i,θ_j) for i in [1, N] and j in [1, K].
 
         Returns:
-            Tensor[float], [N,]
+            scores (Tensor[float], [N,]): H[p(y|x_i)] for i in [1, N].
         """
-        probs = torch.mean(probs, dim=-1)  # [N, Cl]
-        scores = -torch.sum(torch.xlogy(probs, probs), dim=-1)
+        probs = torch.mean(probs, dim=-1)  # [N, C]
+        scores = -torch.sum(torch.xlogy(probs, probs), dim=-1)  # [N,]
         return scores  # [N,]
 
     @requireprobs
     def compute_score(self, predictions, training_predictions):
         """
-        Compute the score according to the heuristic.
+        Compute the expected predictive information gain for each candidate input, x_i:
+            EPIG(x_i) = E_{p_*(x_*)}[I(y;y_*|x_i,x_*)]
+                      = H[p(y|x_i)] + E_{p_*(x_*)}[H[p(y_*|x_*)]] - E_{p_*(x_*)}[H[p(y,y_*|x_i,x_*)]]
+        where x_* ~ p_*(x_*) is a target input with unknown label y_*.
+
 
         Args:
-            predictions (ndarray): Array of predictions
-            training_predictions (ndarray): Array of targets
+            predictions (ndarray, [N_p, C, K]): p(y|x_i,θ_j) for i in [1, N_p] and j in [1, K].
+            training_predictions (ndarray, [N_t, C, K]): p(y|x_*^i,θ_j) for i in [1, N_t] and j in [1, K].
 
         Returns:
-        Array of scores.
+            scores (ndarray, [N,]): EPIG(x_i) for i in [1, N_p].
         """
         assert predictions.ndim == 3, "EPIG only supports classification for now."
         assert training_predictions.ndim == 3, "EPIG only supports classification for now."
 
-        probs_pool = torch.Tensor(predictions)  # [N, Cl, K]
-        probs_targ = torch.Tensor(training_predictions)
+        probs_pool = torch.Tensor(predictions)  # [N_p, C, K]
+        probs_targ = torch.Tensor(training_predictions)  # [N_t, C, K]
 
         N_t, C, K = probs_targ.shape
 
         entropy_pool = self.marginal_entropy_from_probs(probs_pool)  # [N_p,]
         entropy_targ = self.marginal_entropy_from_probs(probs_targ)  # [N_t,]
-        entropy_targ = torch.mean(entropy_targ)  # [1,]
 
-        # probs_pool = probs_pool.permute(0, 2, 1)  # [N_p, Cl, K]
-        probs_targ = probs_targ.permute(2, 0, 1)  # [K, N_t, Cl]
-        probs_targ = probs_targ.reshape(K, N_t * C)  # [K, N_t * Cl]
-        probs_pool_targ_joint = torch.matmul(probs_pool, probs_targ) / K  # [N_p, Cl, N_t * Cl]
+        probs_targ = probs_targ.permute(2, 0, 1)  # [K, N_t, C]
+        probs_targ = probs_targ.reshape(K, N_t * C)  # [K, N_t * C]
+        probs_joint = torch.matmul(probs_pool, probs_targ) / K  # [N_p, C, N_t * C]
 
-        entropy_pool_targ = (
-            -torch.sum(torch.xlogy(probs_pool_targ_joint, probs_pool_targ_joint), dim=(-2, -1))
-            / N_t
-        )  # [N_p,]
+        entropy_joint = -torch.sum(torch.xlogy(probs_joint, probs_joint), dim=(-2, -1)) / N_t  # [N_p,]
+        entropy_joint = torch.nan_to_num(entropy_joint, nan=0.0)  # [N_p,]
 
-        entropy_pool_targ[torch.isnan(entropy_pool_targ)] = 0.0
-        scores = entropy_pool + entropy_targ - entropy_pool_targ  # [N_p,]
+        scores = entropy_pool + torch.mean(entropy_targ) - entropy_joint  # [N_p,]
         return scores.numpy()  # [N_p,]
