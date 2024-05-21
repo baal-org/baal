@@ -11,13 +11,13 @@ def test_labelling_budget():
     ds = ActiveNumpyArray((np.random.randn(100, 3), np.random.randint(0, 3, 100)))
     ds.label_randomly(10)
     criterion = LabellingBudgetStoppingCriterion(ds, labelling_budget=50)
-    assert not criterion.should_stop([])
+    assert not criterion.should_stop({}, [])
 
     ds.label_randomly(10)
-    assert not criterion.should_stop([])
+    assert not criterion.should_stop({}, [])
 
     ds.label_randomly(40)
-    assert criterion.should_stop([])
+    assert criterion.should_stop({}, [])
 
 
 def test_early_stopping():

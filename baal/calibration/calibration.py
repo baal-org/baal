@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Optional
 
 import structlog
 import torch
@@ -38,6 +39,7 @@ class DirichletCalibrator(object):
         reg_factor (float): Regularization factor for the linear layer weights.
         mu (float): Regularization factor for the linear layer biases.
             If not given, will be initialized by "l".
+        training_duration (int): How long to train calibration layer.
 
     """
 
@@ -47,7 +49,8 @@ class DirichletCalibrator(object):
         num_classes: int,
         lr: float,
         reg_factor: float,
-        mu: float = None,
+        mu: Optional[float] = None,
+        training_duration: int = 5,
     ):
         self.num_classes = num_classes
         self.criterion = nn.CrossEntropyLoss()
@@ -63,8 +66,8 @@ class DirichletCalibrator(object):
                 criterion=self.criterion,
                 optimizer=self.optimizer,
                 regularizer=self.l2_reg,
-                epoch=5,
-                use_cuda=False,
+                epoch=training_duration,
+                use_cuda=wrapper.args.use_cuda,
             ),
         )
 

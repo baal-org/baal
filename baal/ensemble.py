@@ -24,7 +24,7 @@ class EnsembleModelWrapper(ModelWrapper):
 
     def __init__(self, model, args: TrainingArgs):
         super().__init__(model, args)
-        self._weights = []
+        self._weights: List[Dict] = []
 
     def add_checkpoint(self):
         """

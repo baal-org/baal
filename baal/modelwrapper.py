@@ -17,6 +17,7 @@ from baal.active.dataset.base import Dataset
 from baal.metrics.mixin import MetricMixin
 from baal.utils.array_utils import stack_in_memory
 from baal.utils.cuda_utils import to_cuda
+from baal.utils.equality import assert_not_none
 from baal.utils.iterutils import map_on_tensor
 from baal.utils.metrics import Loss
 from baal.utils.warnings import raise_warnings_cache_replicated
@@ -319,7 +320,7 @@ class ModelWrapper(MetricMixin):
                 lambda p: p.mean(-1),
                 self.predict_on_batch(data, iterations=average_predictions),
             )
-            loss = self.args.criterion(preds, target)
+            loss = assert_not_none(self.args.criterion)(preds, target)
             self._update_metrics(preds, target, loss, "test")
             return loss
 

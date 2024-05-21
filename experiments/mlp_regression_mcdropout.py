@@ -13,6 +13,7 @@ from baal import ActiveLearningDataset, ModelWrapper
 from baal.active import ActiveLearningLoop
 from baal.active.heuristics import Variance
 from baal.bayesian.dropout import patch_module
+from baal.modelwrapper import TrainingArgs
 
 use_cuda = torch.cuda.is_available()
 
@@ -73,8 +74,15 @@ model.apply(weight_init_normal)
 
 if use_cuda:
     model = model.cuda()
-wrapper = ModelWrapper(model=model, criterion=nn.L1Loss())
+
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
+wrapper = ModelWrapper(
+    model=model,
+    args=TrainingArgs(
+        criterion=nn.L1Loss(), optimizer=optimizer, batch_size=32, epoch=10, use_cuda=use_cuda
+    ),
+)
+
 
 # We will use Variance as our heuristic for regression problems.
 variance = Variance()
@@ -84,13 +92,10 @@ al_loop = ActiveLearningLoop(
     dataset=al_dataset,
     get_probabilities=wrapper.predict_on_dataset,
     heuristic=variance,
-    query_size=250,  # We will label 20 examples per step.
+    query_size=20,  # We will label 20 examples per step.
     # KWARGS for predict_on_dataset
     iterations=20,  # 20 sampling for MC-Dropout
-    batch_size=16,
-    use_cuda=use_cuda,
     verbose=False,
-    workers=0,
 )
 
 # Following Gal 2016, we reset the weights at the beginning of each step.
@@ -98,10 +103,8 @@ initial_weights = deepcopy(model.state_dict())
 
 for step in range(1000):
     model.load_state_dict(initial_weights)
-    train_loss = wrapper.train_on_dataset(
-        al_dataset, optimizer=optimizer, batch_size=16, epoch=1000, use_cuda=use_cuda, workers=0
-    )
-    test_loss = wrapper.test_on_dataset(test_ds, batch_size=16, use_cuda=use_cuda, workers=0)
+    train_loss = wrapper.train_on_dataset(al_dataset)
+    test_loss = wrapper.test_on_dataset(test_ds)
 
     pprint(wrapper.get_metrics())
     flag = al_loop.step()
