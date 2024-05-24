@@ -74,9 +74,7 @@ def requireprobs(fn):
     def wrapper(self, probabilities, target_predictions=None):
         # Expected shape : [n_sample, n_classes, ..., n_iterations]
         probabilities = to_prob(probabilities)
-        target_predictions = (
-            to_prob(target_predictions) if target_predictions is not None else None
-        )
+        target_predictions = to_prob(target_predictions) if target_predictions is not None else None
         return fn(self, probabilities, target_predictions=target_predictions)
 
     return wrapper
@@ -784,7 +782,7 @@ class EPIG(AbstractHeuristic):
             scores (Tensor[float], [N,]): H[p(y|x_i)] for i in [1, N].
         """
         probs = torch.mean(probs, dim=-1)  # [N, C]
-        scores = -torch.sum(torch.xlogy(probs, probs), dim=-1)  # [N,]
+        scores = -torch.sum(torch.xlogy(probs, probs), dim=-1)  # [N,]
         return scores  # [N,]
 
     @requireprobs
@@ -792,13 +790,15 @@ class EPIG(AbstractHeuristic):
         """
         Compute the expected predictive information gain for each candidate input, x_i:
             EPIG(x_i) = E_{p_*(x_*)}[I(y;y_*|x_i,x_*)]
-                      = H[p(y|x_i)] + E_{p_*(x_*)}[H[p(y_*|x_*)]] - E_{p_*(x_*)}[H[p(y,y_*|x_i,x_*)]]
+                      = H[p(y|x_i)] + E_{p_*(x_*)}[H[p(y_*|x_*)]]
+                        - E_{p_*(x_*)}[H[p(y,y_*|x_i,x_*)]]
         where x_* ~ p_*(x_*) is a target input with unknown label y_*.
 
 
         Args:
             predictions (ndarray, [N_p, C, K]): p(y|x_i,θ_j) for i in [1, N_p] and j in [1, K].
-            target_predictions (ndarray, [N_t, C, K]): p(y|x_*^i,θ_j) for i in [1, N_t] and j in [1, K].
+            target_predictions (ndarray, [N_t, C, K]): p(y|x_*^i,θ_j)
+                                                       for i in [1, N_t] and j in [1, K].
 
         Returns:
             scores (ndarray, [N,]): EPIG(x_i) for i in [1, N_p].
@@ -818,7 +818,9 @@ class EPIG(AbstractHeuristic):
         probs_targ = probs_targ.reshape(K, N_t * C)  # [K, N_t * C]
         probs_joint = torch.matmul(probs_pool, probs_targ) / K  # [N_p, C, N_t * C]
 
-        entropy_joint = -torch.sum(torch.xlogy(probs_joint, probs_joint), dim=(-2, -1)) / N_t  # [N_p,]
+        entropy_joint = (
+            -torch.sum(torch.xlogy(probs_joint, probs_joint), dim=(-2, -1)) / N_t
+        )  # [N_p,]
         entropy_joint = torch.nan_to_num(entropy_joint, nan=0.0)  # [N_p,]
 
         scores = entropy_pool + torch.mean(entropy_targ) - entropy_joint  # [N_p,]

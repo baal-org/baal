@@ -78,9 +78,7 @@ class AbstractGPUHeuristic(ModelWrapper):
         self.threshold = threshold
         self.reversed = reverse
         assert reduction in available_reductions or callable(reduction)
-        self.reduction = (
-            reduction if callable(reduction) else available_reductions[reduction]
-        )
+        self.reduction = reduction if callable(reduction) else available_reductions[reduction]
 
     def compute_score(self, predictions, target_predictions=None):
         """
@@ -129,9 +127,7 @@ class AbstractGPUHeuristic(ModelWrapper):
 
     def predict_on_batch(self, data, iterations=1, use_cuda=False):
         """Rank the predictions according to their uncertainties."""
-        return self.get_uncertainties(
-            self.model.predict_on_batch(data, iterations, cuda=use_cuda)
-        )
+        return self.get_uncertainties(self.model.predict_on_batch(data, iterations, cuda=use_cuda))
 
 
 class BALDGPUWrapper(AbstractGPUHeuristic):
