@@ -9,6 +9,7 @@ from baal.active import get_heuristic
 from baal.active.heuristics import (
     Random,
     BALD,
+    EPIG,
     Margin,
     Entropy,
     Certainty,
@@ -62,6 +63,36 @@ def test_bald(distributions, reduction):
 
     bald = BALD(0.99, reduction=reduction)
     marg = bald(distributions)
+
+    # Unlikely, but not 100% sure
+    assert np.any(marg != [1, 2, 0])
+
+@pytest.mark.parametrize(
+    'distributions, reduction',
+    [
+        (distributions_3d, 'none'),
+    ],
+)
+def test_epig(distributions, reduction):
+    np.random.seed(1338)
+    train_preds = distributions
+
+    epig = EPIG(reduction=reduction)
+    marg = epig(distributions, train_preds)
+    str_marg = epig(chunks(distributions, 10), train_preds)
+
+    # EPIG uses mean entropy of the unlabelled predictions, so it's not stable.
+    assert np.allclose(
+        epig.get_uncertainties(distributions, train_preds),
+        epig.get_uncertainties_generator(chunks(distributions, 10), train_preds),
+        rtol=.05
+    )
+
+    assert np.all(marg == [1, 2, 0]), "EPIG is not right {}".format(marg)
+    assert np.all(str_marg == [1, 2, 0]), "StreamingEPIG is not right {}".format(marg)
+
+    epig = EPIG(0.99, reduction=reduction)
+    marg = epig(distributions, train_preds)
 
     # Unlikely, but not 100% sure
     assert np.any(marg != [1, 2, 0])
@@ -193,7 +224,7 @@ def test_that_logits_get_converted_to_probabilities(logits):
 
     # define a random func:
     @requireprobs
-    def wrapped(_, logits):
+    def wrapped(_, logits, target_predictions=None):
         return logits
 
     probability_distribution = wrapped(None, logits)

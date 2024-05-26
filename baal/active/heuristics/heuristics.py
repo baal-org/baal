@@ -2,6 +2,7 @@ import types
 import warnings
 from collections.abc import Sequence
 from functools import wraps as _wraps
+from itertools import zip_longest
 from typing import List
 
 import numpy as np
@@ -47,11 +48,13 @@ def singlepass(fn):
     """
 
     @_wraps(fn)
-    def wrapper(self, probabilities):
+    def wrapper(self, probabilities, target_predictions=None):
         if probabilities.ndim >= 3:
             # Expected shape : [n_sample, n_classes, ..., n_iterations]
             probabilities = probabilities.mean(-1)
-        return fn(self, probabilities)
+        if target_predictions is not None and target_predictions.ndim >= 3:
+            target_predictions = target_predictions.mean(-1)
+        return fn(self, probabilities, target_predictions)
 
     return wrapper
 
@@ -68,10 +71,11 @@ def requireprobs(fn):
     """
 
     @_wraps(fn)
-    def wrapper(self, probabilities):
+    def wrapper(self, probabilities, target_predictions=None):
         # Expected shape : [n_sample, n_classes, ..., n_iterations]
         probabilities = to_prob(probabilities)
-        return fn(self, probabilities)
+        target_predictions = to_prob(target_predictions) if target_predictions is not None else None
+        return fn(self, probabilities, target_predictions=target_predictions)
 
     return wrapper
 
@@ -90,7 +94,7 @@ def require_single_item(fn):
     """
 
     @_wraps(fn)
-    def wrapper(self, probabilities):
+    def wrapper(self, probabilities, target_predictions=None):
         # Expected single shape : [n_sample, n_classes, ..., n_iterations]
         if isinstance(probabilities, (list, tuple)):
             if len(probabilities) == 1:
@@ -103,7 +107,7 @@ def require_single_item(fn):
                     " we suggest using baal.active.heuristics.CombineHeuristics"
                 )
 
-        return fn(self, probabilities)
+        return fn(self, probabilities, target_predictions)
 
     return wrapper
 
@@ -157,24 +161,26 @@ class AbstractHeuristic:
         self._reduction_name = reduction
         self.reduction = reduction if callable(reduction) else available_reductions[reduction]
 
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         """
         Compute the score according to the heuristic.
 
         Args:
-            predictions (ndarray): Array of predictions
+            predictions (ndarray): Array of predictions.
+            target_predictions (Optional[ndarray]): Array of predictions on target inputs.
 
         Returns:
             Array of scores.
         """
         raise NotImplementedError
 
-    def get_uncertainties_generator(self, predictions):
+    def get_uncertainties_generator(self, predictions, target_predictions=None):
         """
         Compute the score according to the heuristic.
 
         Args:
-            predictions (Iterable): Generator of predictions
+            predictions (Iterable): Generator of predictions.
+            target_predictions (Optional[ndarray]): Generator of predictions on target inputs.
 
         Raises:
             ValueError if the generator is empty.
@@ -184,17 +190,18 @@ class AbstractHeuristic:
         """
         acc = []
         for pred in predictions:
-            acc.append(self.get_uncertainties(pred))
+            acc.append(self.get_uncertainties(pred, target_predictions=target_predictions))
         if len(acc) == 0:
             raise ValueError("No prediction! Cannot order the values!")
         return np.concatenate(acc)
 
-    def get_uncertainties(self, predictions):
+    def get_uncertainties(self, predictions, target_predictions=None):
         """
         Get the uncertainties.
 
         Args:
-            predictions (ndarray): Array of predictions
+            predictions (ndarray): Array of predictions.
+            target_predictions (ndarray): Array of predictions on target inputs.
 
         Returns:
             Array of uncertainties
@@ -202,7 +209,7 @@ class AbstractHeuristic:
         """
         if isinstance(predictions, Tensor):
             predictions = predictions.numpy()
-        scores = self.compute_score(predictions)
+        scores = self.compute_score(predictions, target_predictions=target_predictions)
         scores = self.reduction(scores)
         if not np.all(np.isfinite(scores)):
             fixed = 0.0 if self.reversed else 10000
@@ -242,12 +249,13 @@ class AbstractHeuristic:
         ranks = _shuffle_subset(ranks, self.shuffle_prop)
         return ranks
 
-    def get_ranks(self, predictions):
+    def get_ranks(self, predictions, target_predictions=None):
         """
         Rank the predictions according to their uncertainties.
 
         Args:
             predictions (ndarray): [batch_size, C, ..., Iterations]
+            target_predictions (Optional[ndarray]): [batch_size, C, ..., Iterations]
 
         Returns:
             Ranked index according to the uncertainty (highest to lowes).
@@ -255,18 +263,20 @@ class AbstractHeuristic:
 
         """
         if isinstance(predictions, types.GeneratorType):
-            scores = self.get_uncertainties_generator(predictions)
+            scores = self.get_uncertainties_generator(
+                predictions, target_predictions=target_predictions
+            )
         else:
-            scores = self.get_uncertainties(predictions)
+            scores = self.get_uncertainties(predictions, target_predictions=target_predictions)
 
         return self.reorder_indices(scores), scores
 
-    def __call__(self, predictions):
+    def __call__(self, predictions, target_predictions=None):
         """Rank the predictions according to their uncertainties.
 
         Only return the scores and not the associated uncertainties.
         """
-        return self.get_ranks(predictions)[0]
+        return self.get_ranks(predictions, target_predictions)[0]
 
 
 class BALD(AbstractHeuristic):
@@ -288,12 +298,13 @@ class BALD(AbstractHeuristic):
 
     @require_single_item
     @requireprobs
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         """
         Compute the score according to the heuristic.
 
         Args:
             predictions (ndarray): Array of predictions
+            target_predictions (Optional[ndarray]): [batch_size, C, ..., Iterations]
 
         Returns:
             Array of scores.
@@ -432,12 +443,13 @@ class BatchBALD(BALD):
 
     @require_single_item
     @requireprobs
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         """
         Compute the score according to the heuristic.
 
         Args:
             predictions (ndarray): Array of predictions [batch_size, C, Iterations]
+            target_predictions (Optional[ndarray]): [batch_size, C, ..., Iterations]
 
         Notes:
             Only Classification is supported, not semantic segmentation or other.
@@ -481,12 +493,13 @@ class BatchBALD(BALD):
 
         return uncertainties
 
-    def get_ranks(self, predictions):
+    def get_ranks(self, predictions, target_predictions=None):
         """
         Rank the predictions according to their uncertainties.
 
         Args:
             predictions (ndarray): [batch_size, C, Iterations]
+            target_predictions (Optional[ndarray]): [batch_size, C, Iterations]
 
         Returns:
             Ranked index according to the uncertainty (highest to lowest).
@@ -525,7 +538,7 @@ class Variance(AbstractHeuristic):
         super().__init__(shuffle_prop=shuffle_prop, reverse=True, reduction=reduction)
 
     @require_single_item
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         assert predictions.ndim >= 3
         return np.var(predictions, -1)
 
@@ -546,7 +559,7 @@ class Entropy(AbstractHeuristic):
     @require_single_item
     @singlepass
     @requireprobs
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         return scipy.stats.entropy(np.swapaxes(predictions, 0, 1))
 
 
@@ -568,7 +581,7 @@ class Margin(AbstractHeuristic):
     @require_single_item
     @singlepass
     @requireprobs
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         sort_arr = np.sort(predictions, axis=1)
         return sort_arr[:, -1] - sort_arr[:, -2]
 
@@ -587,7 +600,7 @@ class Certainty(AbstractHeuristic):
 
     @require_single_item
     @singlepass
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         return np.max(predictions, axis=1)
 
 
@@ -602,7 +615,7 @@ class Precomputed(AbstractHeuristic):
     def __init__(self, shuffle_prop=DEPRECATED, reverse=False):
         super().__init__(shuffle_prop, reverse=reverse)
 
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         return predictions
 
 
@@ -622,7 +635,7 @@ class Random(Precomputed):
         else:
             self.rng = np.random
 
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         return self.rng.rand(predictions.shape[0])
 
 
@@ -667,7 +680,7 @@ class CombineHeuristics(AbstractHeuristic):
         else:
             raise Exception("heuristics should have the same value for `revesed` parameter")
 
-    def get_uncertainties(self, predictions):
+    def get_uncertainties(self, predictions, target_predictions=None):
         """
         Computes the score for each part of predictions according to the assigned heuristic.
 
@@ -676,7 +689,8 @@ class CombineHeuristics(AbstractHeuristic):
             [confidence_predictions: nd.array(), boundingbox_predictions: nd.array()]
 
         Args:
-            predictions (list[ndarray]): list of predictions arrays
+            predictions (list[ndarray]): List of predictions arrays.
+            target_predictions (Optional[List[ndarray]): List of predictions on target inputs.
 
         Returns:
             Array of uncertainties
@@ -684,11 +698,21 @@ class CombineHeuristics(AbstractHeuristic):
         """
 
         results = []
-        for ind, prediction in enumerate(predictions):
+        for ind, (prediction, target_pred) in enumerate(
+            zip_longest(predictions, target_predictions or [], fillvalue=None)
+        ):
             if isinstance(predictions[0], types.GeneratorType):
-                results.append(self.composed_heuristic[ind].get_uncertainties_generator(prediction))
+                results.append(
+                    self.composed_heuristic[ind].get_uncertainties_generator(
+                        prediction, target_predictions=target_pred
+                    )
+                )
             else:
-                results.append(self.composed_heuristic[ind].get_uncertainties(prediction))
+                results.append(
+                    self.composed_heuristic[ind].get_uncertainties(
+                        prediction, target_predictions=target_pred
+                    )
+                )
         return results
 
     def reorder_indices(self, scores_list):
@@ -725,3 +749,83 @@ class CombineHeuristics(AbstractHeuristic):
             ranks = ranks[::-1]
         ranks = _shuffle_subset(ranks, self.shuffle_prop)
         return ranks
+
+
+class EPIG(AbstractHeuristic):
+    """
+    Implementation of Expected Predicted Information Gain (https://arxiv.org/abs/2304.08151)
+
+    Args:
+        shuffle_prop (float): DEPRECATED
+        reverse (bool): UNUSED
+        reduction (Union[str, callable]): function that aggregates the results.
+
+    References:
+        Code from https://github.com/fbickfordsmith/epig
+    """
+
+    def __init__(self, shuffle_prop=DEPRECATED, reverse=False, reduction="none"):
+        super().__init__(shuffle_prop=shuffle_prop, reverse=True, reduction=reduction)
+
+    def marginal_entropy_from_probs(self, probs):
+        """
+        Compute the marginal predictive entropy for each input, x_i.
+
+        Equation:
+            H[p(y|x_i)]  = H[E_{q(θ)}[p(y|x_i,θ)]]
+                        ~= H[(1/K) Σ_{j=1}^K p(y|x_i,θ_j)]
+            where θ_j ~ q(θ) is a parameter sample and p(y|x_i,θ_j) is the parameter-conditional
+            predictive distribution for x_i and θ_j.
+
+        Args:
+            probs (Tensor[float], [N, C, K]): p(y|x_i,θ_j) for i in [1, N] and j in [1, K].
+
+        Returns:
+            scores (Tensor[float], [N,]): H[p(y|x_i)] for i in [1, N].
+        """
+        probs = torch.mean(probs, dim=-1)  # [N, C]
+        scores = -torch.sum(torch.xlogy(probs, probs), dim=-1)  # [N,]
+        return scores  # [N,]
+
+    @requireprobs
+    def compute_score(self, predictions, target_predictions):
+        """
+        Compute the expected predictive information gain for each candidate input, x_i.
+
+        Equation:
+            EPIG(x_i) = E_{p_*(x_*)}[I(y;y_*|x_i,x_*)]
+                      = H[p(y|x_i)] + E_{p_*(x_*)}[H[p(y_*|x_*)]]
+                        - E_{p_*(x_*)}[H[p(y,y_*|x_i,x_*)]]
+            where x_* ~ p_*(x_*) is a target input with unknown label y_*.
+
+
+        Args:
+            predictions (ndarray, [N_p, C, K]): p(y|x_i,θ_j) for i in [1, N_p] and j in [1, K].
+            target_predictions (ndarray, [N_t, C, K]): Prediction from target distribution.
+                    Or: p(y|x_*^i,θ_j) for i in [1, N_t] and j in [1, K].
+
+        Returns:
+            scores (ndarray, [N,]): EPIG(x_i) for i in [1, N_p].
+        """
+        assert predictions.ndim == 3, "EPIG only supports classification for now."
+        assert target_predictions.ndim == 3, "EPIG only supports classification for now."
+
+        probs_pool = torch.Tensor(predictions)  # [N_p, C, K]
+        probs_targ = torch.Tensor(target_predictions)  # [N_t, C, K]
+
+        N_t, C, K = probs_targ.shape
+
+        entropy_pool = self.marginal_entropy_from_probs(probs_pool)  # [N_p,]
+        entropy_targ = self.marginal_entropy_from_probs(probs_targ)  # [N_t,]
+
+        probs_targ = probs_targ.permute(2, 0, 1)  # [K, N_t, C]
+        probs_targ = probs_targ.reshape(K, N_t * C)  # [K, N_t * C]
+        probs_joint = torch.matmul(probs_pool, probs_targ) / K  # [N_p, C, N_t * C]
+
+        entropy_joint = (
+            -torch.sum(torch.xlogy(probs_joint, probs_joint), dim=(-2, -1)) / N_t
+        )  # [N_p,]
+        entropy_joint = torch.nan_to_num(entropy_joint, nan=0.0)  # [N_p,]
+
+        scores = entropy_pool + torch.mean(entropy_targ) - entropy_joint  # [N_p,]
+        return scores.numpy()  # [N_p,]

@@ -34,15 +34,22 @@ def _shuffle_subset(data: torch.Tensor, shuffle_prop: float) -> torch.Tensor:
     return data
 
 
+def to_prob_torch(probabilities):
+    bounded = torch.min(probabilities) < 0 or torch.max(probabilities) > 1.0
+    if bounded or not probabilities.sum(1).allclose(1):
+        probabilities = F.softmax(probabilities, 1)
+    return probabilities
+
+
 def requireprobs(fn):
     """Will convert logits to probs if needed"""
 
-    def wrapper(self, probabilities):
+    def wrapper(self, probabilities, target_predictions=None):
         # Expected shape : [n_sample, n_classes, ..., n_iterations]
-        bounded = torch.min(probabilities) < 0 or torch.max(probabilities) > 1.0
-        if bounded or not probabilities.sum(1).allclose(1):
-            probabilities = F.softmax(probabilities, 1)
-        return fn(self, probabilities)
+        probabilities = to_prob_torch(probabilities)
+        if target_predictions is not None:
+            target_predictions = to_prob_torch(target_predictions)
+        return fn(self, probabilities, target_predictions)
 
     return wrapper
 
@@ -72,11 +79,12 @@ class AbstractGPUHeuristic(ModelWrapper):
         assert reduction in available_reductions or callable(reduction)
         self.reduction = reduction if callable(reduction) else available_reductions[reduction]
 
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         """
         Compute the score according to the heuristic.
         Args:
-            predictions (ndarray): Array of predictions
+            predictions (ndarray): Array of predictions.
+            target_predictions (ndarray): Array of predictions on target inputs.
 
         Returns:
             Array of scores.
@@ -110,7 +118,13 @@ class BALDGPUWrapper(AbstractGPUHeuristic):
         https://arxiv.org/abs/1703.02910
     """
 
-    def __init__(self, model: ModelWrapper, shuffle_prop=0.0, threshold=None, reduction="none"):
+    def __init__(
+        self,
+        model: ModelWrapper,
+        shuffle_prop=0.0,
+        threshold=None,
+        reduction="none",
+    ):
         super().__init__(
             model,
             shuffle_prop=shuffle_prop,
@@ -120,7 +134,7 @@ class BALDGPUWrapper(AbstractGPUHeuristic):
         )
 
     @requireprobs
-    def compute_score(self, predictions):
+    def compute_score(self, predictions, target_predictions=None):
         assert predictions.ndimension() >= 3
         # [n_sample, n_class, ..., n_iterations]
         expected_entropy = -torch.mean(
