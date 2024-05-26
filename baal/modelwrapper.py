@@ -3,11 +3,12 @@ from collections import defaultdict
 from collections.abc import Sequence
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, Optional, Union, List
 
 import numpy as np
 import structlog
 import torch
+from numpy._typing import NDArray
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
@@ -236,7 +237,7 @@ class ModelWrapper(MetricMixin):
         iterations: int,
         half=False,
         verbose=True,
-    ):
+    ) -> Union[NDArray, List[NDArray]]:
         """
         Use the model to predict on a dataset `iterations` time.
 
