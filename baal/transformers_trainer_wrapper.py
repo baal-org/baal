@@ -3,6 +3,7 @@ from typing import Optional, List, Sequence, Union
 import numpy as np
 import structlog
 import torch
+from numpy._typing import NDArray
 from torch import nn
 from tqdm import tqdm
 from transformers import PreTrainedModel, TrainingArguments
@@ -140,7 +141,7 @@ class BaalTransformersTrainer(Trainer):
         iterations: int = 1,
         half: bool = False,
         ignore_keys: Optional[List[str]] = None,
-    ):
+    ) -> Union[NDArray, List[NDArray]]:
 
         """
         Use the model to predict on a dataset `iterations` time.

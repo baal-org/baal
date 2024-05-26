@@ -1,6 +1,7 @@
 import argparse
 import random
 from copy import deepcopy
+from pprint import pprint
 
 import torch
 import torch.backends
@@ -16,7 +17,9 @@ from transformers import BertForSequenceClassification
 from baal.active import get_heuristic
 from baal.active.active_loop import ActiveLearningLoop
 from baal.active.dataset.nlp_datasets import active_huggingface_dataset, HuggingFaceDatasets
+from baal.active.heuristics import BALD
 from baal.bayesian.dropout import patch_module
+from baal.experiments.base import ActiveLearningExperiment
 from baal.transformers_trainer_wrapper import BaalTransformersTrainer
 
 """
@@ -26,14 +29,11 @@ Minimal example to use BaaL for NLP Classification.
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epoch", default=100, type=int)
     parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--initial_pool", default=1000, type=int)
     parser.add_argument("--model", default="bert-base-uncased", type=str)
     parser.add_argument("--query_size", default=100, type=int)
-    parser.add_argument("--heuristic", default="bald", type=str)
     parser.add_argument("--iterations", default=20, type=int)
-    parser.add_argument("--shuffle_prop", default=0.05, type=float)
     parser.add_argument("--learning_epoch", default=20, type=int)
     return parser.parse_args()
 
@@ -67,8 +67,6 @@ def main():
 
     hyperparams = vars(args)
 
-    heuristic = get_heuristic(hyperparams["heuristic"], hyperparams["shuffle_prop"])
-
     model = BertForSequenceClassification.from_pretrained(
         pretrained_model_name_or_path=hyperparams["model"]
     )
@@ -84,8 +82,6 @@ def main():
 
     if use_cuda:
         model.cuda()
-
-    init_weights = deepcopy(model.state_dict())
 
     training_args = TrainingArguments(
         output_dir="/app/baal/results",  # output directory
@@ -104,44 +100,16 @@ def main():
         eval_dataset=test_set,
         tokenizer=None,
     )
-
-    logs = {}
-    logs["epoch"] = 0
-
-    # In this case, nlp data is fast to process and we do NoT need to use a smaller batch_size
-    active_loop = ActiveLearningLoop(
-        active_set,
-        model.predict_on_dataset,
-        heuristic,
-        hyperparams.get("query_size", 1),
-        iterations=hyperparams["iterations"],
+    experiment = ActiveLearningExperiment(
+        trainer=model,
+        al_dataset=active_set,
+        eval_dataset=test_set,
+        heuristic=BALD(),
+        query_size=hyperparams["query_size"],
+        iterations=20,
+        criterion=None,
     )
-
-    for epoch in tqdm(range(args.epoch)):
-        # we use the default setup of HuggingFace for training (ex: epoch=1).
-        # The setup is adjustable when BaalHuggingFaceTrainer is defined.
-        model.train()
-
-        # Validation!
-        eval_metrics = model.evaluate()
-
-        # We reorder the unlabelled pool at the frequency of learning_epoch
-        # This helps with speed while not changing the quality of uncertainty estimation.
-        should_continue = active_loop.step()
-
-        # We reset the model weights to relearn from the new trainset.
-        model.load_state_dict(init_weights)
-        model.lr_scheduler = None
-        if not should_continue:
-            break
-        active_logs = {
-            "epoch": epoch,
-            "labeled_data": active_set.labelled_map,
-            "Next Training set size": len(active_set),
-        }
-
-        logs = {**eval_metrics, **active_logs}
-        print(logs)
+    pprint(experiment.start())
 
 
 if __name__ == "__main__":
