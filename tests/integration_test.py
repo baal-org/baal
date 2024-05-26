@@ -12,7 +12,7 @@ from torchvision.transforms import ToTensor, Resize, Compose
 from baal.active import ActiveLearningDataset
 from baal.active import ActiveLearningLoop
 from baal.active import heuristics
-from baal.modelwrapper import ModelWrapper
+from baal.modelwrapper import ModelWrapper, TrainingArgs
 from baal.calibration import DirichletCalibrator
 
 
@@ -47,28 +47,23 @@ def test_integration():
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=0.0005)
 
     # We can now use BaaL to create the active learning loop.
-
-    model = ModelWrapper(model, criterion)
+    args = TrainingArgs(criterion=criterion, optimizer=optimizer, batch_size=10, use_cuda=use_cuda, epoch=1)
+    model = ModelWrapper(model, args)
     # We create an ActiveLearningLoop that will automatically label the most uncertain samples.
     # In this case, we use the widely used BALD heuristic.
 
     active_loop = ActiveLearningLoop(al_dataset,
                                      model.predict_on_dataset,
                                      heuristic=heuristics.BALD(),
-                                     query_size=10,
-                                     batch_size=10,
                                      iterations=2,
-                                     use_cuda=use_cuda,
-                                     workers=4)
+                                     query_size=10)
 
     # We're all set!
     num_steps = 10
     for step in range(num_steps):
         old_param = list(map(lambda x: x.clone(), model.model.parameters()))
-        model.train_on_dataset(al_dataset, optimizer=optimizer, batch_size=10,
-                               epoch=1, use_cuda=use_cuda, workers=2)
-        model.test_on_dataset(cifar10_test, batch_size=10, use_cuda=use_cuda,
-                              workers=2)
+        model.train_on_dataset(al_dataset)
+        model.test_on_dataset(cifar10_test)
 
         if not active_loop.step():
             break
@@ -95,25 +90,21 @@ def test_calibration_integration():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=0.0005)
 
-    wrapper = ModelWrapper(model, criterion)
+    args = TrainingArgs(criterion=criterion, optimizer=optimizer, batch_size=10, use_cuda=use_cuda, epoch=1)
+    wrapper = ModelWrapper(model, args)
     calibrator = DirichletCalibrator(wrapper=wrapper, num_classes=10,
                                      lr=0.001, reg_factor=0.01)
 
 
     for step in range(2):
-        wrapper.train_on_dataset(al_dataset, optimizer=optimizer,
-                                 batch_size=10, epoch=1,
-                                 use_cuda=use_cuda, workers=0)
+        wrapper.train_on_dataset(al_dataset)
 
-        wrapper.test_on_dataset(cifar10_test, batch_size=10,
-                                use_cuda=use_cuda, workers=0)
+        wrapper.test_on_dataset(cifar10_test)
 
 
         before_calib_param = list(map(lambda x: x.clone(), wrapper.model.parameters()))
 
-        calibrator.calibrate(al_dataset, cifar10_test,
-                            batch_size=10, epoch=5,
-                            use_cuda=use_cuda, double_fit=False, workers=0)
+        calibrator.calibrate(al_dataset, cifar10_test, use_cuda=use_cuda, double_fit=False)
 
         after_calib_param = list(map(lambda x: x.clone(), model.parameters()))
 

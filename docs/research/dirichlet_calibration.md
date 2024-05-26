@@ -93,26 +93,24 @@ By giving more nuanced predictions, the model is deemed more trustable by the hu
 With Baal 1.2, we add a new module based on this report. We propose new tools and methods to calibrate your model. Our first method will be a Pytorch implementation of the Dirichlet Calibration method. Here is an example:
 
 ```python
-from baal import DirichletCalibrator
-from baal import ModelWrapper
+from baal.calibration import DirichletCalibrator
+from baal.modelwrapper import ModelWrapper, TrainingArgs
 
 """
 Get your train and validation set. In addition, you need a
 held-out set to calibrate your model.
 """
 train_ds, calib_ds, valid_ds = get_datasets()
-wrapper = ModelWrapper(MyModel(), criterion=YourCriterion())
+wrapper = ModelWrapper(MyModel(), TrainingArgs(...))
 
 # Make a calibrator object.
 calibrator = DirichletCalibrator(wrapper, 2, lr=0.001, reg_factor=0.001)
 
 # Train your model as usual.
-wrapper.train_on_dataset(train_ds, SGD(...), batch_size=32, epoch=30, use_cuda=True)
+wrapper.train_on_dataset(train_ds)
 
 # Calibrate your model on a held-out set.
-calibrator.calibrate(calib_ds, valid_ds, batch_size=10, epoch=5,
-                     use_cuda=True,
-                     double_fit=True, workers=4)
+calibrator.calibrate(calib_ds, valid_ds, use_cuda=True, double_fit=True)
 calibrated_model = calibrator.calibrated_model
 ```
 

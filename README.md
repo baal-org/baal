@@ -114,15 +114,15 @@ In conclusion, your script should be similar to this:
 dataset = ActiveLearningDataset(your_dataset)
 dataset.label_randomly(INITIAL_POOL)  # label some data
 model = MCDropoutModule(your_model)
-model = ModelWrapper(model, your_criterion)
+model = ModelWrapper(model, args=TrainingArgs(...))
 active_loop = ActiveLearningLoop(dataset,
                                  get_probabilities=model.predict_on_dataset,
                                  heuristic=heuristics.BALD(),
                                  iterations=20, # Number of MC sampling.
                                  query_size=QUERY_SIZE)  # Number of item to label.
 for al_step in range(N_ALSTEP):
-    model.train_on_dataset(dataset, optimizer, BATCH_SIZE, use_cuda=use_cuda)
-    metrics = model.test_on_dataset(test_dataset, BATCH_SIZE)
+    model.train_on_dataset(dataset)
+    metrics = model.test_on_dataset(test_dataset)
     # Label the next most uncertain items.
     if not active_loop.step():
         # We're done!

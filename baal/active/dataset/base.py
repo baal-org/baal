@@ -1,9 +1,11 @@
 import warnings
-from typing import Union, List, Optional, Any, TYPE_CHECKING, Protocol
+from typing import Union, List, Optional, Any, TYPE_CHECKING, Protocol, Tuple
 
 import numpy as np
 from sklearn.utils import check_random_state
 from torch.utils import data as torchdata
+
+from baal.utils.equality import assert_not_none
 
 
 class SizeableDataset(torchdata.Dataset):
@@ -40,7 +42,7 @@ class SplittedDataset(Dataset):
         if last_active_steps == 0 or last_active_steps < -1:
             raise ValueError("last_active_steps must be > 0 or -1 when disabled.")
         self.last_active_steps = last_active_steps
-        self._indices_cache = (-1, None)
+        self._indices_cache: Tuple[int, List[int]] = (-1, [])
 
     def get_indices_for_active_step(self) -> List[int]:
         """Returns the indices required for the active step.

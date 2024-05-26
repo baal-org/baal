@@ -2,6 +2,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Sequence
 from copy import deepcopy
+from dataclasses import dataclass
 from typing import Callable, Optional
 
 import numpy as np
@@ -12,10 +13,11 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
 from tqdm import tqdm
 
+from baal.active.dataset.base import Dataset
 from baal.metrics.mixin import MetricMixin
 from baal.utils.array_utils import stack_in_memory
-from baal.active.dataset.base import Dataset
 from baal.utils.cuda_utils import to_cuda
+from baal.utils.equality import assert_not_none
 from baal.utils.iterutils import map_on_tensor
 from baal.utils.metrics import Loss
 from baal.utils.warnings import raise_warnings_cache_replicated
@@ -31,6 +33,19 @@ def _stack_preds(out):
     return out
 
 
+@dataclass
+class TrainingArgs:
+    optimizer: Optional[Optimizer] = None
+    batch_size: int = 32
+    epoch: int = 0
+    use_cuda: bool = torch.cuda.is_available()
+    workers: int = 4
+    collate_fn: Callable = default_collate
+    regularizer: Optional[Callable] = None
+    criterion: Optional[Callable] = None
+    replicate_in_memory: bool = True
+
+
 class ModelWrapper(MetricMixin):
     """
     Wrapper created to ease the training/testing/loading.
@@ -41,40 +56,24 @@ class ModelWrapper(MetricMixin):
         replicate_in_memory (bool): Replicate in memory optional.
     """
 
-    def __init__(self, model, criterion, replicate_in_memory=True):
+    def __init__(self, model, args: TrainingArgs):
         self.model = model
-        self.criterion = criterion
+        self.args = args
         self.metrics = dict()
         self.active_learning_metrics = defaultdict(dict)
         self.add_metric("loss", lambda: Loss())
-        self.replicate_in_memory = replicate_in_memory
         self._active_dataset_size = -1
 
-        raise_warnings_cache_replicated(self.model, replicate_in_memory=replicate_in_memory)
+        raise_warnings_cache_replicated(
+            self.model, replicate_in_memory=self.args.replicate_in_memory
+        )
 
-    def train_on_dataset(
-        self,
-        dataset,
-        optimizer,
-        batch_size,
-        epoch,
-        use_cuda,
-        workers=4,
-        collate_fn: Optional[Callable] = None,
-        regularizer: Optional[Callable] = None,
-    ):
+    def train_on_dataset(self, dataset):
         """
         Train for `epoch` epochs on a Dataset `dataset.
 
         Args:
             dataset (Dataset): Pytorch Dataset to be trained on.
-            optimizer (optim.Optimizer): Optimizer to use.
-            batch_size (int): The batch size used in the DataLoader.
-            epoch (int): Number of epoch to train for.
-            use_cuda (bool): Use cuda or not.
-            workers (int): Number of workers for the multiprocessing.
-            collate_fn (Optional[Callable]): The collate function to use.
-            regularizer (Optional[Callable]): The loss regularization for training.
 
         Returns:
             The training history.
@@ -83,17 +82,20 @@ class ModelWrapper(MetricMixin):
         self.train()
         self.set_dataset_size(dataset_size)
         history = []
-        log.info("Starting training", epoch=epoch, dataset=dataset_size)
-        collate_fn = collate_fn or default_collate
-        for _ in range(epoch):
+        log.info("Starting training", epoch=self.args.epoch, dataset=dataset_size)
+        for _ in range(self.args.epoch):
             self._reset_metrics("train")
             for data, target, *_ in DataLoader(
-                dataset, batch_size, True, num_workers=workers, collate_fn=collate_fn
+                dataset,
+                self.args.batch_size,
+                True,
+                num_workers=self.args.workers,
+                collate_fn=self.args.collate_fn,
             ):
-                _ = self.train_on_batch(data, target, optimizer, use_cuda, regularizer)
+                _ = self.train_on_batch(data, target)
             history.append(self.get_metrics("train")["train_loss"])
 
-        optimizer.zero_grad()  # Assert that the gradient is flushed.
+        self.args.optimizer.zero_grad()  # Assert that the gradient is flushed.
         log.info("Training complete", train_loss=self.get_metrics("train")["train_loss"])
         self.active_step(dataset_size, self.get_metrics("train"))
         return history
@@ -101,10 +103,6 @@ class ModelWrapper(MetricMixin):
     def test_on_dataset(
         self,
         dataset: Dataset,
-        batch_size: int,
-        use_cuda: bool,
-        workers: int = 4,
-        collate_fn: Optional[Callable] = None,
         average_predictions: int = 1,
     ):
         """
@@ -112,10 +110,6 @@ class ModelWrapper(MetricMixin):
 
         Args:
             dataset (Dataset): Dataset to evaluate on.
-            batch_size (int): Batch size used for evaluation.
-            use_cuda (bool): Use Cuda or not.
-            workers (int): Number of workers to use.
-            collate_fn (Optional[Callable]): The collate function to use.
             average_predictions (int): The number of predictions to average to
                 compute the test loss.
 
@@ -127,11 +121,13 @@ class ModelWrapper(MetricMixin):
         self._reset_metrics("test")
 
         for data, target, *_ in DataLoader(
-            dataset, batch_size, False, num_workers=workers, collate_fn=collate_fn
+            dataset,
+            self.args.batch_size,
+            False,
+            num_workers=self.args.workers,
+            collate_fn=self.args.collate_fn,
         ):
-            _ = self.test_on_batch(
-                data, target, cuda=use_cuda, average_predictions=average_predictions
-            )
+            _ = self.test_on_batch(data, target, average_predictions=average_predictions)
 
         log.info("Evaluation complete", test_loss=self.get_metrics("test")["test_loss"])
         self.active_step(None, self.get_metrics("test"))
@@ -141,13 +137,6 @@ class ModelWrapper(MetricMixin):
         self,
         train_dataset: Dataset,
         test_dataset: Dataset,
-        optimizer: Optimizer,
-        batch_size: int,
-        epoch: int,
-        use_cuda: bool,
-        workers: int = 4,
-        collate_fn: Optional[Callable] = None,
-        regularizer: Optional[Callable] = None,
         return_best_weights=False,
         patience=None,
         min_epoch_for_es=0,
@@ -160,12 +149,6 @@ class ModelWrapper(MetricMixin):
             train_dataset (Dataset): Dataset to train on.
             test_dataset (Dataset): Dataset to evaluate on.
             optimizer (Optimizer): Optimizer to use during training.
-            batch_size (int): Batch size used.
-            epoch (int): Number of epoch to train on.
-            use_cuda (bool): Use Cuda or not.
-            workers (int): Number of workers to use.
-            collate_fn (Optional[Callable]): The collate function to use.
-            regularizer (Optional[Callable]): The loss regularization for training.
             return_best_weights (bool): If True, will keep the best weights and return them.
             patience (Optional[int]): If provided, will use early stopping to stop after
                                         `patience` epoch without improvement.
@@ -179,14 +162,12 @@ class ModelWrapper(MetricMixin):
         best_loss = 1e10
         best_epoch = 0
         hist = []
-        for e in range(epoch):
+        for e in range(self.args.epoch):
             _ = self.train_on_dataset(
-                train_dataset, optimizer, batch_size, 1, use_cuda, workers, collate_fn, regularizer
+                train_dataset,
             )
             if e % skip_epochs == 0:
-                te_loss = self.test_on_dataset(
-                    test_dataset, batch_size, use_cuda, workers, collate_fn
-                )
+                te_loss = self.test_on_dataset(test_dataset)
                 hist.append(self.get_metrics())
                 if te_loss < best_loss:
                     best_epoch = e
@@ -208,11 +189,7 @@ class ModelWrapper(MetricMixin):
     def predict_on_dataset_generator(
         self,
         dataset: Dataset,
-        batch_size: int,
         iterations: int,
-        use_cuda: bool,
-        workers: int = 4,
-        collate_fn: Optional[Callable] = None,
         half=False,
         verbose=True,
     ):
@@ -221,11 +198,7 @@ class ModelWrapper(MetricMixin):
 
         Args:
             dataset (Dataset): Dataset to predict on.
-            batch_size (int):  Batch size to use during prediction.
             iterations (int): Number of iterations per sample.
-            use_cuda (bool): Use CUDA or not.
-            workers (int): Number of workers to use.
-            collate_fn (Optional[Callable]): The collate function to use.
             half (bool): If True use half precision.
             verbose (bool): If True use tqdm to display progress
 
@@ -240,13 +213,18 @@ class ModelWrapper(MetricMixin):
             return None
 
         log.info("Start Predict", dataset=len(dataset))
-        collate_fn = collate_fn or default_collate
-        loader = DataLoader(dataset, batch_size, False, num_workers=workers, collate_fn=collate_fn)
+        loader = DataLoader(
+            dataset,
+            self.args.batch_size,
+            False,
+            num_workers=self.args.workers,
+            collate_fn=self.args.collate_fn,
+        )
         if verbose:
             loader = tqdm(loader, total=len(loader), file=sys.stdout)
         for idx, (data, *_) in enumerate(loader):
 
-            pred = self.predict_on_batch(data, iterations, use_cuda)
+            pred = self.predict_on_batch(data, iterations)
             pred = map_on_tensor(lambda x: x.detach(), pred)
             if half:
                 pred = map_on_tensor(lambda x: x.half(), pred)
@@ -255,11 +233,7 @@ class ModelWrapper(MetricMixin):
     def predict_on_dataset(
         self,
         dataset: Dataset,
-        batch_size: int,
         iterations: int,
-        use_cuda: bool,
-        workers: int = 4,
-        collate_fn: Optional[Callable] = None,
         half=False,
         verbose=True,
     ):
@@ -268,11 +242,7 @@ class ModelWrapper(MetricMixin):
 
         Args:
             dataset (Dataset): Dataset to predict on.
-            batch_size (int):  Batch size to use during prediction.
             iterations (int): Number of iterations per sample.
-            use_cuda (bool): Use CUDA or not.
-            workers (int): Number of workers to use.
-            collate_fn (Optional[Callable]): The collate function to use.
             half (bool): If True use half precision.
             verbose (bool): If True use tqdm to show progress.
 
@@ -285,11 +255,7 @@ class ModelWrapper(MetricMixin):
         preds = list(
             self.predict_on_dataset_generator(
                 dataset=dataset,
-                batch_size=batch_size,
                 iterations=iterations,
-                use_cuda=use_cuda,
-                workers=workers,
-                collate_fn=collate_fn,
                 half=half,
                 verbose=verbose,
             )
@@ -300,37 +266,31 @@ class ModelWrapper(MetricMixin):
             return np.vstack(preds)
         return [np.vstack(pr) for pr in zip(*preds)]
 
-    def train_on_batch(
-        self, data, target, optimizer, cuda=False, regularizer: Optional[Callable] = None
-    ):
+    def train_on_batch(self, data, target):
         """
         Train the current model on a batch using `optimizer`.
 
         Args:
             data (Tensor): The model input.
             target (Tensor): The ground truth.
-            optimizer (optim.Optimizer): An optimizer.
-            cuda (bool): Use CUDA or not.
-            regularizer (Optional[Callable]): The loss regularization for training.
-
 
         Returns:
             Tensor, the loss computed from the criterion.
         """
 
-        if cuda:
+        if self.args.use_cuda:
             data, target = to_cuda(data), to_cuda(target)
-        optimizer.zero_grad()
+        self.args.optimizer.zero_grad()
         output = self.model(data)
-        loss = self.criterion(output, target)
+        loss = self.args.criterion(output, target)
 
-        if regularizer:
-            regularized_loss = loss + regularizer()
+        if self.args.regularizer:
+            regularized_loss = loss + self.args.regularizer()
             regularized_loss.backward()
         else:
             loss.backward()
 
-        optimizer.step()
+        self.args.optimizer.step()
         self._update_metrics(output, target, loss, filter="train")
         return loss
 
@@ -338,7 +298,6 @@ class ModelWrapper(MetricMixin):
         self,
         data: torch.Tensor,
         target: torch.Tensor,
-        cuda: bool = False,
         average_predictions: int = 1,
     ):
         """
@@ -347,7 +306,6 @@ class ModelWrapper(MetricMixin):
         Args:
             data (Tensor): The model input.
             target (Tensor): The ground truth.
-            cuda (bool): Use CUDA or not.
             average_predictions (int): The number of predictions to average to
                 compute the test loss.
 
@@ -355,25 +313,24 @@ class ModelWrapper(MetricMixin):
             Tensor, the loss computed from the criterion.
         """
         with torch.no_grad():
-            if cuda:
+            if self.args.use_cuda:
                 data, target = to_cuda(data), to_cuda(target)
 
             preds = map_on_tensor(
                 lambda p: p.mean(-1),
-                self.predict_on_batch(data, iterations=average_predictions, cuda=cuda),
+                self.predict_on_batch(data, iterations=average_predictions),
             )
-            loss = self.criterion(preds, target)
+            loss = assert_not_none(self.args.criterion)(preds, target)
             self._update_metrics(preds, target, loss, "test")
             return loss
 
-    def predict_on_batch(self, data, iterations=1, cuda=False):
+    def predict_on_batch(self, data, iterations=1):
         """
         Get the model's prediction on a batch.
 
         Args:
             data (Tensor): The model input.
             iterations (int): Number of prediction to perform.
-            cuda (bool): Use CUDA or not.
 
         Returns:
             Tensor, the loss computed from the criterion.
@@ -383,9 +340,9 @@ class ModelWrapper(MetricMixin):
             Raises RuntimeError if CUDA rans out of memory during data replication.
         """
         with torch.no_grad():
-            if cuda:
+            if self.args.use_cuda:
                 data = to_cuda(data)
-            if self.replicate_in_memory:
+            if self.args.replicate_in_memory:
                 data = map_on_tensor(lambda d: stack_in_memory(d, iterations), data)
                 try:
                     out = self.model(data)

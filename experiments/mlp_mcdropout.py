@@ -11,6 +11,7 @@ from baal.active import ActiveLearningLoop
 from baal.active.heuristics import BALD
 from baal.active.stopping_criteria import LabellingBudgetStoppingCriterion
 from baal.bayesian.dropout import patch_module
+from baal.modelwrapper import TrainingArgs
 
 use_cuda = torch.cuda.is_available()
 
@@ -35,8 +36,18 @@ model = nn.Sequential(
 model = patch_module(model)  # Set dropout layers for MC-Dropout.
 if use_cuda:
     model = model.cuda()
-wrapper = ModelWrapper(model=model, criterion=nn.CrossEntropyLoss())
+
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
+wrapper = ModelWrapper(
+    model=model,
+    args=TrainingArgs(
+        criterion=nn.CrossEntropyLoss(),
+        optimizer=optimizer,
+        batch_size=32,
+        epoch=10,
+        use_cuda=use_cuda,
+    ),
+)
 
 # We will use BALD as our heuristic as it is a great tradeoff between performance and efficiency.
 bald = BALD()
@@ -48,8 +59,6 @@ al_loop = ActiveLearningLoop(
     query_size=100,  # We will label 100 examples per step.
     # KWARGS for predict_on_dataset
     iterations=20,  # 20 sampling for MC-Dropout
-    batch_size=32,
-    use_cuda=use_cuda,
     verbose=False,
 )
 
@@ -62,11 +71,11 @@ stopping_criterion = LabellingBudgetStoppingCriterion(
 while True:
     model.load_state_dict(initial_weights)
     train_loss = wrapper.train_on_dataset(
-        al_dataset, optimizer=optimizer, batch_size=32, epoch=10, use_cuda=use_cuda
+        al_dataset,
     )
-    test_loss = wrapper.test_on_dataset(test_ds, batch_size=32, use_cuda=use_cuda)
+    test_loss = wrapper.test_on_dataset(test_ds)
 
     pprint(wrapper.get_metrics())
     flag = al_loop.step()
-    if stopping_criterion.should_stop() or flag:
+    if stopping_criterion.should_stop(uncertainty=[]) or flag:
         break

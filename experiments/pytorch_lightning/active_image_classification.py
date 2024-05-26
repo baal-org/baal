@@ -5,7 +5,6 @@ from argparse import ArgumentParser
 
 import pytorch_lightning as pl
 import structlog
-from pytorch_lightning import LightningModule
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch import optim
 from torch.nn import CrossEntropyLoss

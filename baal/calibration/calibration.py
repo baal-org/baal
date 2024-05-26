@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Optional
 
 import structlog
 import torch
@@ -7,6 +8,7 @@ from torch import nn
 from torch.optim import Adam
 
 from baal import ModelWrapper
+from baal.modelwrapper import TrainingArgs
 from baal.utils.metrics import ECE, ECE_PerCLs
 
 log = structlog.get_logger("Calibrating...")
@@ -37,6 +39,7 @@ class DirichletCalibrator(object):
         reg_factor (float): Regularization factor for the linear layer weights.
         mu (float): Regularization factor for the linear layer biases.
             If not given, will be initialized by "l".
+        training_duration (int): How long to train calibration layer.
 
     """
 
@@ -46,7 +49,8 @@ class DirichletCalibrator(object):
         num_classes: int,
         lr: float,
         reg_factor: float,
-        mu: float = None,
+        mu: Optional[float] = None,
+        training_duration: int = 5,
     ):
         self.num_classes = num_classes
         self.criterion = nn.CrossEntropyLoss()
@@ -55,7 +59,17 @@ class DirichletCalibrator(object):
         self.mu = mu or reg_factor
         self.dirichlet_linear = nn.Linear(self.num_classes, self.num_classes)
         self.model = nn.Sequential(wrapper.model, self.dirichlet_linear)
-        self.wrapper = ModelWrapper(self.model, self.criterion)
+        self.optimizer = Adam(self.dirichlet_linear.parameters(), lr=self.lr)
+        self.wrapper = ModelWrapper(
+            self.model,
+            TrainingArgs(
+                criterion=self.criterion,
+                optimizer=self.optimizer,
+                regularizer=self.l2_reg,
+                epoch=training_duration,
+                use_cuda=wrapper.args.use_cuda,
+            ),
+        )
 
         self.wrapper.add_metric("ece", lambda: ECE())
         self.wrapper.add_metric("ece", lambda: ECE_PerCLs(num_classes))
@@ -75,8 +89,6 @@ class DirichletCalibrator(object):
         self,
         train_set: Dataset,
         test_set: Dataset,
-        batch_size: int,
-        epoch: int,
         use_cuda: bool,
         double_fit: bool = False,
         **kwargs
@@ -88,8 +100,6 @@ class DirichletCalibrator(object):
         Args:
             train_set (Dataset): The training set.
             test_set (Dataset): The validation set.
-            batch_size (int): Batch size used.
-            epoch (int): Number of epochs to train the linear layer for.
             use_cuda (bool): If "True", will use GPU.
             double_fit (bool): If "True" would fit twice on the train set.
             kwargs (dict): Rest of parameters for baal.ModelWrapper.train_and_test_on_dataset().
@@ -106,36 +116,16 @@ class DirichletCalibrator(object):
         if use_cuda:
             self.dirichlet_linear.cuda()
 
-        optimizer = Adam(self.dirichlet_linear.parameters(), lr=self.lr)
-
         loss_history, weights = self.wrapper.train_and_test_on_datasets(
-            train_set,
-            test_set,
-            optimizer,
-            batch_size,
-            epoch,
-            use_cuda,
-            regularizer=self.l2_reg,
-            return_best_weights=True,
-            patience=None,
-            **kwargs
+            train_set, test_set, return_best_weights=True, patience=None, **kwargs
         )
         self.model.load_state_dict(weights)
 
         if double_fit:
             lr = self.lr / 10
-            optimizer = Adam(self.dirichlet_linear.parameters(), lr=lr)
+            self.wrapper.args.optimizer = Adam(self.dirichlet_linear.parameters(), lr=lr)
             loss_history, weights = self.wrapper.train_and_test_on_datasets(
-                train_set,
-                test_set,
-                optimizer,
-                batch_size,
-                epoch,
-                use_cuda,
-                regularizer=self.l2_reg,
-                return_best_weights=True,
-                patience=None,
-                **kwargs
+                train_set, test_set, return_best_weights=True, patience=None, **kwargs
             )
             self.model.load_state_dict(weights)
 

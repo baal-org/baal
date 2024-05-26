@@ -1,20 +1,16 @@
 import argparse
 import os
-from typing import Any, List
+from functools import partial
 
-import numpy as np
 import structlog
 import torch
 import torch.backends
+from flash.core.classification import LogitsOutput
 from pytorch_lightning import seed_everything
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.trainer.progress import Progress
-from pytorch_lightning.trainer.states import TrainerFn, TrainerStatus, RunningStage
-from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from torch import nn
 from torchvision import datasets
 from torchvision.transforms import transforms
-from functools import partial
 
 try:
     import flash
@@ -26,7 +22,6 @@ except ImportError as e:
         "lightning-flash.git#egg=lightning-flash[image]'"
     )
 from flash.image import ImageClassifier, ImageClassificationData
-from flash.core.classification import Logits
 from flash.image.classification.integrations.baal import (
     ActiveLearningDataModule,
     ActiveLearningLoop,
@@ -106,8 +101,11 @@ def get_model(dm):
         loss_fn=loss_fn,
         optimizer=partial(torch.optim.SGD, momentum=0.9, weight_decay=5e-4),
         learning_rate=LR,
-        serializer=Logits(),  # Note the serializer to Logits to be able to estimate uncertainty.
     )
+    model.output = (
+        LogitsOutput()
+    )  # Note the serializer to Logits to be able to estimate uncertainty.
+
     return model
 
 

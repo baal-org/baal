@@ -3,6 +3,9 @@ import copy
 from argparse import Namespace
 
 import torch
+
+from baal.active import get_heuristic
+from baal.utils.pytorch_lightning import ActiveLightningModule, BaalTrainer, ResetCallback
 from experiments.ssl_experiments.pimodel_cifar10 import PIModel
 from torch import nn
 from torch.hub import load_state_dict_from_url
@@ -10,9 +13,8 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.models import vgg16
 
-from baal import ActiveLearningDataset, get_heuristic
+from baal import ActiveLearningDataset
 from baal.bayesian.dropout import patch_module
-from baal import ActiveLightningModule, BaalTrainer, ResetCallback
 
 
 class PIActiveLearningModel(ActiveLightningModule, PIModel):

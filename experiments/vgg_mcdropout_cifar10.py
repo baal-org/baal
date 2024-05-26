@@ -17,6 +17,7 @@ from baal.active import get_heuristic, ActiveLearningDataset
 from baal.active.active_loop import ActiveLearningLoop
 from baal.bayesian.dropout import patch_module
 from baal import ModelWrapper
+from baal.modelwrapper import TrainingArgs
 
 """
 Minimal example to use BaaL.
@@ -97,7 +98,15 @@ def main():
     optimizer = optim.SGD(model.parameters(), lr=hyperparams["lr"], momentum=0.9)
 
     # Wraps the model into a usable API.
-    model = ModelWrapper(model, criterion)
+    model = ModelWrapper(
+        model,
+        TrainingArgs(
+            optimizer=optimizer,
+            criterion=criterion,
+            epoch=hyperparams["learning_epoch"],
+            use_cuda=use_cuda,
+        ),
+    )
 
     logs = {}
     logs["epoch"] = 0
@@ -121,14 +130,10 @@ def main():
         model.load_state_dict(init_weights)
         model.train_on_dataset(
             active_set,
-            optimizer,
-            hyperparams["batch_size"],
-            hyperparams["learning_epoch"],
-            use_cuda,
         )
 
         # Validation!
-        model.test_on_dataset(test_set, hyperparams["batch_size"], use_cuda)
+        model.test_on_dataset(test_set)
         should_continue = active_loop.step()
         if not should_continue:
             break

@@ -20,7 +20,7 @@ model = YourModel()
 # If not done already, you can wrap your model with our MCDropoutModule
 model = MCDropoutModule(model)
 dataset = YourDataset()
-wrapper = ModelWrapper(model, criterion=None)
+wrapper = ModelWrapper(model, args=TrainingArgs(...))
 
 heuristic = BALD()
 

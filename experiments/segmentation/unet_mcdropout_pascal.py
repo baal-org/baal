@@ -8,11 +8,12 @@ from torch import optim
 from torchvision.transforms import transforms
 from tqdm import tqdm
 
-from baal import get_heuristic, ActiveLearningLoop
-from baal.bayesian.dropout import MCDropoutModule
 from baal import ModelWrapper
-from baal import ClassificationReport
-from baal import PILToLongTensor
+from baal.active import get_heuristic, ActiveLearningLoop
+from baal.bayesian.dropout import MCDropoutModule
+from baal.modelwrapper import TrainingArgs
+from baal.utils.metrics import ClassificationReport
+from baal.utils.transforms import PILToLongTensor
 from utils import pascal_voc_ids, active_pascal, add_dropout, FocalLoss
 
 try:
@@ -122,7 +123,16 @@ def main():
     initial_weights = deepcopy(model.state_dict())
 
     # Add metrics
-    model = ModelWrapper(model, criterion)
+    model = ModelWrapper(
+        model,
+        args=TrainingArgs(
+            criterion=criterion,
+            optimizer=optimizer,
+            batch_size=batch_size,
+            epoch=hyperparams["learning_epoch"],
+            use_cuda=use_cuda,
+        ),
+    )
     model.add_metric("cls_report", lambda: ClassificationReport(len(pascal_voc_ids)))
 
     # Which heuristic you want to use?
@@ -137,21 +147,17 @@ def main():
         query_size=hyperparams["query_size"],
         # Instead of predicting on the entire pool, only a subset is used
         max_sample=1000,
-        batch_size=batch_size,
         iterations=hyperparams["iterations"],
-        use_cuda=use_cuda,
     )
     acc = []
     for epoch in tqdm(range(args.al_step)):
         # Following Gal et al. 2016, we reset the weights.
         model.load_state_dict(initial_weights)
         # Train 50 epochs before sampling.
-        model.train_on_dataset(
-            active_set, optimizer, batch_size, hyperparams["learning_epoch"], use_cuda
-        )
+        model.train_on_dataset(active_set)
 
         # Validation!
-        model.test_on_dataset(test_set, batch_size, use_cuda)
+        model.test_on_dataset(test_set)
         should_continue = loop.step()
 
         logs = model.get_metrics()
