@@ -12,15 +12,14 @@ class TransformersAdapter(FrameworkAdapter):
     def __init__(self, wrapper: BaalTransformersTrainer):
         self.wrapper = wrapper
         self._init_weight = deepcopy(self.wrapper.model.state_dict())
-        self._init_scheduler = deepcopy(self.wrapper.lr_scheduler.state_dict())
-        self._init_optimizer = deepcopy(self.wrapper.optimizer.state_dict())
 
     def reset_weights(self):
         self.wrapper.model.load_state_dict(self._init_weight)
-        self.wrapper.lr_scheduler.load_state_dict(self._init_scheduler)
-        self.wrapper.optimizer.load_state_dict(self._init_optimizer)
+        self.wrapper.lr_scheduler = None
+        self.wrapper.optimizer = None
 
     def train(self, al_dataset: Dataset) -> Dict[str, float]:
+        self.wrapper.train_dataset = al_dataset
         return self.wrapper.train().metrics
 
     def predict(self, dataset: Dataset, iterations: int) -> Union[NDArray, List[NDArray]]:
