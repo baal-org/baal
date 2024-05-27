@@ -78,6 +78,7 @@ nav:
       - api/calibration.md
       - api/dataset_management.md
       - api/heuristics.md
+      - api/stopping_criteria.md
       - api/modelwrapper.md
       - api/utils.md
       - Compatibility:
