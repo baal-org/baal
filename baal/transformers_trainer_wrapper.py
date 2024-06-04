@@ -5,8 +5,8 @@ import structlog
 import torch
 from numpy._typing import NDArray
 from torch import nn
-from tqdm import tqdm
 from transformers import PreTrainedModel, TrainingArguments
+from transformers.utils.logging import tqdm
 
 from baal.utils.warnings import raise_warnings_cache_replicated
 

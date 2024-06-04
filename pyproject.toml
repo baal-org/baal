@@ -34,6 +34,7 @@ lightning-flash = { version = ">=0.7.5", optional=true }
 transformers = {version = ">=4.10.2", optional=true}
 accelerate = {version = "^0.28.0", optional=true}
 datasets = {version = ">=2.14.6", optional=true}
+jupyter = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
@@ -51,8 +52,8 @@ bandit = "^1.7.1"
 docutils = "0.16"
 
 # Documentation
-mkdocs-jupyter = "^0.21.0"
-mkdocs-material = "^8.5.6"
+mkdocs-jupyter = "^0.24.0"
+mkdocs-material = "^9.5.0"
 Pygments = "^2.12.0"
 mkdocstrings = {extras = ["python"], version = "^0.18.1"}
 mkdocs-exclude-search = "^0.6.4"
@@ -60,6 +61,9 @@ mkdocs-exclude-search = "^0.6.4"
 [tool.poetry.extras]
 vision = ["torchvision", "lightning-flash"]
 nlp = ["transformers", "datasets", "accelerate"]
+
+[tool.poetry.group.dev.dependencies]
+neoteroi-mkdocs = "^1.0.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

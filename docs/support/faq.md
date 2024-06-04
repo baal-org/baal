@@ -140,7 +140,7 @@ active_dataset.label(ranks, labels)
 Bayesian active learning is a relatively small field with a lot of unknowns. This section aims at presenting some of our
 findings so that newcomers can quickly learn.
 
-Don't forget to look at our [literature review](../research/literature/index.md) for a good introduction to the field.
+Don't forget to look at our [literature review](../learn/literature/index.md) for a good introduction to the field.
 
 ### Should you use early stopping?
 
