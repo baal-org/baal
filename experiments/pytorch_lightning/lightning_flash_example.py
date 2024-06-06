@@ -29,7 +29,7 @@ from flash.image.classification.integrations.baal import (
 
 from baal.active import get_heuristic
 
-log = structlog.get_logger()
+log = structlog.get_logger('baal')
 
 IMG_SIZE = 128
 

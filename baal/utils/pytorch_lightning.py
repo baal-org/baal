@@ -18,7 +18,7 @@ from baal.modelwrapper import mc_inference
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
 
-log = structlog.get_logger("PL testing")
+log = structlog.get_logger("baal")
 
 warnings.warn(
     "baal.utils.pytorch_lightning is deprecated. BaaL is now integrated into Lightning Flash!"

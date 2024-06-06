@@ -12,7 +12,7 @@ from numpy._typing import NDArray
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
 from baal.active.dataset.base import Dataset
 from baal.metrics.mixin import MetricMixin
@@ -23,7 +23,7 @@ from baal.utils.iterutils import map_on_tensor
 from baal.utils.metrics import Loss
 from baal.utils.warnings import raise_warnings_cache_replicated
 
-log = structlog.get_logger("ModelWrapper")
+log = structlog.get_logger("baal")
 
 
 def _stack_preds(out):

@@ -22,7 +22,7 @@ except ImportError:
 from baal.utils.array_utils import stack_in_memory
 from baal.utils.iterutils import map_on_tensor
 
-log = structlog.get_logger("BaalTransformersTrainer")
+log = structlog.get_logger("baal")
 
 
 def _stack_preds(out):
