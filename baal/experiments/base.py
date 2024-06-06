@@ -20,8 +20,8 @@ try:
 
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
-    BaalTransformersTrainer = Any  # type: ignore
-    TransformersAdapter = Any  # type: ignore
+    BaalTransformersTrainer = None  # type: ignore
+    TransformersAdapter = None  # type: ignore
     TRANSFORMERS_AVAILABLE = False
 
 log = structlog.get_logger(__name__)
