@@ -147,3 +147,22 @@ def test_experiment(model_wrapper):
     assert isinstance(experiment.adapter, ModelWrapperAdapter)
     output = experiment.start()
     assert len(output) == 2
+
+    al_dataset = ActiveLearningDataset(MockDataset())
+    al_dataset.label_randomly(10)
+    experiment = ActiveLearningExperiment(
+            trainer=model_wrapper.wrapper, al_dataset=al_dataset, eval_dataset=MockDataset(),
+            heuristic=BALD(), query_size=5, iterations=10, criterion=None, pool_size=10
+    )
+    assert len(experiment._get_pool()) == 10
+    output = experiment.start()
+    assert len(output) == 2
+    assert len(experiment._get_pool()) == 0
+
+    al_dataset = ActiveLearningDataset(MockDataset())
+    with pytest.raises(ValueError, match='label_randomly'):
+        experiment = ActiveLearningExperiment(
+                trainer=model_wrapper.wrapper, al_dataset=al_dataset, eval_dataset=MockDataset(),
+                heuristic=BALD(), query_size=5, iterations=10, criterion=None, pool_size=10
+        )
+        output = experiment.start()

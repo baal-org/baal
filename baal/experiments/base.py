@@ -73,6 +73,11 @@ class ActiveLearningExperiment:
     def start(self):
         records = []
         _start = len(self.al_dataset)
+        if _start == 0:
+            raise ValueError(
+                "No item labelled in the training set."
+                " Did you run `ActiveLearningDataset.label_randomly`?"
+            )
         for _ in tqdm(itertools.count(start=0)):
             self.adapter.reset_weights()
             train_metrics = self.adapter.train(self.al_dataset)
@@ -105,5 +110,7 @@ class ActiveLearningExperiment:
         if self.pool_size is None:
             return self.al_dataset.pool
         pool = self.al_dataset.pool
-        indices = np.random.choice(len(pool), self.pool_size, replace=False)
+        if len(pool) < self.pool_size:
+            return pool
+        indices = np.random.choice(len(pool), min(len(pool), self.pool_size), replace=False)
         return Subset(pool, indices)
