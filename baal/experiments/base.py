@@ -1,5 +1,5 @@
 import itertools
-from typing import Union, Optional
+from typing import Union, Optional, Any
 
 import numpy as np
 import structlog
@@ -20,8 +20,8 @@ try:
 
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
-    BaalTransformersTrainer = None
-    TransformersAdapter = None
+    BaalTransformersTrainer = Any  # type: ignore
+    TransformersAdapter = Any  # type: ignore
     TRANSFORMERS_AVAILABLE = False
 
 log = structlog.get_logger(__name__)
@@ -47,16 +47,17 @@ class ActiveLearningExperiment:
         pool_size: Optionally limit the size of the unlabelled pool.
         criterion: Stopping criterion for the experiment.
     """
+
     def __init__(
-            self,
-            trainer: Union[ModelWrapper, "BaalTransformersTrainer"],
-            al_dataset: ActiveLearningDataset,
-            eval_dataset: Dataset,
-            heuristic: AbstractHeuristic,
-            query_size: int = 100,
-            iterations: int = 20,
-            pool_size: Optional[int] = None,
-            criterion: Optional[StoppingCriterion] = None,
+        self,
+        trainer: Union[ModelWrapper, "BaalTransformersTrainer"],
+        al_dataset: ActiveLearningDataset,
+        eval_dataset: Dataset,
+        heuristic: AbstractHeuristic,
+        query_size: int = 100,
+        iterations: int = 20,
+        pool_size: Optional[int] = None,
+        criterion: Optional[StoppingCriterion] = None,
     ):
         self.al_dataset = al_dataset
         self.eval_dataset = eval_dataset
@@ -89,7 +90,7 @@ class ActiveLearningExperiment:
                 return records
 
     def _get_adapter(
-            self, trainer: Union[ModelWrapper, "BaalTransformersTrainer"]
+        self, trainer: Union[ModelWrapper, "BaalTransformersTrainer"]
     ) -> FrameworkAdapter:
         if isinstance(trainer, ModelWrapper):
             return ModelWrapperAdapter(trainer)

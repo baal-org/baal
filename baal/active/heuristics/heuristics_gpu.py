@@ -106,8 +106,8 @@ class AbstractGPUHeuristic(ModelWrapper):
         verbose=True,
     ):
         return (
-            super().predict_on_dataset(dataset, iterations, half, verbose).reshape([-1])
-        )  # type: ignore
+            super().predict_on_dataset(dataset, iterations, half, verbose).reshape([-1])  # type: ignore
+        )
 
     def predict_on_batch(self, data, iterations=1):
         """Rank the predictions according to their uncertainties."""

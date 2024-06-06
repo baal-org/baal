@@ -20,7 +20,7 @@ class TransformersAdapter(FrameworkAdapter):
 
     def train(self, al_dataset: Dataset) -> Dict[str, float]:
         self.wrapper.train_dataset = al_dataset
-        return self.wrapper.train().metrics
+        return self.wrapper.train().metrics  # type: ignore
 
     def predict(self, dataset: Dataset, iterations: int) -> Union[NDArray, List[NDArray]]:
         return self.wrapper.predict_on_dataset(dataset, iterations=iterations)
