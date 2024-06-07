@@ -7,7 +7,7 @@ from scipy.stats import rankdata
 
 from baal.active.heuristics import AbstractHeuristic, Sequence
 
-log = structlog.get_logger('baal')
+log = structlog.get_logger("baal")
 EPSILON = 1e-8
 
 

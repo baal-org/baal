@@ -53,8 +53,7 @@ class ModelWrapper(MetricMixin):
 
     Args:
         model (nn.Module): The model to optimize.
-        criterion (Callable): A loss function.
-        replicate_in_memory (bool): Replicate in memory optional.
+        args (TrainingArgs): Model arguments for training/predicting.
     """
 
     def __init__(self, model, args: TrainingArgs):
@@ -149,7 +148,6 @@ class ModelWrapper(MetricMixin):
         Args:
             train_dataset (Dataset): Dataset to train on.
             test_dataset (Dataset): Dataset to evaluate on.
-            optimizer (Optimizer): Optimizer to use during training.
             return_best_weights (bool): If True, will keep the best weights and return them.
             patience (Optional[int]): If provided, will use early stopping to stop after
                                         `patience` epoch without improvement.

@@ -11,7 +11,7 @@ import torch.utils.data as torchdata
 from . import heuristics
 from .dataset import ActiveLearningDataset
 
-log = structlog.get_logger('baal')
+log = structlog.get_logger("baal")
 pjoin = os.path.join
 
 

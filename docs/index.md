@@ -12,6 +12,10 @@ To know more on what is Bayesian active learning, see our [User guide](user_guid
 
 We are a member of Pytorch's ecosystem, and we welcome contributions from the community.
 
+!!! tip "Baal 2.0 !"
+    Baal is now version 2.0! We made a lot of changes to make everyone life easier!
+    See our [Release Note](https://github.com/baal-org/baal/releases/tag/v2.0.0) for details.
+
 ::cards:: cols=2
 - title: User Guide
   content: |
@@ -46,4 +50,3 @@ Baal is available as a package on PyPI:
     `baal[nlp]` installs needed dependencies for HuggingFace support.
 
     `baal[vision]` installs dependencies for our Lightning-Flash integration.
-

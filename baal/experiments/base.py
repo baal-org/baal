@@ -24,7 +24,7 @@ except ImportError:
     TransformersAdapter = None  # type: ignore
     TRANSFORMERS_AVAILABLE = False
 
-log = structlog.get_logger('baal')
+log = structlog.get_logger("baal")
 
 
 class ActiveLearningExperiment:
@@ -78,10 +78,12 @@ class ActiveLearningExperiment:
                 "No item labelled in the training set."
                 " Did you run `ActiveLearningDataset.label_randomly`?"
             )
-        for _ in tqdm(itertools.count(start=0),  # Infinite counter to rely on Criterion
-                      desc="Active Experiment",
-                      # Upper bound estimation.
-                      total=np.round(self.al_dataset.n_unlabelled // self.query_size)):
+        for _ in tqdm(
+            itertools.count(start=0),  # Infinite counter to rely on Criterion
+            desc="Active Experiment",
+            # Upper bound estimation.
+            total=np.round(self.al_dataset.n_unlabelled // self.query_size),
+        ):
             self.adapter.reset_weights()
             train_metrics = self.adapter.train(self.al_dataset)
             eval_metrics = self.adapter.evaluate(
