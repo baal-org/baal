@@ -18,7 +18,7 @@ from baal.modelwrapper import mc_inference
 from baal.utils.cuda_utils import to_cuda
 from baal.utils.iterutils import map_on_tensor
 
-log = structlog.get_logger("PL testing")
+log = structlog.get_logger("baal")
 
 warnings.warn(
     "baal.utils.pytorch_lightning is deprecated. BaaL is now integrated into Lightning Flash!"
@@ -76,9 +76,7 @@ class ActiveLightningModule(LightningModule):
         # Get the input only.
         x, _ = batch
         # Perform Monte-Carlo Inference fro I iterations.
-        out = mc_inference(
-            self, x, self.hparams.iterations, self.hparams.replicate_in_memory  # type: ignore
-        )
+        out = mc_inference(self, x, self.hparams.iterations, self.hparams.replicate_in_memory)
         return out
 
 
@@ -185,7 +183,7 @@ class BaalTrainer(Trainer):
         """
         # High to low
         if datamodule is None:
-            pool_dataloader = self.lightning_module.pool_dataloader()  # type: ignore
+            pool_dataloader = self.lightning_module.pool_dataloader()
         else:
             pool_dataloader = datamodule.pool_dataloader()
         model = model if model is not None else self.lightning_module

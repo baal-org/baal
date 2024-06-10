@@ -1,16 +1,8 @@
-# Active learning functionality
+# Active Learning Dataset
 
-In this module, we find all the utilities to do active learning.
-
-1. Dataset management
-2. Active loop implementation
+In this module, we find all the utilities to manage data when performing active learning.
 
 Baal takes care of the dataset split between labelled and unlabelled examples.
-It also takes care of the active learning loop:
-
-1. Predict on the unlabelled examples.
-2. Label the most uncertain examples.
-
 ### Example
 
 ```python
@@ -38,9 +30,6 @@ assert al_dataset.pool.transform is None
 
 ### baal.active.ActiveLearningDataset
 ::: baal.active.ActiveLearningDataset
-
-### baal.active.ActiveLearningLoop
-::: baal.active.ActiveLearningLoop
 
 ### baal.active.FileDataset
 ::: baal.active.FileDataset

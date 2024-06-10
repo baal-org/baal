@@ -3,15 +3,16 @@ from collections import defaultdict
 from collections.abc import Sequence
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, Optional, Union, List
 
 import numpy as np
 import structlog
 import torch
+from numpy._typing import NDArray
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
 from baal.active.dataset.base import Dataset
 from baal.metrics.mixin import MetricMixin
@@ -22,7 +23,7 @@ from baal.utils.iterutils import map_on_tensor
 from baal.utils.metrics import Loss
 from baal.utils.warnings import raise_warnings_cache_replicated
 
-log = structlog.get_logger("ModelWrapper")
+log = structlog.get_logger("baal")
 
 
 def _stack_preds(out):
@@ -52,8 +53,7 @@ class ModelWrapper(MetricMixin):
 
     Args:
         model (nn.Module): The model to optimize.
-        criterion (Callable): A loss function.
-        replicate_in_memory (bool): Replicate in memory optional.
+        args (TrainingArgs): Model arguments for training/predicting.
     """
 
     def __init__(self, model, args: TrainingArgs):
@@ -148,7 +148,6 @@ class ModelWrapper(MetricMixin):
         Args:
             train_dataset (Dataset): Dataset to train on.
             test_dataset (Dataset): Dataset to evaluate on.
-            optimizer (Optimizer): Optimizer to use during training.
             return_best_weights (bool): If True, will keep the best weights and return them.
             patience (Optional[int]): If provided, will use early stopping to stop after
                                         `patience` epoch without improvement.
@@ -236,7 +235,7 @@ class ModelWrapper(MetricMixin):
         iterations: int,
         half=False,
         verbose=True,
-    ):
+    ) -> Union[NDArray, List[NDArray]]:
         """
         Use the model to predict on a dataset `iterations` time.
 

@@ -22,7 +22,7 @@ from baal.utils.pytorch_lightning import (
     BaaLDataModule,
 )
 
-log = structlog.get_logger("PL testing")
+log = structlog.get_logger("baal")
 
 warnings.warn(
     "baal.utils.pytorch_lightning is deprecated. BaaL is now integrated into Lightning Flash!"

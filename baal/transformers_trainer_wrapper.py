@@ -3,9 +3,10 @@ from typing import Optional, List, Sequence, Union
 import numpy as np
 import structlog
 import torch
+from numpy._typing import NDArray
 from torch import nn
-from tqdm import tqdm
 from transformers import PreTrainedModel, TrainingArguments
+from transformers.utils.logging import tqdm
 
 from baal.utils.warnings import raise_warnings_cache_replicated
 
@@ -21,7 +22,7 @@ except ImportError:
 from baal.utils.array_utils import stack_in_memory
 from baal.utils.iterutils import map_on_tensor
 
-log = structlog.get_logger("BaalTransformersTrainer")
+log = structlog.get_logger("baal")
 
 
 def _stack_preds(out):
@@ -140,7 +141,7 @@ class BaalTransformersTrainer(Trainer):
         iterations: int = 1,
         half: bool = False,
         ignore_keys: Optional[List[str]] = None,
-    ):
+    ) -> Union[NDArray, List[NDArray]]:
 
         """
         Use the model to predict on a dataset `iterations` time.

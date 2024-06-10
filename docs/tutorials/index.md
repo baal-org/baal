@@ -10,7 +10,6 @@ latter on how we integrate with other common frameworks such as Label Studio, Hu
 
 ## :material-file-tree: How to
 
-* [Run an active learning experiments](../notebooks/active_learning_process.ipynb)
 * [Active learning in production (Image Classification)](../notebooks/production/baal_prod_cls.ipynb)
 * [Active learning in production (Text Classification)](../notebooks/production/baal_prod_cls_nlp_hf.ipynb)
 * [Deep Ensembles](../notebooks/deep_ensemble.ipynb)
@@ -18,6 +17,6 @@ latter on how we integrate with other common frameworks such as Label Studio, Hu
 ## :material-file-tree: Compatibility
 
 * [:material-link: Lightning Flash](https://devblog.pytorchlightning.ai/active-learning-made-simple-using-flash-and-baal-2216df6f872c)
-* [HuggingFace](../notebooks/compatibility/nlp_classification.ipynb)
 * [Scikit-Learn](../notebooks/compatibility/sklearn_tutorial.ipynb)
-* [Label Studio](./label-studio-cv.md)
+* [Label Studio CV](./label-studio-cv.md)
+* [Label Studio NLP](./label-studio-hf.md)

@@ -4,3 +4,4 @@ mkdocs-jupyter==0.21.0
 mkdocstrings[python]==0.23.0
 Pygments==2.13.0
 lxml[html_clean]
+neoteroi-mkdocs

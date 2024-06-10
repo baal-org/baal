@@ -91,7 +91,7 @@ The framework consists of four main parts, as demonstrated in the flowchart belo
 - ActiveLearningLoop
 
 <p align="center">
-  <img src="docs/research/literature/images/Baalscheme.svg">
+  <img src="docs/learn/literature/images/Baalscheme.svg">
 </p>
 
 To get started, wrap your dataset in our _[**ActiveLearningDataset**](baal/active/dataset.py)_ class. This will ensure
@@ -114,19 +114,19 @@ In conclusion, your script should be similar to this:
 dataset = ActiveLearningDataset(your_dataset)
 dataset.label_randomly(INITIAL_POOL)  # label some data
 model = MCDropoutModule(your_model)
-model = ModelWrapper(model, args=TrainingArgs(...))
-active_loop = ActiveLearningLoop(dataset,
-                                 get_probabilities=model.predict_on_dataset,
-                                 heuristic=heuristics.BALD(),
-                                 iterations=20, # Number of MC sampling.
-                                 query_size=QUERY_SIZE)  # Number of item to label.
-for al_step in range(N_ALSTEP):
-    model.train_on_dataset(dataset)
-    metrics = model.test_on_dataset(test_dataset)
-    # Label the next most uncertain items.
-    if not active_loop.step():
-        # We're done!
-        break
+wrapper = ModelWrapper(model, args=TrainingArgs(...))
+experiment = ActiveLearningExperiment(
+    trainer=wrapper, # Huggingface or ModelWrapper to train
+    al_dataset=dataset, # Active learning dataset
+    eval_dataset=test_dataset, # Evaluation Dataset
+    heuristic=BALD(), # Uncertainty heuristic to use
+    query_size=100, # How many items to label per round.
+    iterations=20, # How many MC sampling to perform per item.
+    pool_size=None, # Optionally limit the size of the unlabelled pool.
+    criterion=None # Stopping criterion for the experiment.
+)
+# The experiment will run until all items are labelled.
+metrics = experiment.start()
 ```
 
 For a complete experiment, see _[experiments/vgg_mcdropout_cifar10.py](experiments/vgg_mcdropout_cifar10.py)_ .

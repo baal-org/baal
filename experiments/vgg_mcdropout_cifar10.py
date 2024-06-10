@@ -1,7 +1,6 @@
 import argparse
-from pprint import pprint
 import random
-from copy import deepcopy
+from pprint import pprint
 
 import torch
 import torch.backends
@@ -11,12 +10,12 @@ from torch.nn import CrossEntropyLoss
 from torchvision import datasets
 from torchvision.models import vgg16
 from torchvision.transforms import transforms
-from tqdm import tqdm
 
-from baal.active import get_heuristic, ActiveLearningDataset
-from baal.active.active_loop import ActiveLearningLoop
-from baal.bayesian.dropout import patch_module
 from baal import ModelWrapper
+from baal.active import ActiveLearningDataset
+from baal.active.heuristics import BALD
+from baal.bayesian.dropout import patch_module
+from baal.experiments.base import ActiveLearningExperiment
 from baal.modelwrapper import TrainingArgs
 
 """
@@ -26,14 +25,11 @@ Minimal example to use BaaL.
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epoch", default=100, type=int)
     parser.add_argument("--batch_size", default=32, type=int)
     parser.add_argument("--initial_pool", default=1000, type=int)
     parser.add_argument("--query_size", default=100, type=int)
     parser.add_argument("--lr", default=0.001)
-    parser.add_argument("--heuristic", default="bald", type=str)
     parser.add_argument("--iterations", default=20, type=int)
-    parser.add_argument("--shuffle_prop", default=0.05, type=float)
     parser.add_argument("--learning_epoch", default=20, type=int)
     return parser.parse_args()
 
@@ -83,7 +79,6 @@ def main():
 
     active_set, test_set = get_datasets(hyperparams["initial_pool"])
 
-    heuristic = get_heuristic(hyperparams["heuristic"], hyperparams["shuffle_prop"])
     criterion = CrossEntropyLoss()
     model = vgg16(weights=None, num_classes=10)
     weights = load_state_dict_from_url("https://download.pytorch.org/models/vgg16-397923af.pth")
@@ -105,40 +100,20 @@ def main():
             criterion=criterion,
             epoch=hyperparams["learning_epoch"],
             use_cuda=use_cuda,
+            batch_size=hyperparams["batch_size"],
         ),
     )
 
-    logs = {}
-    logs["epoch"] = 0
-
-    # for prediction we use a smaller batchsize
-    # since it is slower
-    active_loop = ActiveLearningLoop(
-        active_set,
-        model.predict_on_dataset,
-        heuristic,
-        hyperparams.get("query_size", 1),
-        batch_size=10,
-        iterations=hyperparams["iterations"],
-        use_cuda=use_cuda,
+    experiment = ActiveLearningExperiment(
+        trainer=model,
+        al_dataset=active_set,
+        eval_dataset=test_set,
+        heuristic=BALD(),
+        query_size=hyperparams["query_size"],
+        iterations=20,
+        criterion=None,
     )
-    # We will reset the weights at each active learning step.
-    init_weights = deepcopy(model.state_dict())
-
-    for _ in tqdm(range(args.epoch)):
-        # Load the initial weights.
-        model.load_state_dict(init_weights)
-        model.train_on_dataset(
-            active_set,
-        )
-
-        # Validation!
-        model.test_on_dataset(test_set)
-        should_continue = active_loop.step()
-        if not should_continue:
-            break
-
-        pprint(model.get_metrics())
+    pprint(experiment.start())
 
 
 if __name__ == "__main__":

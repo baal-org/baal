@@ -11,7 +11,7 @@ from baal import ModelWrapper
 from baal.modelwrapper import TrainingArgs
 from baal.utils.metrics import ECE, ECE_PerCLs
 
-log = structlog.get_logger("Calibrating...")
+log = structlog.get_logger("baal")
 
 
 class DirichletCalibrator(object):

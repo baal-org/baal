@@ -1,7 +1,8 @@
 # API Reference
 
-### :material-file-tree: API Definition
+### :material-file-tree: Components
 
+* [baal.experiments.ActiveLearningExperiment](./active_experiment.md)
 * [baal.modelwrapper.ModelWrapper](./modelwrapper.md)
 * [baal.bayesian](./bayesian.md)
 * [baal.active](./dataset_management.md)

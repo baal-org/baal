@@ -58,7 +58,7 @@ class ActiveDatasetTest(unittest.TestCase):
         self.dataset._dataset.label = unittest.mock.MagicMock()
         labels_initial = self.dataset.n_labelled
 
-        # Test that we can label without value for research
+        # Test that we can label without value for learn
         self.dataset.can_label = False
         self.dataset.label(0, value=np.arange(1, 10))
         self.dataset._dataset.label.assert_not_called()

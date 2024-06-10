@@ -12,7 +12,7 @@ from baal.bayesian.common import replace_layers_in_module, _patching_wrapper, Ba
 
 class ConsistentDropout(_DropoutNd):
     """
-    ConsistentDropout is useful when doing research.
+    ConsistentDropout is useful when doing learn.
     It guarantees that while the masks are the same between batches
     during inference. The masks are different inside the batch.
 
@@ -59,7 +59,7 @@ class ConsistentDropout(_DropoutNd):
 
 class ConsistentDropout2d(_DropoutNd):
     """
-    ConsistentDropout is useful when doing research.
+    ConsistentDropout is useful when doing learn.
     It guarantees that while the mask are the same between batches,
     they are different inside the batch.
 

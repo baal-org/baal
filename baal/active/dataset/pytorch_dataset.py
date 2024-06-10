@@ -188,12 +188,12 @@ class ActiveLearningDataset(SplittedDataset):
             elif self.can_label and val is None:
                 raise ValueError(
                     """The dataset is able to label data, but no label was provided.
-                                 If this is a research setting, please set the
+                                 If this is a learn setting, please set the
                                   `ActiveLearningDataset.can_label` to `False`.
                                   """
                 )
             else:
-                # Regular research usecase.
+                # Regular learn usecase.
                 self.labelled_map[idx] = active_step
                 if val is not None:
                     warnings.warn(
