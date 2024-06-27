@@ -94,7 +94,7 @@ The framework consists of four main parts, as demonstrated in the flowchart belo
   <img src="docs/learn/literature/images/Baalscheme.svg">
 </p>
 
-To get started, wrap your dataset in our _[**ActiveLearningDataset**](baal/active/dataset.py)_ class. This will ensure
+To get started, wrap your dataset in our _[**ActiveLearningDataset**](baal/active/dataset/pytorch_dataset.py)_ class. This will ensure
 that the dataset is split into
 `training` and `pool` sets. The `pool` set represents the portion of the training set which is yet to be labelled.
 
