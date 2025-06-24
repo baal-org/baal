@@ -14,7 +14,7 @@ def test_make_animation_from_data():
 
     result = make_animation_from_data(x, y, labelled_at, classes)
     assert isinstance(result, list)
-    assert result[0].shape[2] == 3
+    assert result[0].shape[2] == 4
 
 
 if __name__ == '__main__':

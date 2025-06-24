@@ -5,9 +5,9 @@ import pytest
 import shutil
 import torch
 from hypothesis import given
-from torch_hypothesis import classification_logits_and_labels
 
 from baal.utils.metrics import Loss, Accuracy, Precision, ECE, ClassificationReport, PRAuC, ECE_PerCLs
+from tests.torch_hypothesis import classification_logits_and_labels
 
 
 def test_loss():

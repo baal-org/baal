@@ -228,7 +228,7 @@ def test_that_logits_get_converted_to_probabilities(logits):
         return logits
 
     probability_distribution = wrapped(None, logits)
-    assert np.alltrue((probability_distribution >= 0) & (probability_distribution <= 1)).all()
+    assert np.all((probability_distribution >= 0) & (probability_distribution <= 1)).all()
 
 
 def test_that_precomputed_passes_back_predictions():

@@ -60,7 +60,7 @@ class BaalTransformerTrainer(unittest.TestCase):
             assert next(l_gen).dtype == np.float16
             assert l.dtype == np.float16
 
-    def test_load_state_dic(self):
+    def test_load_state_dict(self):
         wrapper = BaalTransformersTrainer(model=self.model,
                                           args=self.args,
                                           train_dataset=self.dataset,
