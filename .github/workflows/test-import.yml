@@ -27,7 +27,7 @@ jobs:
     - uses: Gr1N/setup-poetry@v8
     - name: Install dependencies no dev
       run: |
-        poetry install --no-interaction --no-ansi --no-dev
+        poetry install --no-interaction --no-ansi
     - name: Test imports
       run: |
         poetry run python -c "import baal; import baal.active.dataset; \

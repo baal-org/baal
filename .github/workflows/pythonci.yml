@@ -27,7 +27,7 @@ jobs:
     - uses: Gr1N/setup-poetry@v8
     - name: Install dependencies
       run: |
-        poetry install --no-interaction --no-ansi --remove-untracked -E nlp -E vision
+        poetry install --no-interaction --no-ansi -E nlp -E vision --with dev
     - name: Test with pytest/flake8/mypy
       run: |
         make test bandit

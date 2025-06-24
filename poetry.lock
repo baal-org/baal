@@ -5827,4 +5827,4 @@ vision = ["lightning-flash", "torchvision"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4"
-content-hash = "a315fb76cd3d3916c75bdc8a9655284f992a55777617cd5e25c17562a0d091a7"
+content-hash = "60ef27589d6e4385407c2cd987d706a30997e293ac1acad9120851e21f139011"
