@@ -68,8 +68,8 @@ def make_animation_from_data(
         ax.legend(loc="best", ncol=1, prop={"size": 15}, markerscale=3, fancybox=True, shadow=True)
         fig.set_size_inches(15, 10.0)
         fig.canvas.draw()
-        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype="uint8")
-        image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        image = np.frombuffer(fig.canvas.tostring_argb(), dtype="uint8")
+        image = image.reshape(fig.canvas.get_width_height()[::-1] + (4,))
         frames.append(image)
         plt.close(fig)
     return frames

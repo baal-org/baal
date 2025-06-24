@@ -3,7 +3,6 @@ import warnings
 import numpy as np
 import pytest
 from hypothesis import given
-from torch_hypothesis import class_logits
 
 from baal.active import get_heuristic
 from baal.active.heuristics import (
@@ -21,6 +20,7 @@ from baal.active.heuristics import (
     CombineHeuristics,
 )
 from tests.test_utils import make_fake_dist, make_3d_fake_dist, make_5d_fake_dist
+from tests.torch_hypothesis import class_logits
 
 N_CLASS = 10
 
@@ -228,7 +228,7 @@ def test_that_logits_get_converted_to_probabilities(logits):
         return logits
 
     probability_distribution = wrapped(None, logits)
-    assert np.alltrue((probability_distribution >= 0) & (probability_distribution <= 1)).all()
+    assert np.all((probability_distribution >= 0) & (probability_distribution <= 1)).all()
 
 
 def test_that_precomputed_passes_back_predictions():

@@ -96,7 +96,7 @@ class FileDatasetTest(unittest.TestCase):
             def __call__(self, x, **kwargs):
                 x, canvas = x  # x is a [int, ndarray]
                 canvas[:self.side, :self.side] = x
-                return canvas
+                return canvas.astype(np.uint8)
 
         target_trans = BaaLCompose(
             [GetCanvas(), DrawSquare(3), ToPILImage(mode=None), Resize(60, interpolation=0),

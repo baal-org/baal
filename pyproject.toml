@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "baal"
-version = "2.0.0"
+version = "2.1.0"
 description = "Library to enable Bayesian active learning in your research or labeling work."
 authors = ["Parmida Atighehchian <parmida.atighehchian@servicenow.com>",
            "Frederic Branchaud-Charron <frederic.branchaud-charron@servicenow.com>",
@@ -14,11 +14,10 @@ documentation = "https://baal.readthedocs.io"
 repository = "https://github.com/ElementAI/baal/"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4"
+python = ">=3.10,<4"
 torch = ">=1.6.0"
-torchmetrics = "^0.9.3"
-h5py = "^3.4.0"
-numpy = "^1.21.2"
+torchmetrics = "^1.7.3"
+numpy = ">=2.0.0"
 matplotlib = "^3.4.3"
 Pillow = ">=6.2.0"
 tqdm = "^4.62.2"
@@ -32,15 +31,14 @@ lightning-flash = { version = ">=0.7.5", optional=true }
 
 # NLP
 transformers = {version = ">=4.10.2", optional=true}
-accelerate = {version = "^0.28.0", optional=true}
+accelerate = {version = "^1.8.0", optional=true}
 datasets = {version = ">=2.14.6", optional=true}
 jupyter = "^1.0.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^6.2.5"
 pytest-cov = "^2.12.1"
-torch-hypothesis = "0.2.0"
-hypothesis = "4.24.0"
+hypothesis = "^6.135.14"
 flake8 = "^3.9.2"
 pytest-mock = "^3.6.1"
 black = "^22.3.0"
@@ -57,13 +55,12 @@ mkdocs-material = "^9.5.0"
 Pygments = "^2.12.0"
 mkdocstrings = {extras = ["python"], version = "^0.18.1"}
 mkdocs-exclude-search = "^0.6.4"
+neoteroi-mkdocs = "^1.0.5"
 
 [tool.poetry.extras]
 vision = ["torchvision", "lightning-flash"]
 nlp = ["transformers", "datasets", "accelerate"]
 
-[tool.poetry.group.dev.dependencies]
-neoteroi-mkdocs = "^1.0.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
