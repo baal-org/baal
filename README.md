@@ -60,6 +60,7 @@ To install Baal from source: `poetry install`
 - [Active learning with MaskAL reduces annotation effort for training Mask R-CNN](https://arxiv.org/abs/2112.06586) (
   Blok et al. 2021)
 - [Stochastic Batch Acquisition for Deep Active Learning](https://arxiv.org/abs/2106.12059) (Kirsch et al. 2022)
+- [Combining X-Vectors and Bayesian Batch Active Learning: Two-Stage Active Learning Pipeline for Speech Recognition](https://arxiv.org/pdf/2406.02566) (Kundacina et al. 2025)
 
 # What is active learning?
 
